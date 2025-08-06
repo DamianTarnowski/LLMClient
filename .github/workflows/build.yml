@@ -1,0 +1,105 @@
+# GitHub Actions Workflow for building the LLMClient project
+
+name: .NET MAUI and Rust CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events for the main branch
+  push:
+    branches: [ "main" ]
+  # Triggers the workflow on pull request events targeting the main branch
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Use a matrix strategy to run the build on different operating systems
+    strategy:
+      matrix:
+        # Define the operating systems to build on
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          # Windows-specific configuration
+          - os: windows-latest
+            # .NET MAUI Target Framework Moniker for Windows
+            tfm: 'net9.0-windows10.0.19041.0'
+            # Name of the Rust library artifact on Windows
+            rust_artifact_name: 'tokenizer_rust.dll'
+          # macOS-specific configuration
+          - os: macos-latest
+            # .NET MAUI Target Framework Moniker for Mac Catalyst
+            tfm: 'net9.0-maccatalyst'
+            # Name of the Rust library artifact on macOS
+            rust_artifact_name: 'libtokenizer_rust.dylib'
+          - os: macos-latest
+            tfm: 'net9.0-ios'
+            rust_artifact_name: 'libtokenizer_rust.dylib'
+          - os: ubuntu-latest
+            tfm: 'net9.0-android'
+            rust_artifact_name: 'libtokenizer_rust.so'
+
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # 1. Check-out the repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            TokenizerRust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Cache NuGet
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      # 2. Set up the Rust toolchain
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      # 3. Build the Rust library in release mode
+      # The output will be in TokenizerRust/target/release/
+      - name: Build Rust Tokenizer Library
+        run: cargo build --release --manifest-path TokenizerRust/Cargo.toml
+
+      # 4. Set up the .NET SDK, version 9 in this case
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      
+      # 5. Build the .NET MAUI application
+      # The -f flag specifies the target framework, which we defined in the matrix
+      # The .csproj is already configured to find the compiled Rust library from the previous step
+      - name: Build .NET MAUI Project
+        run: |
+          if [[ "${{ matrix.tfm }}" == "net9.0-ios" ]]; then
+            dotnet build --configuration Release --framework ${{ matrix.tfm }} /p:ArchiveOnBuild=true /p:EnableSigning=false
+          else
+            dotnet build --configuration Release --framework ${{ matrix.tfm }}
+          fi
+
+      - name: Run Tests
+        run: dotnet test --configuration Release
+
+      # (Optional) Future step: Upload build artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: llmclient-${{ matrix.os }}
+          path: LLMClient/bin/Release/${{ matrix.tfm }}/

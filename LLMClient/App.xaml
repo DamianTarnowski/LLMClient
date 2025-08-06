@@ -1,0 +1,23 @@
+﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:LLMClient"
+             xmlns:converters="clr-namespace:LLMClient.Converters"
+             x:Class="LLMClient.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <!-- Globalne konwertery dla całej aplikacji -->
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:CollectionEmptyConverter x:Key="CollectionEmptyConverter" />
+            <converters:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter" />
+            <converters:BoolToThemeIconConverter x:Key="BoolToThemeIconConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

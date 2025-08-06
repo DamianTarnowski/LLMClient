@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="LLMClient.Views.ModelConfigurationPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:LLMClient.Models"
+             xmlns:converters="clr-namespace:LLMClient.Converters"
+             Title="Konfiguracja Modeli AI"
+             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
+
+    <ContentPage.Resources>
+        <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+        <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+        <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+    </ContentPage.Resources>
+
+    <Grid Padding="10,20">
+        <!-- Visual State Manager dla responsywności -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup Name="AdaptiveStates">
+                
+                <!-- Desktop Layout (>1200px) -->
+                <VisualState Name="Desktop">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1200" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="MainGrid" Property="Grid.ColumnDefinitions" Value="2*,3*" />
+                        <Setter TargetName="ModelsPanel" Property="Grid.Column" Value="0" />
+                        <Setter TargetName="ModelsPanel" Property="Margin" Value="0,0,15,0" />
+                        <Setter TargetName="FormPanel" Property="Grid.Column" Value="1" />
+                        <Setter TargetName="FormPanel" Property="Margin" Value="15,0,0,0" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="False" />
+                        <Setter TargetName="MobileBackButton" Property="IsVisible" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Tablet Layout (700-1200px) -->
+                <VisualState Name="Tablet">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="700" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="MainGrid" Property="Grid.ColumnDefinitions" Value="1*,1.5*" />
+                        <Setter TargetName="ModelsPanel" Property="Grid.Column" Value="0" />
+                        <Setter TargetName="ModelsPanel" Property="Margin" Value="0,0,10,0" />
+                        <Setter TargetName="FormPanel" Property="Grid.Column" Value="1" />
+                        <Setter TargetName="FormPanel" Property="Margin" Value="10,0,0,0" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="False" />
+                        <Setter TargetName="MobileBackButton" Property="IsVisible" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Mobile Layout (<700px) -->
+                <VisualState Name="Mobile">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="MainGrid" Property="Grid.ColumnDefinitions" Value="*" />
+                        <Setter TargetName="ModelsPanel" Property="Grid.Column" Value="0" />
+                        <Setter TargetName="ModelsPanel" Property="Margin" Value="0" />
+                        <Setter TargetName="FormPanel" Property="Grid.Column" Value="0" />
+                        <Setter TargetName="FormPanel" Property="Margin" Value="0" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="True" />
+                        <Setter TargetName="MobileBackButton" Property="IsVisible" Value="True" />
+                    </VisualState.Setters>
+                </VisualState>
+                
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackLayout Grid.Row="0" Spacing="15" Margin="0,0,0,20">
+            <Label Text="Konfiguracja Modeli AI" 
+                   FontSize="24" 
+                   FontAttributes="Bold" 
+                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+
+            <BoxView HeightRequest="2" BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+
+            <StackLayout Orientation="Horizontal" Spacing="15">
+                <Label Text="Streaming:" 
+                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" 
+                       VerticalOptions="Center" 
+                       FontSize="16" />
+                <Switch IsToggled="{Binding StreamingEnabled}" 
+                        OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+            </StackLayout>
+
+            <StackLayout Orientation="Horizontal" Spacing="15">
+                <Label Text="Jasny theme:" 
+                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" 
+                       VerticalOptions="Center" 
+                       FontSize="16" />
+                <Switch IsToggled="{Binding IsLightTheme}" 
+                        OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+            </StackLayout>
+        </StackLayout>
+
+        <!-- Mobile Header (widoczny tylko na mobile gdy jest wybrany model) -->
+        <StackLayout x:Name="MobileHeader" 
+                     Grid.Row="1" 
+                     Orientation="Horizontal" 
+                     IsVisible="False"
+                     Margin="0,0,0,15">
+            
+            <Button x:Name="MobileBackButton"
+                    Text="← Lista"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                    CornerRadius="8"
+                    FontSize="14"
+                    Padding="15,8"
+                    IsVisible="False"
+                    Clicked="MobileBackButton_Clicked" />
+                    
+            <Label Text="{Binding SelectedModelForEdit.Name, StringFormat='Edytuj: {0}'}"
+                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   Margin="15,0,0,0" />
+        </StackLayout>
+
+        <!-- Main Content -->
+        <Grid x:Name="MainGrid" Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Panel z listą modeli -->
+            <Border x:Name="ModelsPanel"
+                    Grid.Column="0" 
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
+                    StrokeShape="RoundRectangle 10"
+                    Margin="0,0,15,0"
+                    Padding="15">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" 
+                           Text="Dostępne Modele" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="White" 
+                           Margin="0,0,0,15" />
+
+                    <!-- Komunikat gdy brak modeli -->
+                    <StackLayout Grid.Row="1" 
+                                 IsVisible="{Binding Models, Converter={StaticResource CollectionEmptyConverter}}"
+                                 VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="15">
+                        
+                        <Label Text="🤖" 
+                               FontSize="48"
+                               HorizontalOptions="Center"
+                               TextColor="#B9BBBE" />
+                        
+                        <Label Text="Brak modeli AI" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="White" />
+                        
+                        <Label Text="Dodaj pierwszy model aby rozpocząć konwersacje z AI!" 
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               TextColor="#B9BBBE"
+                               HorizontalTextAlignment="Center" />
+                    </StackLayout>
+
+                    <CollectionView Grid.Row="1" 
+                                    ItemsSource="{Binding Models}"
+                                    SelectedItem="{Binding SelectedModelForEdit}"
+                                    SelectionMode="Single"
+                                    IsVisible="{Binding Models, Converter={StaticResource CollectionNotEmptyConverter}}">
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="5" BackgroundColor="Transparent">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectModelCommand}" 
+                                                              CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+
+                                    <Border BackgroundColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}}"
+                                            StrokeShape="RoundRectangle 8"
+                                            Padding="15,12">
+
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <Label Grid.Row="0"
+                                                   Text="{Binding Name}"
+                                                   TextColor="White"
+                                                   FontAttributes="Bold"
+                                                   FontSize="15" />
+
+                                            <Label Grid.Row="1"
+                                                   Text="{Binding ProviderName}"
+                                                   TextColor="#B9BBBE"
+                                                   FontSize="13"
+                                                   Margin="0,2,0,0" />
+
+                                            <Label Grid.Row="2"
+                                                   Text="{Binding ModelId}"
+                                                   TextColor="#72767D"
+                                                   FontSize="11"
+                                                   Margin="0,2,0,0" />
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Button Grid.Row="2"
+                            Text="+ Nowy Model"
+                            BackgroundColor="#5865F2"
+                            TextColor="White"
+                            CornerRadius="8"
+                            FontSize="14"
+                            Padding="0,12"
+                            Margin="0,15,0,0"
+                            Command="{Binding AddNewModelCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Panel z formularzem edycji -->
+            <Border x:Name="FormPanel"
+                    Grid.Column="1" 
+                    BackgroundColor="#2F3136"
+                    StrokeShape="RoundRectangle 10"
+                    Margin="15,0,0,0"
+                    Padding="20">
+
+                <ScrollView>
+                    <StackLayout Spacing="20" IsVisible="{Binding SelectedModelForEdit, Converter={StaticResource IsNotNullConverter}}">
+
+                        <Label Text="Edytuj Model" 
+                               FontSize="18" 
+                               FontAttributes="Bold" 
+                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+
+                        <!-- Nazwa -->
+                        <StackLayout Spacing="8">
+                            <Label Text="Nazwa:" TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" FontSize="15" FontAttributes="Bold" />
+                            <Entry Text="{Binding SelectedModelForEdit.Name}"
+                                   BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                   PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                   Placeholder="np. GPT-4 Turbo"
+                                   FontSize="14"
+                                   HeightRequest="45" />
+                        </StackLayout>
+
+                        <!-- Dostawca -->
+                        <StackLayout Spacing="8">
+                            <Label Text="Dostawca:" TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" FontSize="15" FontAttributes="Bold" />
+                            <Picker ItemsSource="{Binding AvailableProviders}"
+                                    SelectedItem="{Binding SelectedModelForEdit.Provider}"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                    FontSize="14"
+                                    HeightRequest="45" />
+                        </StackLayout>
+
+                        <!-- Model ID -->
+                        <StackLayout Spacing="8">
+                            <Label Text="Model ID:" TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" FontSize="15" FontAttributes="Bold" />
+                            <Entry Text="{Binding SelectedModelForEdit.ModelId}"
+                                   BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                   PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                   Placeholder="np. gpt-4-turbo-preview"
+                                   FontSize="14"
+                                   HeightRequest="45" />
+                        </StackLayout>
+
+                        <!-- API Key -->
+                        <StackLayout Spacing="8">
+                            <Label Text="API Key:" TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" FontSize="15" FontAttributes="Bold" />
+                            <Entry Text="{Binding SelectedModelForEdit.ApiKey}"
+                                   IsPassword="True"
+                                   BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                   PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                   Placeholder="Wklej swój API key"
+                                   FontSize="14"
+                                   HeightRequest="45" />
+                        </StackLayout>
+
+                        <!-- Endpoint (dla OpenAI Compatible) -->
+                        <StackLayout Spacing="8" IsVisible="{Binding SelectedModelForEdit.RequiresEndpoint}">
+                            <Label Text="Endpoint URL:" TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" FontSize="15" FontAttributes="Bold" />
+                            <Entry Text="{Binding SelectedModelForEdit.Endpoint}"
+                                   BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                   PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                   Placeholder="https://api.example.com/v1"
+                                   FontSize="14"
+                                   HeightRequest="45" />
+                        </StackLayout>
+
+                        <!-- Opcje - Touch-friendly switches -->
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="15">
+                            
+                            <StackLayout Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                                <Label Text="Aktywny:" 
+                                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" 
+                                       FontSize="15"
+                                       VerticalOptions="Center" />
+                                <Switch IsToggled="{Binding SelectedModelForEdit.IsActive}" 
+                                        OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                        Scale="1.2" />
+                            </StackLayout>
+
+                            <StackLayout Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                                <Label Text="Streaming:" 
+                                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" 
+                                       FontSize="15"
+                                       VerticalOptions="Center" />
+                                <Switch IsToggled="{Binding SelectedModelForEdit.SupportsStreaming}" 
+                                        OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                        Scale="1.2" />
+                            </StackLayout>
+
+                            <StackLayout Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
+                                <Label Text="Obsługuje obrazki:" 
+                                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" 
+                                       FontSize="15"
+                                       VerticalOptions="Center" />
+                                <Switch IsToggled="{Binding SelectedModelForEdit.SupportsImages}" 
+                                        OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                        Scale="1.2" />
+                            </StackLayout>
+                        </Grid>
+
+                        <!-- Przyciski - Mobile-friendly -->
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" Margin="0,25,0,0">
+                            <Button Grid.Column="0"
+                                    Text="Zapisz"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark=#57F287}"
+                                    TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                    CornerRadius="8"
+                                    FontSize="14"
+                                    FontAttributes="Bold"
+                                    HeightRequest="50"
+                                    Command="{Binding SaveModelCommand}" />
+
+                            <Button Grid.Column="1"
+                                    Text="Test"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}"
+                                    CornerRadius="8"
+                                    FontSize="14"
+                                    FontAttributes="Bold"
+                                    HeightRequest="50"
+                                    Command="{Binding TestModelCommand}" />
+
+                            <Button Grid.Column="2"
+                                    Text="Usuń"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark=#ED4245}"
+                                    TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}"
+                                    CornerRadius="8"
+                                    FontSize="14"
+                                    FontAttributes="Bold"
+                                    HeightRequest="50"
+                                    Command="{Binding DeleteModelCommand}" />
+                        </Grid>
+
+                        <!-- Status -->
+                        <Label Text="{Binding StatusMessage}"
+                               TextColor="{Binding StatusColor}"
+                               FontSize="13"
+                               FontAttributes="Bold"
+                               IsVisible="{Binding StatusMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                               Margin="0,15,0,0"
+                               HorizontalTextAlignment="Center" />
+                    </StackLayout>
+                </ScrollView>
+            </Border>
+        </Grid>
+
+        <!-- Footer -->
+        <StackLayout Grid.Row="3" Orientation="Horizontal" Spacing="15" Margin="0,25,0,0">
+            <Button Text="Zamknij"
+                    BackgroundColor="#40444B"
+                    TextColor="White"
+                    CornerRadius="8"
+                    FontSize="14"
+                    Padding="20,12"
+                    Command="{Binding CloseCommand}"
+                    HorizontalOptions="End" />
+        </StackLayout>
+    </Grid>
+
+</ContentPage>

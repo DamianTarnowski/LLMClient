@@ -1,0 +1,898 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="LLMClient.MainPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:LLMClient.Converters"
+             xmlns:behaviors="clr-namespace:LLMClient.Behaviors"
+             xmlns:markdown="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+             Title="LLMClient">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Wyszukaj"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🔍, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding GoToSearchCommand}"
+                     Order="Primary"
+                     Priority="0" />
+        <ToolbarItem Text="Ustawienia"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=⚙, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding SettingsCommand}"
+                     Order="Primary"
+                     Priority="1" />
+    </ContentPage.ToolbarItems>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:ZeroToBoolConverter x:Key="ZeroToBoolConverter" />
+            <converters:ZeroToInverseBoolConverter x:Key="ZeroToInverseBoolConverter" />
+            <converters:TextTruncateConverter x:Key="TextTruncateConverter" />
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <converters:HighlightTextConverter x:Key="HighlightTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid x:Name="MainGrid">
+        
+        <!-- Visual State Manager dla responsywności -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup Name="WindowStates">
+                
+                <!-- Desktop Layout (>900px) -->
+                <VisualState Name="Desktop">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="ConversationsColumn" Property="ColumnDefinition.Width" Value="320" />
+                        <Setter TargetName="ConversationsPanel" Property="IsVisible" Value="True" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="False" />
+                        <Setter TargetName="DesktopChatHeader" Property="IsVisible" Value="True" />
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Tablet Layout (600-900px) -->
+                <VisualState Name="Tablet">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="600" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="ConversationsColumn" Property="ColumnDefinition.Width" Value="280" />
+                        <Setter TargetName="ConversationsPanel" Property="IsVisible" Value="True" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="False" />
+                        <Setter TargetName="DesktopChatHeader" Property="IsVisible" Value="True" />
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Mobile Layout (<600px) -->
+                <VisualState Name="Mobile">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="ConversationsColumn" Property="ColumnDefinition.Width" Value="0" />
+                        <Setter TargetName="ConversationsPanel" Property="IsVisible" Value="False" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="True" />
+                        <Setter TargetName="DesktopChatHeader" Property="IsVisible" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="ConversationsColumn" Width="300" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Panel konwersacji (lewa strona) -->
+        <Border x:Name="ConversationsPanel"
+                Grid.Column="0" 
+                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
+                StrokeShape="Rectangle"
+                Stroke="Transparent">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="60" />
+                </Grid.RowDefinitions>
+
+                <!-- Header konwersacji -->
+                <Border Grid.Row="0" 
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
+                        Padding="15,10">
+                    <Label Text="Konwersacje" 
+                           TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </Border>
+
+                <!-- Komunikat o braku konwersacji -->
+                <Label Grid.Row="1" 
+                       Text="Brak konwersacji. Utwórz nową, aby rozpocząć."
+                       TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       IsVisible="{Binding IsConversationsEmpty}" />
+
+                <!-- Lista konwersacji -->
+                <CollectionView Grid.Row="1" 
+                                x:Name="ConversationsCollectionView"
+                                ItemsSource="{Binding Conversations}"
+                                SelectedItem="{Binding SelectedConversation}"
+                                SelectionMode="Single"
+                                BackgroundColor="Transparent"
+                                IsVisible="{Binding IsConversationsEmpty, Converter={StaticResource InverseBoolConverter}}"
+                                ItemsLayout="VerticalList">
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItemView Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteConversationCommand}"
+                                                       CommandParameter="{Binding .}">
+                                            <Grid BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark=#ED4245}" WidthRequest="60">
+                                                <Label Text="🗑️" TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" FontSize="24"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                                            </Grid>
+                                        </SwipeItemView>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <SwipeView.Content>
+                                    <Grid Padding="15,10"
+                                          BackgroundColor="Transparent">
+                                        <FlyoutBase.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Text="Usuń konwersację"
+                                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteConversationCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                            </MenuFlyout>
+                                        </FlyoutBase.ContextFlyout>
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectConversationCommand}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Grid.GestureRecognizers>
+
+                                        <VisualStateManager.VisualStateGroups>
+                                            <VisualStateGroup Name="CommonStates">
+                                                <VisualState Name="Normal">
+                                                    <VisualState.Setters>
+                                                        <Setter Property="BackgroundColor" Value="Transparent" />
+                                                    </VisualState.Setters>
+                                                </VisualState>
+                                                <VisualState Name="Selected">
+                                                    <VisualState.Setters>
+                                                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}" />
+                                                    </VisualState.Setters>
+                                                </VisualState>
+                                            </VisualStateGroup>
+                                        </VisualStateManager.VisualStateGroups>
+
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <Label Grid.Row="0"
+                                               Text="{Binding Title}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               LineBreakMode="TailTruncation" />
+
+                                        <Label Grid.Row="1"
+                                               Text="{Binding LastMessage, Converter={StaticResource TextTruncateConverter}, ConverterParameter=80}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}"
+                                               FontSize="12"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="2"
+                                               Margin="0,2,0,0" />
+
+                                        <Label Grid.Row="2"
+                                               Text="{Binding LastMessageTime, StringFormat='{0:HH:mm}'}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                               FontSize="10"
+                                               HorizontalOptions="End"
+                                               Margin="0,2,0,0" />
+                                    </Grid>
+                                </SwipeView.Content>
+                            </SwipeView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Status szyfrowania -->
+                <Label Grid.Row="2"
+                       Text="{Binding EncryptionStatus}"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}"
+                       FontSize="10"
+                       HorizontalOptions="Center"
+                       Margin="15,2"
+                       LineBreakMode="TailTruncation" />
+
+                <!-- Identyfikator aplikacji -->
+                <Label Grid.Row="3"
+                       Text="{Binding ApplicationInfo}"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}"
+                       FontSize="10"
+                       HorizontalOptions="Center"
+                       Margin="15,2"
+                       LineBreakMode="TailTruncation" />
+
+                <!-- Przycisk nowej konwersacji -->
+                <Button Grid.Row="4"
+                        Text="+ Nowa konwersacja"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}"
+                        Margin="15,10"
+                        CornerRadius="8"
+                        Command="{Binding NewConversationCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Obszar czatu (prawa strona) -->
+        <Grid Grid.Column="1" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Mobile Header z hamburger menu -->
+            <Border x:Name="MobileHeader"
+                    Grid.Row="0" 
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
+                    Padding="15,10"
+                    IsVisible="False">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Main header row -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Hamburger button -->
+                        <Button Grid.Column="0"
+                                x:Name="HamburgerButton"
+                                Text="☰"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                FontSize="20"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                Clicked="HamburgerButton_Clicked" />
+
+                        <Label Grid.Column="1"
+                               Text="{Binding SelectedConversation.Title, FallbackValue='LLMClient'}"
+                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center"
+                               Margin="10,0,0,0"
+                               LineBreakMode="TailTruncation" />
+
+                        <!-- Export Button (mobile) -->
+                        <Button Grid.Column="2"
+                                Text="💾"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark=#43B581}"
+                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                CornerRadius="8"
+                                WidthRequest="30"
+                                HeightRequest="30"
+                                FontSize="12"
+                                Command="{Binding ExportConversationCommand}"
+                                IsVisible="{Binding SelectedConversation, Converter={StaticResource IsNotNullConverter}}"
+                                Margin="2,0" />
+
+                        <!-- Wybór modelu (mobile) -->
+                        <Picker Grid.Column="3"
+                                ItemsSource="{Binding AiConfiguration.Models}"
+                                SelectedItem="{Binding AiConfiguration.SelectedModel}"
+                                ItemDisplayBinding="{Binding Name}"
+                                BackgroundColor="#40444B"
+                                TextColor="White"
+                                WidthRequest="100"
+                                FontSize="11"
+                                Margin="2,0"
+                                IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionNotEmptyConverter}}" />
+
+                        <!-- Komunikat o braku modeli (mobile) -->
+                        <Label Grid.Column="3"
+                               Text="Brak modeli"
+                               BackgroundColor="#40444B"
+                               TextColor="#B9BBBE"
+                               FontSize="11"
+                               VerticalTextAlignment="Center"
+                               HorizontalTextAlignment="Center"
+                               WidthRequest="100"
+                               Margin="2,0"
+                               IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionEmptyConverter}}" />
+
+                        <!-- Przycisk motywu (mobile) -->
+                        <Button Grid.Column="4"
+                                Text="{Binding IsLightTheme, Converter={StaticResource BoolToThemeIconConverter}}"
+                                BackgroundColor="#43B581"
+                                TextColor="White"
+                                CornerRadius="8"
+                                WidthRequest="30"
+                                HeightRequest="30"
+                                FontSize="12"
+                                Command="{Binding ToggleThemeCommand}"
+                                Margin="2,0" />
+
+                        <!-- Przycisk konfiguracji (mobile) -->
+                        <Button Grid.Column="5"
+                                Text="⚙️"
+                                BackgroundColor="#5865F2"
+                                TextColor="White"
+                                CornerRadius="8"
+                                WidthRequest="30"
+                                HeightRequest="30"
+                                FontSize="12"
+                                Command="{Binding OpenModelConfigCommand}"
+                                Margin="2,0" />
+                    </Grid>
+
+                    <!-- Search row (mobile) -->
+                    <Grid Grid.Row="1" 
+                          Margin="0,8,0,0"
+                          BackgroundColor="#40444B">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search Entry (mobile) -->
+                        <Entry Grid.Column="0"
+                               x:Name="SearchEntryMobile"
+                               Placeholder="Wyszukaj..."
+                               Text="{Binding SearchTerm}"
+                               BackgroundColor="#40444B"
+                               TextColor="White"
+                               PlaceholderColor="#72767D"
+                               HeightRequest="30"
+                               FontSize="12"
+                               VerticalOptions="Center" />
+
+                        <!-- Search Navigation (mobile) -->
+                        <StackLayout Grid.Column="1" 
+                                     Orientation="Horizontal" 
+                                     Spacing="2" 
+                                     Margin="5,0"
+                                     IsVisible="{Binding HasSearchResults}">
+                            <Label Text="{Binding SearchResultText}"
+                                   TextColor="#B9BBBE"
+                                   FontSize="10"
+                                   VerticalOptions="Center" />
+                            <Button Text="↑"
+                                    BackgroundColor="#40444B"
+                                    TextColor="White"
+                                    FontSize="10"
+                                    WidthRequest="25"
+                                    HeightRequest="25"
+                                    CornerRadius="3"
+                                    Command="{Binding PreviousSearchResultCommand}" />
+                            <Button Text="↓"
+                                    BackgroundColor="#40444B"
+                                    TextColor="White"
+                                    FontSize="10"
+                                    WidthRequest="25"
+                                    HeightRequest="25"
+                                    CornerRadius="3"
+                                    Command="{Binding NextSearchResultCommand}" />
+                        </StackLayout>
+
+                        <!-- Clear Search Button (mobile) -->
+                        <Button Grid.Column="2"
+                                Text="✕"
+                                BackgroundColor="Transparent"
+                                TextColor="#72767D"
+                                CornerRadius="5"
+                                WidthRequest="25"
+                                HeightRequest="25"
+                                FontSize="12"
+                                Command="{Binding ClearSearchCommand}"
+                                IsVisible="{Binding HasSearchResults}"
+                                Margin="3,0,0,0" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Desktop Header -->
+            <Border x:Name="DesktopChatHeader"
+                    Grid.Row="0" 
+                    BackgroundColor="#202225"
+                    Padding="20,10"
+                    IsVisible="True">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Main header row -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0"
+                               Text="{Binding SelectedConversation.Title, FallbackValue='Wybierz konwersację'}"
+                               TextColor="White"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+
+                        <!-- Wybór modelu (desktop) -->
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding AiConfiguration.Models}"
+                                SelectedItem="{Binding AiConfiguration.SelectedModel}"
+                                ItemDisplayBinding="{Binding Name}"
+                                BackgroundColor="#40444B"
+                                TextColor="White"
+                                WidthRequest="200"
+                                Margin="10,0"
+                                IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionNotEmptyConverter}}" />
+
+                        <!-- Komunikat o braku modeli (desktop) -->
+                        <Label Grid.Column="1"
+                               Text="Brak modeli - dodaj w konfiguracji"
+                               BackgroundColor="#40444B"
+                               TextColor="#B9BBBE"
+                               FontSize="12"
+                               VerticalTextAlignment="Center"
+                               HorizontalTextAlignment="Center"
+                               WidthRequest="200"
+                               Margin="10,0"
+                               IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionEmptyConverter}}" />
+
+                        <!-- Przycisk motywu (desktop) -->
+                        <Button Grid.Column="2"
+                                Text="{Binding IsLightTheme, Converter={StaticResource BoolToThemeIconConverter}}"
+                                BackgroundColor="#43B581"
+                                TextColor="White"
+                                CornerRadius="8"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                Command="{Binding ToggleThemeCommand}"
+                                ToolTipProperties.Text="Przełącz motyw"
+                                Margin="5,0" />
+
+                        <!-- Przycisk konfiguracji (desktop) -->
+                        <Button Grid.Column="3"
+                                Text="⚙️"
+                                BackgroundColor="#5865F2"
+                                TextColor="White"
+                                CornerRadius="8"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                Command="{Binding OpenModelConfigCommand}"
+                                ToolTipProperties.Text="Konfiguracja modeli AI" />
+                    </Grid>
+
+                    <!-- Search and Export row -->
+                    <Grid Grid.Row="1" 
+                          Margin="0,10,0,0"
+                          BackgroundColor="#40444B">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search Entry -->
+                        <Entry Grid.Column="0"
+                               x:Name="SearchEntry"
+                               Placeholder="Wyszukaj w konwersacji..."
+                               Text="{Binding SearchTerm}"
+                               BackgroundColor="#40444B"
+                               TextColor="White"
+                               PlaceholderColor="#72767D"
+                               HeightRequest="35"
+                               VerticalOptions="Center" />
+
+                        <!-- Search Results Navigation -->
+                        <StackLayout Grid.Column="1" 
+                                     Orientation="Horizontal" 
+                                     Spacing="5" 
+                                     Margin="10,0"
+                                     IsVisible="{Binding HasSearchResults}">
+                            <Label Text="{Binding SearchResultText}"
+                                   TextColor="#B9BBBE"
+                                   FontSize="12"
+                                   VerticalOptions="Center" />
+                            <Button Text="↑"
+                                    BackgroundColor="#40444B"
+                                    TextColor="White"
+                                    FontSize="12"
+                                    WidthRequest="30"
+                                    HeightRequest="30"
+                                    CornerRadius="4"
+                                    Command="{Binding PreviousSearchResultCommand}" />
+                            <Button Text="↓"
+                                    BackgroundColor="#40444B"
+                                    TextColor="White"
+                                    FontSize="12"
+                                    WidthRequest="30"
+                                    HeightRequest="30"
+                                    CornerRadius="4"
+                                    Command="{Binding NextSearchResultCommand}" />
+                        </StackLayout>
+
+                        <!-- Export Button -->
+                        <Button Grid.Column="2"
+                                Text="💾"
+                                BackgroundColor="#43B581"
+                                TextColor="White"
+                                CornerRadius="8"
+                                Padding="15,10"
+                                FontSize="16"
+                                Command="{Binding ExportConversationCommand}"
+                                ToolTipProperties.Text="Eksportuj konwersację"
+                                IsVisible="{Binding SelectedConversation, Converter={StaticResource IsNotNullConverter}}" />
+
+                        <!-- Clear Search Button -->
+                        <Button Grid.Column="3"
+                                Text="✕"
+                                BackgroundColor="Transparent"
+                                TextColor="#72767D"
+                                CornerRadius="8"
+                                WidthRequest="30"
+                                HeightRequest="30"
+                                FontSize="14"
+                                Command="{Binding ClearSearchCommand}"
+                                IsVisible="{Binding HasSearchResults}"
+                                Margin="5,0,0,0" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Komunikat o braku wiadomości -->
+            <StackLayout Grid.Row="1" 
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         IsVisible="{Binding SelectedConversation.Messages.Count, Converter={StaticResource ZeroToBoolConverter}}"
+                         Spacing="20">
+                <Label Text="💬"
+                       FontSize="48"
+                       HorizontalOptions="Center" />
+                <Label Text="Brak wiadomości"
+                       TextColor="#72767D"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+                <Label Text="Napisz pierwszą wiadomość, aby rozpocząć konwersację."
+                       TextColor="#72767D"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center" />
+            </StackLayout>
+
+            <!-- Obszar wiadomości -->
+            <ScrollView Grid.Row="1" x:Name="MessagesScrollView"
+                        IsVisible="{Binding SelectedConversation.Messages.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
+                        Padding="10,0">
+                <CollectionView x:Name="MessagesCollectionView"
+                                ItemsSource="{Binding FilteredMessages}"
+                                BackgroundColor="Transparent"
+                                SelectionMode="None"
+                                ItemsLayout="VerticalList">
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItemView Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CopyMessageCommand}"
+                                                       CommandParameter="{Binding .}">
+                                            <Grid BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" WidthRequest="60">
+                                                <Label Text="📋" TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}" FontSize="20"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                                            </Grid>
+                                        </SwipeItemView>
+                                        <SwipeItemView Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMessageCommand}"
+                                                       CommandParameter="{Binding .}">
+                                            <Grid BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark=#ED4245}" WidthRequest="60">
+                                                <Label Text="🗑️" TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" FontSize="20"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                                            </Grid>
+                                        </SwipeItemView>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <SwipeView.Content>
+                                    <Grid Padding="15,8">
+                                        <FlyoutBase.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Text="Kopiuj wiadomość"
+                                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CopyMessageCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                                <MenuFlyoutItem Text="Usuń wiadomość"
+                                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMessageCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                            </MenuFlyout>
+                                        </FlyoutBase.ContextFlyout>
+
+                                        <!-- Wiadomość użytkownika -->
+                                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                                StrokeShape="RoundRectangle 15"
+                                                Padding="15,10"
+                                                Margin="50,5,15,5"
+                                                HorizontalOptions="End"
+                                                MaximumWidthRequest="300"
+                                                IsVisible="{Binding IsUser}">
+                                            <StackLayout Spacing="8">
+                                                <!-- Obrazek jeśli istnieje -->
+                                                <Image Source="{Binding ImagePath}"
+                                                       IsVisible="{Binding HasImage}"
+                                                       Aspect="AspectFill"
+                                                       HeightRequest="150"
+                                                       WidthRequest="200" />
+                                                       
+                                                <!-- Tekst wiadomości -->
+                                                <Label TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}"
+                                                       FontSize="14"
+                                                       IsVisible="{Binding Content, Converter={StaticResource IsNotNullOrEmptyConverter}}">
+                                                    <Label.FormattedText>
+                                                        <MultiBinding Converter="{StaticResource HighlightTextConverter}">
+                                                            <Binding Path="Content" />
+                                                            <Binding Path="BindingContext.SearchTerm" Source="{RelativeSource AncestorType={x:Type ContentPage}}" />
+                                                        </MultiBinding>
+                                                    </Label.FormattedText>
+                                                </Label>
+                                            </StackLayout>
+                                        </Border>
+
+                                        <!-- Wiadomość bota -->
+                                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                                StrokeShape="RoundRectangle 15"
+                                                Padding="15,10"
+                                                Margin="15,5,50,5"
+                                                HorizontalOptions="Start"
+                                                MaximumWidthRequest="300"
+                                                IsVisible="{Binding IsBot}">
+                                            <StackLayout Spacing="8">
+                                                <!-- Obrazek jeśli istnieje -->
+                                                <Image Source="{Binding ImagePath}"
+                                                       IsVisible="{Binding HasImage}"
+                                                       Aspect="AspectFill"
+                                                       HeightRequest="150"
+                                                       WidthRequest="200" />
+                                                       
+                                                <!-- Tekst wiadomości -->
+                                                <Label TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                                       FontSize="14"
+                                                       IsVisible="{Binding Content, Converter={StaticResource IsNotNullOrEmptyConverter}}">
+                                                    <Label.FormattedText>
+                                                        <MultiBinding Converter="{StaticResource HighlightTextConverter}">
+                                                            <Binding Path="Content" />
+                                                            <Binding Path="BindingContext.SearchTerm" Source="{RelativeSource AncestorType={x:Type ContentPage}}" />
+                                                        </MultiBinding>
+                                                    </Label.FormattedText>
+                                                </Label>
+                                            </StackLayout>
+                                        </Border>
+                                    </Grid>
+                                </SwipeView.Content>
+                            </SwipeView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </ScrollView>
+
+            <!-- Preview wybranego obrazka -->
+            <Border Grid.Row="2" 
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+                    Margin="15,5,15,0"
+                    StrokeShape="RoundRectangle 15"
+                    Padding="10"
+                    IsVisible="{Binding HasSelectedImage}">
+                
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    
+                    <Image Grid.Column="0"
+                           Source="{Binding SelectedImagePath}"
+                           WidthRequest="60"
+                           HeightRequest="60"
+                           Aspect="AspectFill" />
+                           
+                    <Label Grid.Column="1"
+                           Text="📷 Obrazek wybrany"
+                           TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                           FontSize="14"
+                           VerticalOptions="Center"
+                           Margin="10,0,0,0" />
+                           
+                    <Button Grid.Column="2"
+                            Text="✕"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                            FontSize="16"
+                            WidthRequest="30"
+                            HeightRequest="30"
+                            Command="{Binding ClearImageCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Pole wprowadzania -->
+            <Border Grid.Row="3" 
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                    Margin="15,5,15,10"
+                    StrokeShape="RoundRectangle 25"
+                    Padding="15,12">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Przycisk wyboru obrazka -->
+                    <Button Grid.Column="0"
+                            Text="📷"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
+                            TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                            CornerRadius="18"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            FontSize="16"
+                            Margin="0,0,10,0"
+                            Command="{Binding PickImageCommand}"
+                            IsVisible="{Binding SupportsImages}" />
+
+                    <Editor Grid.Column="1"
+                        x:Name="MessageEntry"
+                        Text="{Binding NewMessage}"
+                        Placeholder="Napisz wiadomość..."
+                        PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                        TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                        BackgroundColor="Transparent"
+                        FontSize="14"
+                        AutoSize="TextChanges"
+                        MaximumHeightRequest="120"
+                        Completed="MessageEntry_Completed" />
+
+                    <Button Grid.Column="2"
+                            Text="📤"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}"
+                            CornerRadius="18"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            FontSize="16"
+                            Margin="10,0,0,0"
+                            Command="{Binding SendMessageCommand}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Mobile Conversations Overlay -->
+        <Border x:Name="ConversationsOverlay"
+                Grid.ColumnSpan="2"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
+                IsVisible="False"
+                InputTransparent="False">
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="60" />
+                </Grid.RowDefinitions>
+
+                <!-- Header z przyciskiem zamknięcia -->
+                <Border Grid.Row="0" 
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
+                        Padding="15,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <Label Grid.Column="0"
+                               Text="Konwersacje" 
+                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                               
+                        <Button Grid.Column="1"
+                                Text="✕"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                FontSize="18"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                Clicked="CloseConversationsOverlay_Clicked" />
+                    </Grid>
+                </Border>
+
+                <!-- Lista konwersacji (mobile) -->
+                <CollectionView Grid.Row="1" 
+                                ItemsSource="{Binding Conversations}"
+                                SelectedItem="{Binding SelectedConversation}"
+                                SelectionMode="Single"
+                                BackgroundColor="Transparent"
+                                ItemsLayout="VerticalList">
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="15,12" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectConversationCommand}"
+                                                          CommandParameter="{Binding .}"
+                                                          Tapped="ConversationSelected_Tapped" />
+                                </Grid.GestureRecognizers>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0"
+                                       Text="{Binding Title}"
+                                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                       FontSize="16"
+                                       FontAttributes="Bold" />
+
+                                <Label Grid.Row="1"
+                                       Text="{Binding LastMessage, Converter={StaticResource TextTruncateConverter}, ConverterParameter=100}"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}"
+                                       FontSize="14"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2"
+                                       Margin="0,4,0,0" />
+
+                                <Label Grid.Row="2"
+                                       Text="{Binding LastMessageTime, StringFormat='{0:HH:mm}'}"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                       FontSize="12"
+                                       HorizontalOptions="End"
+                                       Margin="0,4,0,0" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Przycisk nowej konwersacji (mobile) -->
+                <Button Grid.Row="2"
+                        Text="+ Nowa konwersacja"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}"
+                        Margin="15,10"
+                        CornerRadius="8"
+                        Command="{Binding NewConversationCommand}"
+                        Clicked="NewConversation_Clicked" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,705 @@
+using SQLite;
+using LLMClient.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using SQLiteNetExtensionsAsync.Extensions;
+using System.Collections.ObjectModel;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace LLMClient.Services
+{
+    public class DatabaseService
+    {
+        private SQLiteAsyncConnection _database;
+        private readonly ISecureApiKeyService _secureApiKeyService;
+        private readonly IEmbeddingService? _embeddingService;
+        private bool _migrationCompleted = false;
+        private const string DB_ENCRYPTION_KEY_NAME = "llmclient_db_key";
+        private const string APPLICATION_ID_KEY_NAME = "llmclient_app_id";
+        private const string DB_CUSTOM_KEY_NAME = "llmclient_db_custom_key";
+        private const int PBKDF2_ITERATIONS = 10000;
+        private const int PBKDF2_KEY_SIZE = 32;
+
+        public DatabaseService(ISecureApiKeyService secureApiKeyService, IEmbeddingService? embeddingService = null)
+        {
+            _secureApiKeyService = secureApiKeyService;
+            _embeddingService = embeddingService;
+            System.Diagnostics.Debug.WriteLine("DatabaseService: Constructor completed - lazy initialization will be used");
+        }
+
+        private async Task EnsureDatabaseInitializedAsync()
+        {
+            if (_migrationCompleted) return;
+
+            try
+            {
+                var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "llmclient.db3");
+                System.Diagnostics.Debug.WriteLine($"DatabaseService: Initializing database at {dbPath}");
+                
+                // Pobierz lub wygeneruj klucz szyfrowania
+                var encryptionKey = await GetOrGenerateEncryptionKeyAsync();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Encryption key obtained");
+                
+                // Pobierz lub wygeneruj unikalny identyfikator aplikacji
+                var applicationId = await GetOrGenerateApplicationIdAsync();
+                System.Diagnostics.Debug.WriteLine($"DatabaseService: Application ID obtained: {applicationId?.Substring(0, Math.Min(8, applicationId?.Length ?? 0))}...");
+                
+                // Utwórz zaszyfrowane połączenie z bazą danych
+                var connectionString = new SQLiteConnectionString(dbPath, true, key: encryptionKey);
+                _database = new SQLiteAsyncConnection(connectionString);
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Database connection established");
+                
+                await _database.CreateTableAsync<AiModel>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: AiModel table created/verified");
+                
+                await _database.CreateTableAsync<LLMClient.Models.Conversation>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Conversation table created/verified");
+                
+                await _database.CreateTableAsync<LLMClient.Models.Message>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Message table created/verified");
+                
+                _migrationCompleted = true;
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Initialization completed successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DatabaseService: CRITICAL ERROR during initialization: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"DatabaseService: Stack trace: {ex.StackTrace}");
+                throw; 
+            }
+        }
+
+        /// <summary>
+        /// Pobiera istniejący klucz szyfrowania z SecureStorage lub generuje nowy jeśli nie istnieje
+        /// </summary>
+        private async Task<string> GetOrGenerateEncryptionKeyAsync()
+        {
+            try
+            {
+                // Sprawdź custom key najpierw
+                var customKey = await SecureStorage.GetAsync(DB_CUSTOM_KEY_NAME);
+                if (!string.IsNullOrEmpty(customKey))
+                    return customKey;
+
+                // Potem legacy auto-generated
+                var existingKey = await SecureStorage.GetAsync(DB_ENCRYPTION_KEY_NAME);
+                if (!string.IsNullOrEmpty(existingKey))
+                    return existingKey;
+
+                // Generate new auto-key
+                var newKey = GenerateEncryptionKey();
+                await SecureStorage.SetAsync(DB_ENCRYPTION_KEY_NAME, newKey);
+                return newKey;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Nie udało się pobrać/wygenerować klucza szyfrowania: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Generuje bezpieczny klucz szyfrowania
+        /// </summary>
+        private string GenerateEncryptionKey()
+        {
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                var keyBytes = new byte[32]; // 256-bit klucz
+                rng.GetBytes(keyBytes);
+                return Convert.ToBase64String(keyBytes);
+            }
+        }
+
+        /// <summary>
+        /// Pobiera istniejący identyfikator aplikacji z SecureStorage lub generuje nowy jeśli nie istnieje
+        /// </summary>
+        private async Task<string> GetOrGenerateApplicationIdAsync()
+        {
+            try
+            {
+                // Sprawdź czy Application ID już istnieje
+                var existingId = await SecureStorage.GetAsync(APPLICATION_ID_KEY_NAME);
+                
+                if (!string.IsNullOrEmpty(existingId))
+                {
+                    return existingId;
+                }
+
+                // Wygeneruj nowy unikalny identyfikator
+                var newId = GenerateApplicationId();
+                
+                // Zapisz w SecureStorage
+                await SecureStorage.SetAsync(APPLICATION_ID_KEY_NAME, newId);
+                
+                return newId;
+            }
+            catch (Exception ex)
+            {
+                // W przypadku błędu, wygeneruj tymczasowy ID
+                throw new InvalidOperationException($"Nie udało się pobrać/wygenerować Application ID: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Generuje unikalny identyfikator aplikacji
+        /// </summary>
+        private string GenerateApplicationId()
+        {
+            // Generuj GUID + timestamp dla dodatkowej unikalności
+            var guid = Guid.NewGuid();
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            return $"{guid:N}-{timestamp:X}";
+        }
+
+        /// <summary>
+        /// Sprawdza czy baza danych jest zaszyfrowana
+        /// </summary>
+        public async Task<bool> IsDatabaseEncryptedAsync()
+        {
+            try
+            {
+                // Próba wykonania prostego zapytania na zaszyfrowanej bazie
+                await _database.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM sqlite_master");
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Regeneruje klucz szyfrowania bazy danych (wymaga ponownego uruchomienia aplikacji)
+        /// </summary>
+        public async Task<bool> RegenerateEncryptionKeyAsync()
+        {
+            try
+            {
+                // Wygeneruj nowy klucz
+                var newKey = GenerateEncryptionKey();
+                
+                // Zapisz nowy klucz w SecureStorage
+                await SecureStorage.SetAsync(DB_ENCRYPTION_KEY_NAME, newKey);
+                
+                // Uwaga: Zmiana klucza wymaga ponownego uruchomienia aplikacji
+                // Alternatywnie można by użyć PRAGMA rekey, ale to jest bardziej skomplikowane
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                System.Diagnostics.Debug.WriteLine($"Błąd podczas regeneracji klucza: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Pobiera informacje o szyfrowaniu bazy danych
+        /// </summary>
+        public async Task<string> GetEncryptionInfoAsync()
+        {
+            try
+            {
+                var isEncrypted = await IsDatabaseEncryptedAsync();
+                var keyExists = !string.IsNullOrEmpty(await SecureStorage.GetAsync(DB_ENCRYPTION_KEY_NAME));
+                
+                if (isEncrypted && keyExists)
+                {
+                    return "Baza danych jest zaszyfrowana i bezpieczna 🔒";
+                }
+                else if (keyExists)
+                {
+                    return "Klucz szyfrowania istnieje, ale status niejasny ⚠️";
+                }
+                else
+                {
+                    return "Baza danych nie jest zaszyfrowana ❌";
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Błąd sprawdzania szyfrowania: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Pobiera unikalny identyfikator aplikacji
+        /// </summary>
+        public async Task<string> GetApplicationIdAsync()
+        {
+            try
+            {
+                var applicationId = await SecureStorage.GetAsync(APPLICATION_ID_KEY_NAME);
+                return applicationId ?? "ID nie został jeszcze wygenerowany";
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Nie udało się pobrać Application ID: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Pobiera informacje o identyfikatorze aplikacji
+        /// </summary>
+        public async Task<string> GetApplicationInfoAsync()
+        {
+            try
+            {
+                var applicationId = await SecureStorage.GetAsync(APPLICATION_ID_KEY_NAME);
+                
+                if (!string.IsNullOrEmpty(applicationId))
+                {
+                    // Pokaż tylko pierwsze 8 znaków dla bezpieczeństwa
+                    var shortId = applicationId.Length > 8 ? applicationId.Substring(0, 8) + "..." : applicationId;
+                    return $"ID: {shortId} ✅";
+                }
+                else
+                {
+                    return "ID aplikacji nie został wygenerowany ❌";
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Błąd pobierania ID: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Regeneruje identyfikator aplikacji (ostrożnie - zmieni to sposób identyfikacji użytkownika!)
+        /// </summary>
+        public async Task<bool> RegenerateApplicationIdAsync()
+        {
+            try
+            {
+                // Usuń stary ID
+                SecureStorage.Remove(APPLICATION_ID_KEY_NAME);
+                
+                // Wygeneruj nowy
+                var newId = GenerateApplicationId();
+                await SecureStorage.SetAsync(APPLICATION_ID_KEY_NAME, newId);
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Błąd podczas regeneracji Application ID: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> SetCustomPassphraseAsync(string passphrase)
+        {
+            if (string.IsNullOrWhiteSpace(passphrase) || passphrase.Length < 8)
+                return false; // Walidacja
+
+            try
+            {
+                // Generate salt
+                var salt = new byte[16];
+                RandomNumberGenerator.Fill(salt);
+
+                // Derive key z passphrase
+                using var pbkdf2 = new Rfc2898DeriveBytes(passphrase, salt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256);
+                var keyBytes = pbkdf2.GetBytes(PBKDF2_KEY_SIZE);
+                var customKey = Convert.ToBase64String(keyBytes) + ":" + Convert.ToBase64String(salt); // Store key:salt
+
+                await SecureStorage.SetAsync(DB_CUSTOM_KEY_NAME, customKey);
+                // Usuń stary auto-key jeśli istnieje
+                SecureStorage.Remove(DB_ENCRYPTION_KEY_NAME);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Metody dla AiModel
+        public async Task<List<AiModel>> GetModelsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            var models = await _database.GetAllWithChildrenAsync<AiModel>();
+            
+            // Migrate API keys from SQLite to SecureStorage (one-time operation)
+            if (!_migrationCompleted)
+            {
+                await MigrateApiKeysAsync(models);
+                _migrationCompleted = true;
+            }
+            
+            // Load API keys from SecureStorage for UI binding
+            foreach (var model in models)
+            {
+                model.ApiKey = await _secureApiKeyService.GetApiKeyAsync(model.Id) ?? string.Empty;
+            }
+            
+            return models;
+        }
+
+        public async Task SaveModelAsync(AiModel model)
+        {
+            await EnsureDatabaseInitializedAsync();
+            // Save API key to SecureStorage
+            if (!string.IsNullOrWhiteSpace(model.ApiKey))
+            {
+                await _secureApiKeyService.SetApiKeyAsync(model.Id, model.ApiKey);
+            }
+            
+            // Clear API key before saving to database
+            var originalApiKey = model.ApiKey;
+            model.ApiKey = string.Empty;
+            
+            try
+            {
+                await _database.InsertOrReplaceWithChildrenAsync(model);
+            }
+            finally
+            {
+                // Restore API key for UI binding
+                model.ApiKey = originalApiKey;
+            }
+        }
+
+        public async Task DeleteModelAsync(AiModel model)
+        {
+            await EnsureDatabaseInitializedAsync();
+            await _secureApiKeyService.DeleteApiKeyAsync(model.Id);
+            await _database.DeleteAsync(model);
+        }
+
+        private async Task MigrateApiKeysAsync(List<AiModel> models)
+        {
+            try
+            {
+                // Check if any model has API key stored in SQLite (old format)
+                var modelsWithApiKeys = models.Where(m => !string.IsNullOrWhiteSpace(m.ApiKey)).ToList();
+                
+                if (modelsWithApiKeys.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine($"Migrating {modelsWithApiKeys.Count} API keys to SecureStorage");
+                    
+                    foreach (var model in modelsWithApiKeys)
+                    {
+                        await _secureApiKeyService.SetApiKeyAsync(model.Id, model.ApiKey);
+                        
+                        // Clear API key from SQLite
+                        model.ApiKey = string.Empty;
+                        await _database.UpdateAsync(model);
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine("API key migration completed");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during API key migration: {ex.Message}");
+            }
+        }
+
+        // Metody dla Conversation - POPRAWIONE
+        public async Task<List<Conversation>> GetConversationsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            var conversations = await _database.Table<Conversation>().ToListAsync();
+
+            foreach (var conversation in conversations)
+            {
+                var messages = await _database.Table<Message>()
+                    .Where(m => m.ConversationId == conversation.Id)
+                    .OrderBy(m => m.Timestamp)
+                    .ThenBy(m => m.Id)
+                    .ToListAsync();
+
+                conversation.Messages = new ObservableCollection<Message>(messages);
+            }
+
+            return conversations;
+        }
+
+        public async Task<int> SaveConversationAsync(Conversation conversation)
+        {
+            await EnsureDatabaseInitializedAsync();
+            if (conversation.Id != 0)
+            {
+                await _database.UpdateAsync(conversation);
+                return conversation.Id;
+            }
+            else
+            {
+                await _database.InsertAsync(conversation);
+                return conversation.Id; // SQLite automatycznie ustawia ID
+            }
+        }
+
+        public async Task DeleteConversationAsync(int conversationId)
+        {
+            await EnsureDatabaseInitializedAsync();
+            // Usu� wszystkie wiadomo�ci z konwersacji
+            await _database.Table<Message>()
+                .Where(m => m.ConversationId == conversationId)
+                .DeleteAsync();
+
+            // Usu� konwersacj�
+            await _database.DeleteAsync<Conversation>(conversationId);
+        }
+
+        // Przeci��enie dla obiektu Conversation
+        public Task DeleteConversationAsync(Conversation conversation) => DeleteConversationAsync(conversation.Id);
+
+        // Metody dla Message - POPRAWIONE
+        public Task<List<Message>> GetMessagesAsync(int conversationId, int limit = 50, int offset = 0) =>
+            _database.Table<Message>()
+                .Where(m => m.ConversationId == conversationId)
+                .OrderBy(m => m.Timestamp)
+                .ThenBy(m => m.Id)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+        public async Task<int> SaveMessageAsync(Message message)
+        {
+            await EnsureDatabaseInitializedAsync();
+            if (message.Id != 0)
+            {
+                await _database.UpdateAsync(message);
+                return message.Id;
+            }
+            else
+            {
+                await _database.InsertAsync(message);
+                return message.Id; // SQLite automatycznie ustawia ID
+            }
+        }
+
+        public Task DeleteMessageAsync(Message message) => _database.DeleteAsync(message);
+
+        // Dodatkowa metoda do pobierania konkretnej konwersacji
+        public async Task<Conversation?> GetConversationAsync(int id)
+        {
+            await EnsureDatabaseInitializedAsync();
+            var conversation = await _database.FindAsync<Conversation>(id);
+
+            if (conversation != null)
+            {
+                var messages = await _database.Table<Message>()
+                    .Where(m => m.ConversationId == conversation.Id)
+                    .OrderBy(m => m.Timestamp)
+                    .ThenBy(m => m.Id)
+                    .ToListAsync();
+
+                conversation.Messages = new ObservableCollection<Message>(messages);
+            }
+
+            return conversation;
+        }
+
+        // ===== EMBEDDING METHODS =====
+        // TODO: Uncomment when IEmbeddingService interface is properly resolved
+
+        /// <summary>
+        /// Generuje i zapisuje embedding dla wiadomości
+        /// </summary>
+        public async Task<bool> GenerateAndSaveEmbeddingAsync(Message message)
+        {
+            if (_embeddingService == null || !_embeddingService.IsInitialized || string.IsNullOrWhiteSpace(message.Content))
+                return false;
+
+            try
+            {
+                var embedding = await _embeddingService.GenerateEmbeddingAsync(message.Content, false);
+                if (embedding == null) return false;
+
+                message.Embedding = _embeddingService.FloatArrayToBytes(embedding);
+                message.EmbeddingVersion = _embeddingService.ModelVersion;
+
+                await SaveMessageAsync(message);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Błąd generowania embeddingu: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Znajduje wiadomości bez embeddingów lub z przestarzałą wersją
+        /// </summary>
+        public async Task<List<Message>> GetMessagesNeedingEmbeddingsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            if (_embeddingService == null) return new List<Message>();
+            
+            var currentVersion = _embeddingService.ModelVersion;
+            
+            return await _database.Table<Message>()
+                .Where(m => m.Embedding == null || m.EmbeddingVersion != currentVersion)
+                .Where(m => !string.IsNullOrEmpty(m.Content))
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Wyszukiwanie semantyczne w konkretnej konwersacji
+        /// </summary>
+        public async Task<List<(Message message, float similarity)>> SemanticSearchInConversationAsync(
+            int conversationId, 
+            float[] queryEmbedding, 
+            float minSimilarity = 0.3f, 
+            int maxResults = 10)
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            if (_embeddingService == null) return new List<(Message, float)>();
+            
+            var messages = await _database.Table<Message>()
+                .Where(m => m.ConversationId == conversationId && m.Embedding != null)
+                .ToListAsync();
+
+            var results = new List<(Message message, float similarity)>();
+
+            foreach (var message in messages)
+            {
+                if (message.Embedding == null) continue;
+                
+                var messageEmbedding = _embeddingService.BytesToFloatArray(message.Embedding);
+                if (messageEmbedding == null || queryEmbedding == null || messageEmbedding.Length == 0 || queryEmbedding.Length == 0 || messageEmbedding.Length != queryEmbedding.Length)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] Ostrzeżenie: Nieprawidłowy embedding (messageId={message.Id}, queryEmbedding null={queryEmbedding==null}, messageEmbedding null={messageEmbedding==null}, messageEmbedding.Length={messageEmbedding?.Length}, queryEmbedding.Length={queryEmbedding?.Length})");
+                    continue;
+                }
+                var similarity = _embeddingService.CalculateSimilarity(queryEmbedding, messageEmbedding);
+                
+                if (similarity >= minSimilarity)
+                {
+                    results.Add((message, similarity));
+                }
+            }
+
+            return results
+                .OrderByDescending(r => r.similarity)
+                .Take(maxResults)
+                .ToList();
+        }
+
+        // Klasa pomocnicza do mapowania wyników SQL
+        public class MessageWithConversationTitle : Message
+        {
+            public string ConversationTitle { get; set; } = string.Empty;
+        }
+
+        /// <summary>
+        /// Wyszukiwanie semantyczne we wszystkich konwersacjach
+        /// </summary>
+        public async Task<List<(Message message, float similarity, string conversationTitle)>> SemanticSearchAcrossConversationsAsync(
+            float[] queryEmbedding, 
+            float minSimilarity = 0.3f, 
+            int maxResults = 20)
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            if (_embeddingService == null) return new List<(Message, float, string)>();
+            
+            var query = @"
+                SELECT m.Id, m.Content, m.IsUser, m.Timestamp, m.ConversationId, m.Embedding, m.EmbeddingVersion, m.ImagePath, m.ImageBase64, c.Title as ConversationTitle 
+                FROM Message m 
+                INNER JOIN Conversation c ON m.ConversationId = c.Id 
+                WHERE m.Embedding IS NOT NULL
+            ";
+            
+            var messagesWithConversations = await _database.QueryAsync<MessageWithConversationTitle>(query);
+            var results = new List<(Message message, float similarity, string conversationTitle)>();
+            int scanned = 0;
+            int invalid = 0;
+
+            foreach (var row in messagesWithConversations)
+            {
+                var message = (Message)row;
+                var conversationTitle = row.ConversationTitle ?? "Bez tytułu";
+                
+                if (message.Embedding == null) continue;
+                
+                var messageEmbedding = _embeddingService.BytesToFloatArray(message.Embedding);
+                if (messageEmbedding == null || queryEmbedding == null || messageEmbedding.Length == 0 || queryEmbedding.Length == 0 || messageEmbedding.Length != queryEmbedding.Length)
+                {
+                    invalid++;
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] Ostrzeżenie: Nieprawidłowy embedding (messageId={message.Id}, msgLen={messageEmbedding?.Length}, queryLen={queryEmbedding?.Length})");
+                    continue;
+                }
+                scanned++;
+                var similarity = _embeddingService.CalculateSimilarity(queryEmbedding, messageEmbedding);
+                
+                if (similarity >= minSimilarity)
+                {
+                    results.Add((message, similarity, conversationTitle));
+                }
+            }
+
+                if (results.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] SemanticSearch scanned={scanned}, invalidDim={invalid}, passedThreshold=0");
+                }
+                else
+                {
+                    var maxSim = results.Max(r => r.similarity);
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] SemanticSearch scanned={scanned}, invalidDim={invalid}, passedThreshold={results.Count}, maxSim={maxSim:F3}");
+                }
+
+            return results
+                .OrderByDescending(r => r.similarity)
+                .Take(maxResults)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Zlicza wiadomości z embeddingami
+        /// </summary>
+        public async Task<(int withEmbeddings, int total)> GetEmbeddingStatsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            var total = await _database.Table<Message>().CountAsync();
+            var withEmbeddings = await _database.Table<Message>()
+                .Where(m => m.Embedding != null)
+                .CountAsync();
+
+            return (withEmbeddings, total);
+        }
+
+        /// <summary>
+        /// Usuwa wszystkie embeddingi (przydatne przy zmianie modelu)
+        /// </summary>
+        public async Task<int> ClearAllEmbeddingsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            return await _database.ExecuteAsync(@"
+                UPDATE Message 
+                SET Embedding = NULL, EmbeddingVersion = NULL 
+                WHERE Embedding IS NOT NULL
+            ");
+        }
+
+        /// <summary>
+        /// Aktualizuje embeddingi do nowej wersji modelu
+        /// </summary>
+        public async Task<int> UpdateEmbeddingsToCurrentVersionAsync()
+        {
+            if (_embeddingService == null || !_embeddingService.IsInitialized) return 0;
+            
+            var messagesNeedingUpdate = await GetMessagesNeedingEmbeddingsAsync();
+            var updateCount = 0;
+            
+            foreach (var message in messagesNeedingUpdate)
+            {
+                if (await GenerateAndSaveEmbeddingAsync(message))
+                {
+                    updateCount++;
+                }
+            }
+            
+            return updateCount;
+        }
+    }
+}

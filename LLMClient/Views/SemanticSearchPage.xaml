@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="LLMClient.Views.SemanticSearchPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
+             xmlns:converters="clr-namespace:LLMClient.Converters"
+             Title="Semantic Search">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Wróć" IconImageSource="arrow_back" Order="Primary" Priority="0"
+                     Command="{Binding GoBackCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="20">
+        
+        <!-- Search Section -->
+        <Border Grid.Row="0" 
+                BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2D2D2D}"
+                Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                StrokeThickness="1"
+                Padding="15"
+                Margin="0,0,0,10">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8"/>
+            </Border.StrokeShape>
+            
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                
+                <!-- Search Input -->
+                <Entry Grid.Row="0" Grid.ColumnSpan="2"
+                       Text="{Binding SearchQuery}"
+                       Placeholder="Wpisz zapytanie semantyczne..."
+                       FontSize="16"
+                       Margin="0,0,0,10"/>
+                
+                <!-- Search Controls -->
+                <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+                    <Button Grid.Column="0"
+                            Text="🔍 Szukaj"
+                            Command="{Binding SearchCommand}"
+                            IsEnabled="{Binding CanSearch}"
+                            BackgroundColor="{AppThemeBinding Light=#007ACC, Dark=#0066B3}"
+                            TextColor="White"
+                            HorizontalOptions="Start"/>
+                    <Button Grid.Column="1"
+                            Text="Pobierz model"
+                            Command="{Binding DownloadModelCommand}"
+                            IsVisible="{Binding IsModelReady, Converter={StaticResource InverseBoolConverter}}"
+                            IsEnabled="{Binding IsDownloadingModel, Converter={StaticResource InverseBoolConverter}}"
+                            BackgroundColor="#FF9800"
+                            TextColor="White"
+                            HorizontalOptions="End"/>
+                    <ActivityIndicator Grid.Column="2"
+                                       IsRunning="{Binding IsDownloadingModel}"
+                                       IsVisible="{Binding IsDownloadingModel}"
+                                       Color="#007ACC"
+                                       VerticalOptions="Center"/>
+                </Grid>
+                
+                <!-- Settings -->
+                <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,*" Margin="0,0,0,10">
+                    <Label Grid.Column="0" Text="Min. podobieństwo:" VerticalOptions="Center"/>
+                    <Slider Grid.Column="1" 
+                            Value="{Binding MinSimilarity}"
+                            Minimum="0.1" 
+                            Maximum="0.9" 
+                            VerticalOptions="Center"
+                            Margin="10,0"/>
+                    
+                    <Label Grid.Column="2" Text="Max wyników:" VerticalOptions="Center" Margin="10,0,0,0"/>
+                    <Stepper Grid.Column="3" 
+                             Value="{Binding MaxResults}"
+                             Minimum="5" 
+                             Maximum="50" 
+                             Increment="5"
+                             VerticalOptions="Center"
+                             Margin="10,0,0,0"/>
+                </Grid>
+                
+                <!-- Status -->
+                <Label Grid.Row="3" Grid.ColumnSpan="2"
+                       Text="{Binding StatusMessage}"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#666666, Dark=#CCCCCC}"/>
+            </Grid>
+        </Border>
+        
+        <!-- Settings Display -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="0,0,0,10">
+            <Label Grid.Column="0" 
+                   Text="{Binding MinSimilarityPercentage, StringFormat='Próg podobieństwa: {0}'}"
+                   FontSize="12"
+                   TextColor="{AppThemeBinding Light=#666666, Dark=#CCCCCC}"/>
+            <Label Grid.Column="1" 
+                   Text="{Binding MaxResults, StringFormat='Limit wyników: {0}'}"
+                   FontSize="12"
+                   TextColor="{AppThemeBinding Light=#666666, Dark=#CCCCCC}"/>
+        </Grid>
+
+        <!-- Embedding Pipeline Section -->
+        <Border Grid.Row="2"
+                BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2A2A2A}"
+                Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                StrokeThickness="1"
+                Margin="0,0,0,10"
+                Padding="15">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8"/>
+            </Border.StrokeShape>
+            
+            <StackLayout Spacing="10">
+                <!-- Stats Section -->
+                <StackLayout Orientation="Horizontal" Spacing="8">
+                    <Label Text="📊" FontSize="16" VerticalOptions="Center"/>
+                    <Label Text="{Binding EmbeddingStatsText}" 
+                           FontSize="14" 
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}"
+                           VerticalOptions="Center" 
+                           HorizontalOptions="FillAndExpand"/>
+                    <Button Text="🔄" 
+                            Command="{Binding CheckEmbeddingStatsCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#007ACC, Dark=#4FC3F7}"
+                            FontSize="16"
+                            Padding="8"
+                            CornerRadius="4"/>
+                </StackLayout>
+
+                <!-- Progress Label -->
+                <Label Text="{Binding EmbeddingProgress}" 
+                       FontSize="12" 
+                       TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                       IsVisible="{Binding IsGeneratingEmbeddings}"
+                       HorizontalTextAlignment="Center"/>
+            </StackLayout>
+        </Border>
+        
+        <!-- Global spinner overlay -->
+        <ActivityIndicator Grid.Row="0" Grid.RowSpan="4"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Color="#007ACC"
+                           WidthRequest="60"
+                           HeightRequest="60"
+                           ZIndex="999"/>
+
+        <!-- Results Section -->
+        <Border Grid.Row="3"
+                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}"
+                Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8"/>
+            </Border.StrokeShape>
+            
+            <Grid RowDefinitions="Auto,*">
+                <!-- Results Header -->
+                <Label Grid.Row="0"
+                       Text="Wyniki wyszukiwania"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       Padding="15,10,15,5"
+                       TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"/>
+                
+                <!-- Results List -->
+                <CollectionView Grid.Row="1" 
+                                ItemsSource="{Binding SearchResults}"
+                                BackgroundColor="Transparent">
+                    
+                    <CollectionView.EmptyView>
+                        <StackLayout VerticalOptions="Center" Padding="20">
+                            <Label Text="🔍"
+                                   FontSize="48"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#CCCCCC, Dark=#555555}"/>
+                            <Label Text="Brak wyników wyszukiwania"
+                                   FontSize="16"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#CCCCCC}"
+                                   Margin="0,10,0,0"/>
+                            <Label Text="Spróbuj zmienić zapytanie lub zmniejszyć próg podobieństwa"
+                                   FontSize="14"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#999999, Dark=#888888}"
+                                   Margin="0,5,0,0"/>
+                        </StackLayout>
+                    </CollectionView.EmptyView>
+                    
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border BackgroundColor="{AppThemeBinding Light=#FAFAFA, Dark=#252525}"
+                                    Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                                    StrokeThickness="1"
+                                    Padding="15"
+                                    Margin="10,5">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6"/>
+                                </Border.StrokeShape>
+                                
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:SemanticSearchViewModel}}, Path=NavigateToMessageCommand}"
+                                                          CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                                    
+                                    <!-- Header with similarity and conversation -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                                        <Label Grid.Column="0"
+                                               Text="{Binding ConversationTitle}"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light=#007ACC, Dark=#4FC3F7}"
+                                               LineBreakMode="TailTruncation"/>
+                                        
+                                        <Border Grid.Column="1"
+                                                BackgroundColor="{AppThemeBinding Light=#E3F2FD, Dark=#1565C0}"
+                                                Stroke="{AppThemeBinding Light=#2196F3, Dark=#42A5F5}"
+                                                StrokeThickness="1"
+                                                Padding="6,2">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="10"/>
+                                            </Border.StrokeShape>
+                                            <Label Text="{Binding SimilarityPercentage}"
+                                                   FontSize="12"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#1976D2, Dark=#FFFFFF}"/>
+                                        </Border>
+                                    </Grid>
+                                    
+                                    <!-- Message content -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Message.Content}"
+                                           FontSize="14"
+                                           LineBreakMode="WordWrap"
+                                           MaxLines="3"
+                                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                           Margin="0,0,0,8"/>
+                                    
+                                    <!-- Message metadata -->
+                                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
+                                        <Label Grid.Column="0"
+                                               Text="{Binding Message.IsUser, Converter={StaticResource BoolToColorConverter}}"
+                                               FontSize="12"
+                                               TextColor="{AppThemeBinding Light=#666666, Dark=#CCCCCC}"/>
+                                        
+                                        <Label Grid.Column="2"
+                                               Text="{Binding MessageTimestamp, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+                                               FontSize="12"
+                                               TextColor="{AppThemeBinding Light=#666666, Dark=#CCCCCC}"/>
+                                    </Grid>
+                                    
+                                    <!-- Hover effect indicator -->
+                                    <BoxView Grid.Row="3"
+                                             Color="{AppThemeBinding Light=#007ACC, Dark=#4FC3F7}"
+                                             HeightRequest="2"
+                                             Opacity="0.7"
+                                             Margin="0,8,0,0"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage> 

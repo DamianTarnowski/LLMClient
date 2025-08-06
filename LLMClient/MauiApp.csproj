@@ -1,0 +1,5 @@
+  <ItemGroup>
+    <None Update="..\TokenizerRust\target\release\tokenizer_rust.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup> 

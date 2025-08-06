@@ -1,0 +1,13 @@
+[package]
+name = "tokenizer_rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "tokenizer_rust"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+tokenizers = "0.15.2"
+serde_json = "1.0"
+once_cell = "1.19" 
