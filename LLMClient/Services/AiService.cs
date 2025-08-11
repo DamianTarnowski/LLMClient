@@ -22,6 +22,12 @@ namespace LLMClient.Services
         private Kernel? _kernel;
         private IChatCompletionService? _chatService;
         private AiModel? _currentModel;
+        private readonly IMemoryContextService? _memoryContextService;
+
+        public AiService(IMemoryContextService? memoryContextService = null)
+        {
+            _memoryContextService = memoryContextService;
+        }
 
         public bool IsConfigured => _kernel != null && _chatService != null && _currentModel != null;
 
@@ -56,6 +62,7 @@ namespace LLMClient.Services
                 }
 
                 _kernel = builder.Build();
+                
                 _chatService = _kernel.GetRequiredService<IChatCompletionService>();
             }
             catch (Exception ex)
@@ -74,7 +81,7 @@ namespace LLMClient.Services
             if (!IsConfigured)
                 throw new InvalidOperationException("AI Service nie jest skonfigurowany");
 
-            var chatHistory = CreateChatHistory(conversationHistory);
+            var chatHistory = await CreateChatHistoryAsync(conversationHistory);
             
             // Dodaj wiadomość użytkownika z potencjalnym obrazkiem
             if (!string.IsNullOrEmpty(imageBase64))
@@ -99,6 +106,7 @@ namespace LLMClient.Services
             var result = await _chatService!.GetChatMessageContentAsync(
                 chatHistory,
                 executionSettings: GetExecutionSettings(),
+                kernel: _kernel,
                 cancellationToken: cancellationToken);
 
             return result.Content ?? "Brak odpowiedzi";
@@ -124,7 +132,7 @@ namespace LLMClient.Services
             if (!IsConfigured)
                 throw new InvalidOperationException("AI Service nie jest skonfigurowany");
 
-            var chatHistory = CreateChatHistory(conversationHistory);
+            var chatHistory = await CreateChatHistoryAsync(conversationHistory);
             
             // Dodaj wiadomość użytkownika z potencjalnym obrazkiem
             if (!string.IsNullOrEmpty(imageBase64))
@@ -149,6 +157,7 @@ namespace LLMClient.Services
             var response = _chatService!.GetStreamingChatMessageContentsAsync(
                 chatHistory,
                 executionSettings: GetExecutionSettings(),
+                kernel: _kernel,
                 cancellationToken: cancellationToken);
 
             await foreach (var content in response.WithCancellation(cancellationToken))
@@ -160,12 +169,36 @@ namespace LLMClient.Services
             }
         }
 
-        private ChatHistory CreateChatHistory(List<Message> conversationHistory)
+        private async Task<ChatHistory> CreateChatHistoryAsync(List<Message> conversationHistory)
         {
             var chatHistory = new ChatHistory();
 
-            // Dodaj system message
-            chatHistory.AddSystemMessage("Jesteś pomocnym asystentem AI. Odpowiadaj w języku polskim, chyba że użytkownik poprosi o inny język. Jeśli otrzymasz obrazek, opisz go szczegółowo.");
+            // Podstawowy system message
+            var systemMessage = "Jesteś pomocnym asystentem AI. Odpowiadaj w języku polskim, chyba że użytkownik poprosi o inny język. Jeśli otrzymasz obrazek, opisz go szczegółowo.";
+            
+            // Dodaj kontekst pamięci jeśli dostępny
+            if (_memoryContextService != null)
+            {
+                System.Diagnostics.Debug.WriteLine("[AiService] Loading memory context");
+                var memoryContext = await _memoryContextService.GenerateMemoryContextAsync();
+                
+                if (!string.IsNullOrWhiteSpace(memoryContext))
+                {
+                    systemMessage += "\n\n" + memoryContext;
+                    systemMessage += "\n\nUżywaj tej pamięci do personalizacji odpowiedzi. Kiedy użytkownik poda nowe informacje o sobie, zapamiętaj je (ale nie pokazuj procesu zapamiętywania - po prostu używaj informacji w przyszłych rozmowach).";
+                    System.Diagnostics.Debug.WriteLine($"[AiService] Memory context added to system message ({memoryContext.Length} chars)");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[AiService] No memory context available");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[AiService] No memory context service available");
+            }
+            
+            chatHistory.AddSystemMessage(systemMessage);
 
             // Dodaj historię konwersacji
             foreach (var msg in conversationHistory.Take(20)) // Ogranicz do ostatnich 20 wiadomości
@@ -204,7 +237,7 @@ namespace LLMClient.Services
 
         private PromptExecutionSettings GetExecutionSettings()
         {
-            return _currentModel?.Provider switch
+            var settings = _currentModel?.Provider switch
             {
                 AiProvider.OpenAI or AiProvider.OpenAICompatible => new OpenAIPromptExecutionSettings
                 {
@@ -229,6 +262,9 @@ namespace LLMClient.Services
                     }
                 }
             };
+            
+            System.Diagnostics.Debug.WriteLine($"[AiService] Execution settings configured for {_currentModel?.Provider}");
+            return settings;
         }
     }
 }

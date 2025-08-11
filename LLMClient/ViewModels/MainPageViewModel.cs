@@ -32,6 +32,7 @@ namespace LLMClient.ViewModels
         private int _messagesOffset = 0;
         private const int PAGE_SIZE = 50;
         private readonly IEmbeddingService _embeddingService;
+        private readonly IMemoryExtractionService? _memoryExtractionService;
         private double _downloadProgressValue;
 
         public ObservableCollection<Conversation> Conversations
@@ -213,12 +214,13 @@ namespace LLMClient.ViewModels
         public ICommand ToggleThemeCommand { get; }
         public ICommand SettingsCommand { get; }
         public ICommand GoToSearchCommand { get; }
+        public ICommand GoToMemoryCommand { get; }
         public ICommand SetPassphraseCommand { get; }
         public ICommand LoadMoreMessagesCommand { get; }
 
         public bool IsConversationsEmpty => Conversations.Count == 0;
 
-        public MainPageViewModel(IAiService aiService, DatabaseService databaseService, IStreamingBatchService streamingBatchService, IErrorHandlingService errorHandlingService, ISearchService searchService, IExportService exportService, IEmbeddingService embeddingService)
+        public MainPageViewModel(IAiService aiService, DatabaseService databaseService, IStreamingBatchService streamingBatchService, IErrorHandlingService errorHandlingService, ISearchService searchService, IExportService exportService, IEmbeddingService embeddingService, IMemoryExtractionService? memoryExtractionService = null)
         {
             _aiService = aiService;
             _databaseService = databaseService;
@@ -227,6 +229,7 @@ namespace LLMClient.ViewModels
             _searchService = searchService;
             _exportService = exportService;
             _embeddingService = embeddingService;
+            _memoryExtractionService = memoryExtractionService;
 
             // Initialize AiConfiguration and subscribe to its PropertyChanged event
             _aiConfiguration = new AiConfiguration();
@@ -248,6 +251,7 @@ namespace LLMClient.ViewModels
             ToggleThemeCommand = new Command(() => IsLightTheme = !IsLightTheme);
             SettingsCommand = new Command(async () => await GoToSettingsAsync());
             GoToSearchCommand = new Command(async () => await GoToSearchAsync());
+            GoToMemoryCommand = new Command(async () => await GoToMemoryAsync());
             SetPassphraseCommand = new Command(async () => await SetDatabasePassphraseAsync());
             LoadMoreMessagesCommand = new Command(async () => await LoadMoreMessagesAsync());
 
@@ -633,6 +637,13 @@ namespace LLMClient.ViewModels
                 if (SelectedConversation.Messages.Count == 2)
                 {
                     _ = Task.Run(() => GenerateConversationTitleAsync(userMessage.Content));
+                }
+
+                // Automatically extract memory from recent messages
+                if (_memoryExtractionService != null)
+                {
+                    _ = Task.Run(() => _memoryExtractionService.ExtractAndSaveMemoryFromConversationAsync(
+                        SelectedConversation.Messages.TakeLast(10).ToList()));
                 }
             }
             catch (Exception ex)
@@ -1046,6 +1057,11 @@ namespace LLMClient.ViewModels
         private async Task GoToSearchAsync()
         {
             await Shell.Current.GoToAsync("///SemanticSearchPage");
+        }
+
+        private async Task GoToMemoryAsync()
+        {
+            await Shell.Current.GoToAsync("///MemoryPage");
         }
 
         private async Task SetDatabasePassphraseAsync()

@@ -6,7 +6,8 @@
       "Bash(where:*)",
       "Bash(echo $ANDROID_HOME)",
       "Bash(echo $ANDROID_NDK_ROOT)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test)"
     ],
     "deny": []
   }

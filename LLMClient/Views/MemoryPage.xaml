@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="LLMClient.Views.MemoryPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:LLMClient.ViewModels"
+             xmlns:converters="clr-namespace:LLMClient.Converters"
+             Title="Pamięć AI">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <converters:CategoryToColorConverter x:Key="CategoryToColorConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Powrót"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🏠, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding BackToMainCommand}"
+                     Order="Primary"
+                     Priority="0" />
+        <ToolbarItem Text="Dodaj"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=➕, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding AddMemoryCommand}"
+                     Order="Primary"
+                     Priority="1" />
+        <ToolbarItem Text="Odśwież"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🔄, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding RefreshCommand}"
+                     Order="Primary"
+                     Priority="2" />
+        <ToolbarItem Text="Debug"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🐞, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding DebugTestCommand}"
+                     Order="Secondary"
+                     Priority="3" />
+    </ContentPage.ToolbarItems>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header z wyszukiwaniem -->
+        <Border Grid.Row="0" 
+                BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
+                Padding="15,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Label Grid.Row="0"
+                       Text="Pamięć AI 🧠" 
+                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+
+                <Entry Grid.Row="1"
+                       x:Name="SearchEntry"
+                       Placeholder="Wyszukaj w pamięci..."
+                       Text="{Binding SearchTerm}"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray600}}"
+                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                       PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                       Margin="0,10,0,0" />
+            </Grid>
+        </Border>
+
+        <!-- Filter Chips -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" Padding="15,5">
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <Button Text="Wszystkie"
+                        BackgroundColor="{Binding SelectedCategory, Converter={StaticResource CategoryToColorConverter}, ConverterParameter=''}"
+                        TextColor="White"
+                        FontSize="12"
+                        Padding="15,5"
+                        CornerRadius="15"
+                        Command="{Binding FilterByCategoryCommand}"
+                        CommandParameter="" />
+                        
+                <CollectionView ItemsSource="{Binding Categories}" 
+                                ItemsLayout="LinearItemsLayout"
+                                BackgroundColor="Transparent">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Button Text="{Binding .}"
+                                    BackgroundColor="{Binding ., Converter={StaticResource CategoryToColorConverter}}"
+                                    TextColor="White"
+                                    FontSize="12"
+                                    Padding="15,5"
+                                    CornerRadius="15"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.FilterByCategoryCommand}"
+                                    CommandParameter="{Binding .}" />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </StackLayout>
+        </ScrollView>
+
+        <!-- Komunikat o braku pamięci -->
+        <StackLayout Grid.Row="2" 
+                     HorizontalOptions="Center"
+                     VerticalOptions="Center"
+                     IsVisible="{Binding IsEmpty}"
+                     Spacing="20">
+            <Label Text="🧠"
+                   FontSize="48"
+                   HorizontalOptions="Center" />
+            <Label Text="Brak wspomnień"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            <Label Text="Dodaj pierwszą informację do pamięci."
+                   TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+            <Button Text="➕ Dodaj wspomnienie"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}"
+                    CornerRadius="8"
+                    Command="{Binding AddMemoryCommand}" />
+        </StackLayout>
+
+        <!-- Lista wspomnień -->
+        <CollectionView Grid.Row="2" 
+                        x:Name="MemoriesCollectionView"
+                        ItemsSource="{Binding FilteredMemories}"
+                        IsVisible="{Binding IsEmpty, Converter={StaticResource InverseBoolConverter}}"
+                        BackgroundColor="Transparent"
+                        SelectionMode="None"
+                        Margin="15,0">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItemView Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditMemoryCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Grid BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark=#43B581}" WidthRequest="60">
+                                        <Label Text="✏️" TextColor="White" FontSize="20"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Grid>
+                                </SwipeItemView>
+                                <SwipeItemView Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMemoryCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Grid BackgroundColor="#ED4245" WidthRequest="60">
+                                        <Label Text="🗑️" TextColor="White" FontSize="20"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Grid>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <SwipeView.Content>
+                            <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray600}}"
+                                    StrokeShape="RoundRectangle 10"
+                                    Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
+                                    Padding="15"
+                                    Margin="0,5">
+                                <FlyoutBase.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Edytuj"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditMemoryCommand}"
+                                                        CommandParameter="{Binding .}" />
+                                        <MenuFlyoutItem Text="Usuń"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMemoryCommand}"
+                                                        CommandParameter="{Binding .}" />
+                                    </MenuFlyout>
+                                </FlyoutBase.ContextFlyout>
+
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Klucz i ikona ważności -->
+                                    <StackLayout Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                                        <Label Text="🔑"
+                                               FontSize="16"
+                                               VerticalOptions="Center" />
+                                        <Label Text="{Binding Key}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               VerticalOptions="Center"
+                                               HorizontalOptions="FillAndExpand" />
+                                        <Label Text="⭐"
+                                               FontSize="14"
+                                               IsVisible="{Binding IsImportant}"
+                                               VerticalOptions="Center" />
+                                    </StackLayout>
+
+                                    <!-- Wartość -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Value}"
+                                           TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                                           FontSize="14"
+                                           Margin="26,5,0,0"
+                                           LineBreakMode="WordWrap" />
+
+                                    <!-- Kategoria -->
+                                    <StackLayout Grid.Row="2" 
+                                                 Orientation="Horizontal" 
+                                                 Spacing="5"
+                                                 Margin="26,5,0,0"
+                                                 IsVisible="{Binding Category, Converter={StaticResource IsNotNullOrEmptyConverter}}">
+                                        <Label Text="📂"
+                                               FontSize="12"
+                                               VerticalOptions="Center" />
+                                        <Border BackgroundColor="{Binding Category, Converter={StaticResource CategoryToColorConverter}}"
+                                                Padding="8,2"
+                                                StrokeShape="RoundRectangle 10">
+                                            <Label Text="{Binding Category}"
+                                                   TextColor="White"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+                                    </StackLayout>
+
+                                    <!-- Tagi -->
+                                    <StackLayout Grid.Row="3" 
+                                                 Orientation="Horizontal" 
+                                                 Spacing="5"
+                                                 Margin="26,5,0,0"
+                                                 IsVisible="{Binding Tags, Converter={StaticResource IsNotNullOrEmptyConverter}}">
+                                        <Label Text="🏷️"
+                                               FontSize="12"
+                                               VerticalOptions="Center" />
+                                        <Label Text="{Binding Tags}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                                               FontSize="11"
+                                               VerticalOptions="Center" />
+                                    </StackLayout>
+
+                                    <!-- Data aktualizacji -->
+                                    <StackLayout Grid.Row="4" 
+                                                 Orientation="Horizontal" 
+                                                 Spacing="5"
+                                                 Margin="26,5,0,0">
+                                        <Label Text="📅"
+                                               FontSize="12"
+                                               VerticalOptions="Center" />
+                                        <Label Text="{Binding UpdatedAt, StringFormat='{0:yyyy-MM-dd HH:mm}'}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                                               FontSize="11"
+                                               VerticalOptions="Center" />
+                                    </StackLayout>
+                                </Grid>
+                            </Border>
+                        </SwipeView.Content>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

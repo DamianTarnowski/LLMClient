@@ -279,4 +279,40 @@ namespace LLMClient.Converters
             throw new NotImplementedException();
         }
     }
+
+    public class CategoryToColorConverter : IValueConverter
+    {
+        private static readonly Dictionary<string, string> CategoryColors = new()
+        {
+            { "", "#6B7280" },
+            { "osobiste", "#EF4444" },
+            { "preferencje", "#F59E0B" },
+            { "cele", "#10B981" },
+            { "techniczne", "#3B82F6" },
+            { "praca", "#8B5CF6" },
+            { "hobby", "#EC4899" },
+            { "zdrowie", "#06B6D4" },
+            { "rodzina", "#84CC16" },
+            { "finanse", "#F97316" }
+        };
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var category = value?.ToString() ?? string.Empty;
+            var parameterCategory = parameter?.ToString() ?? category;
+            
+            if (CategoryColors.TryGetValue(parameterCategory.ToLower(), out var color))
+                return color;
+                
+            // Generuj kolor na podstawie hash kodu kategorii
+            var hash = parameterCategory.GetHashCode();
+            var colors = new[] { "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16", "#F97316" };
+            return colors[Math.Abs(hash) % colors.Length];
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

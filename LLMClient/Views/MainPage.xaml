@@ -8,16 +8,21 @@
              Title="LLMClient">
 
     <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Pamięć"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🧠, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding GoToMemoryCommand}"
+                     Order="Primary"
+                     Priority="0" />
         <ToolbarItem Text="Wyszukaj"
                      IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🔍, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Command="{Binding GoToSearchCommand}"
                      Order="Primary"
-                     Priority="0" />
+                     Priority="1" />
         <ToolbarItem Text="Ustawienia"
                      IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=⚙, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Command="{Binding SettingsCommand}"
                      Order="Primary"
-                     Priority="1" />
+                     Priority="2" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>
@@ -28,6 +33,7 @@
             <converters:TextTruncateConverter x:Key="TextTruncateConverter" />
             <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
             <converters:HighlightTextConverter x:Key="HighlightTextConverter" />
+            <converters:CategoryToColorConverter x:Key="CategoryToColorConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 

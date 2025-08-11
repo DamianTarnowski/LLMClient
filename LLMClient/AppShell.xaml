@@ -17,4 +17,9 @@
         ContentTemplate="{DataTemplate views:SemanticSearchPage}"
         Route="SemanticSearchPage" />
 
+    <ShellContent
+        Title="Memory"
+        ContentTemplate="{DataTemplate views:MemoryPage}"
+        Route="MemoryPage" />
+
 </Shell>

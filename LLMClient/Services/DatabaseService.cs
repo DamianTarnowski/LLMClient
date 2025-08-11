@@ -37,6 +37,7 @@ namespace LLMClient.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine($"DatabaseService: Initializing database at {dbPath}");
+                System.Diagnostics.Debug.WriteLine($"DatabaseService: Database file exists: {File.Exists(dbPath)}");
                 
                 // Pobierz lub wygeneruj klucz szyfrowania
                 var encryptionKey = await GetOrGenerateEncryptionKeyAsync();
@@ -59,6 +60,9 @@ namespace LLMClient.Services
                 
                 await _database.CreateTableAsync<LLMClient.Models.Message>();
                 System.Diagnostics.Debug.WriteLine("DatabaseService: Message table created/verified");
+                
+                await _database.CreateTableAsync<LLMClient.Models.Memory>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Memory table created/verified");
                 
                 _migrationCompleted = true;
                 System.Diagnostics.Debug.WriteLine("DatabaseService: Initialization completed successfully");
@@ -103,6 +107,7 @@ namespace LLMClient.Services
                         await _database.CreateTableAsync<AiModel>();
                         await _database.CreateTableAsync<LLMClient.Models.Conversation>();
                         await _database.CreateTableAsync<LLMClient.Models.Message>();
+                        await _database.CreateTableAsync<LLMClient.Models.Memory>();
                         
                         _migrationCompleted = true;
                         System.Diagnostics.Debug.WriteLine("DatabaseService: Database successfully recreated after corruption");
@@ -131,6 +136,7 @@ namespace LLMClient.Services
                             await _database.CreateTableAsync<AiModel>();
                             await _database.CreateTableAsync<LLMClient.Models.Conversation>();
                             await _database.CreateTableAsync<LLMClient.Models.Message>();
+                            await _database.CreateTableAsync<LLMClient.Models.Memory>();
                             
                             _migrationCompleted = true;
                             System.Diagnostics.Debug.WriteLine("DatabaseService: Unencrypted fallback database created successfully");
@@ -777,6 +783,146 @@ namespace LLMClient.Services
             }
             
             return updateCount;
+        }
+
+        // Memory operations
+        public async Task<List<Memory>> GetAllMemoriesAsync()
+        {
+            System.Diagnostics.Debug.WriteLine("[DatabaseService] GetAllMemoriesAsync called");
+            await EnsureDatabaseInitializedAsync();
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Database initialized, connection: {_database != null}");
+            
+            var memories = await _database.Table<Memory>()
+                .OrderByDescending(m => m.UpdatedAt)
+                .ToListAsync();
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Retrieved {memories.Count} memories from database");
+            
+            foreach (var memory in memories)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Memory: {memory.Key} = {memory.Value} (ID: {memory.Id})");
+            }
+            
+            return memories;
+        }
+
+        public async Task<Memory?> GetMemoryByKeyAsync(string key)
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database.Table<Memory>()
+                .Where(m => m.Key == key)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Memory>> SearchMemoriesAsync(string searchTerm)
+        {
+            await EnsureDatabaseInitializedAsync();
+            var lowerSearchTerm = searchTerm.ToLower();
+            return await _database.Table<Memory>()
+                .Where(m => m.Key.ToLower().Contains(lowerSearchTerm) || 
+                           m.Value.ToLower().Contains(lowerSearchTerm) ||
+                           m.Category.ToLower().Contains(lowerSearchTerm) ||
+                           m.Tags.ToLower().Contains(lowerSearchTerm))
+                .OrderByDescending(m => m.UpdatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<Memory>> GetMemoriesByCategoryAsync(string category)
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database.Table<Memory>()
+                .Where(m => m.Category == category)
+                .OrderByDescending(m => m.UpdatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<int> AddMemoryAsync(Memory memory)
+        {
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] AddMemoryAsync called for key: {memory.Key}");
+            await EnsureDatabaseInitializedAsync();
+            memory.CreatedAt = DateTime.Now;
+            memory.UpdatedAt = DateTime.Now;
+            
+            var result = await _database.InsertAsync(memory);
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Memory inserted with result: {result}, memory ID now: {memory.Id}");
+            return result;
+        }
+
+        public async Task<int> UpdateMemoryAsync(Memory memory)
+        {
+            await EnsureDatabaseInitializedAsync();
+            memory.UpdatedAt = DateTime.Now;
+            return await _database.UpdateAsync(memory);
+        }
+
+        public async Task<int> DeleteMemoryAsync(int memoryId)
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database.DeleteAsync<Memory>(memoryId);
+        }
+
+        public async Task<int> UpsertMemoryAsync(string key, string value, string category = "", string tags = "", bool isImportant = false)
+        {
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] UpsertMemoryAsync called - Key: {key}, Value: {value}");
+            await EnsureDatabaseInitializedAsync();
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Database initialized for upsert");
+            
+            var existingMemory = await GetMemoryByKeyAsync(key);
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Existing memory found: {existingMemory != null}");
+            
+            int result;
+            if (existingMemory != null)
+            {
+                existingMemory.Value = value;
+                existingMemory.Category = category;
+                existingMemory.Tags = tags;
+                existingMemory.IsImportant = isImportant;
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Updating existing memory ID: {existingMemory.Id}");
+                result = await UpdateMemoryAsync(existingMemory);
+            }
+            else
+            {
+                var newMemory = new Memory
+                {
+                    Key = key,
+                    Value = value,
+                    Category = category,
+                    Tags = tags,
+                    IsImportant = isImportant
+                };
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Creating new memory");
+                result = await AddMemoryAsync(newMemory);
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] UpsertMemoryAsync completed with result: {result}");
+            return result;
+        }
+
+        public async Task<List<string>> GetMemoryCategoriesAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            var memories = await _database.Table<Memory>().ToListAsync();
+            return memories.Where(m => !string.IsNullOrEmpty(m.Category))
+                          .Select(m => m.Category)
+                          .Distinct()
+                          .OrderBy(c => c)
+                          .ToList();
+        }
+
+        public async Task<List<string>> GetMemoryTagsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            var memories = await _database.Table<Memory>().ToListAsync();
+            var allTags = new List<string>();
+            
+            foreach (var memory in memories.Where(m => !string.IsNullOrEmpty(m.Tags)))
+            {
+                var tags = memory.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(tag => tag.Trim())
+                                    .Where(tag => !string.IsNullOrEmpty(tag));
+                allTags.AddRange(tags);
+            }
+            
+            return allTags.Distinct().OrderBy(t => t).ToList();
         }
     }
 }
