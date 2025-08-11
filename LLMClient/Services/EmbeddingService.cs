@@ -12,6 +12,7 @@ namespace LLMClient.Services
     public interface IEmbeddingService
     {
         Task InitializeAsync();
+        Task<bool> IsModelDownloadedAsync();
         Task<float[]?> GenerateEmbeddingAsync(string text, bool isQuery = false);
         byte[] FloatArrayToBytes(float[] embedding);
         float[] BytesToFloatArray(byte[] bytes);
@@ -57,17 +58,31 @@ namespace LLMClient.Services
             _logger = logger;
         }
 
+        public Task<bool> IsModelDownloadedAsync()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var modelsDir = Path.Combine(appData, "User Name", "com.companyname.llmclient", "Data", "models", ModelVersion);
+            var modelPath = Path.Combine(modelsDir, "model.onnx");
+            var modelExternalDataPath = Path.Combine(modelsDir, "model.onnx_data");
+
+            return Task.FromResult(File.Exists(modelPath) && File.Exists(modelExternalDataPath));
+        }
+
         public async Task InitializeAsync()
         {
+            System.Diagnostics.Debug.WriteLine("[EmbeddingService] InitializeAsync called");
             try
             {
                 _logger.LogInformation("Inicjalizacja EmbeddingService...");
+                System.Diagnostics.Debug.WriteLine("[EmbeddingService] Starting initialization...");
                 // Load ONNX model
                 await LoadModelAsync();
                 _logger.LogInformation($"Tryb modelu: {( _session != null ? "REAL (ONNX)" : "DEMO (brak modelu)" )}");
                 // Initialize tokenizer
+                _logger.LogInformation($"Sprawdzam _tokenizerPath: '{_tokenizerPath}'");
                 if (!string.IsNullOrEmpty(_tokenizerPath))
                 {
+                    _logger.LogInformation("Inicjalizuję tokenizer...");
                     await InitializeTokenizerAsync(_tokenizerPath);
                 }
                 else
@@ -239,10 +254,19 @@ namespace LLMClient.Services
                 }
             }
             // Ustaw ścieżkę do tokenizer-a
+            _logger.LogInformation($"Sprawdzam czy plik tokenizer.json istnieje: {tokenizerJsonPath}");
+            _logger.LogInformation($"Plik istnieje: {File.Exists(tokenizerJsonPath)}");
+            
             if (File.Exists(tokenizerJsonPath))
+            {
                 _tokenizerPath = tokenizerJsonPath;
+                _logger.LogInformation($"Tokenizer path ustawiony na: {_tokenizerPath}");
+            }
             else
+            {
                 _tokenizerPath = null;
+                _logger.LogWarning($"Tokenizer.json nie istnieje w: {tokenizerJsonPath}");
+            }
             return modelPath;
         }
 
@@ -260,13 +284,32 @@ namespace LLMClient.Services
                 return;
             }
 
-            var result = await TokenizerNative.InitAsync(tokenizerPath);
-            if (result != 0)
-                _logger.LogError($"Błąd inicjalizacji tokenizera Rust: kod {result}");
-            else
+            try
             {
-                _tokenizerReady = true;
-                _logger.LogInformation($"Załadowano natywny tokenizer Rust z: {tokenizerPath}");
+                _logger.LogInformation($"Próba inicjalizacji tokenizera z: {tokenizerPath}");
+                _logger.LogInformation($"Plik istnieje: {File.Exists(tokenizerPath)}");
+                
+                var result = await TokenizerNative.InitAsync(tokenizerPath);
+                if (result != 0)
+                {
+                    _logger.LogError($"Błąd inicjalizacji tokenizera Rust: kod {result}");
+                    _logger.LogError("Tokenizer nie został zainicjalizowany - używam fallback do demo mode");
+                }
+                else
+                {
+                    _tokenizerReady = true;
+                    _logger.LogInformation($"Załadowano natywny tokenizer Rust z: {tokenizerPath}");
+                }
+            }
+            catch (DllNotFoundException ex)
+            {
+                _logger.LogError(ex, "Nie można znaleźć biblioteki natywnej tokenizer_rust - sprawdź czy biblioteka .so została poprawnie zainstalowana");
+                _logger.LogError("Fallback do demo mode dla tokenizera");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Nieoczekiwany błąd podczas inicjalizacji tokenizera: {ex.Message}");
+                _logger.LogError("Fallback do demo mode dla tokenizera");
             }
         }
 

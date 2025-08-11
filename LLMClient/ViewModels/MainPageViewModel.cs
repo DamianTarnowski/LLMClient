@@ -442,7 +442,7 @@ namespace LLMClient.ViewModels
 
             // Initialize embedding service with progress reporting
             _embeddingService.DownloadProgress += (progress) => DownloadProgressValue = progress;
-            await _embeddingService.InitializeAsync();
+            // await _embeddingService.InitializeAsync(); // Moved to SemanticSearchViewModel
         }
 
 

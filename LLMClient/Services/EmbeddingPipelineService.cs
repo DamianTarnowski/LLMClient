@@ -70,13 +70,10 @@ namespace LLMClient.Services
 
                 if (!_embeddingService.IsInitialized)
                 {
-                    await _embeddingService.InitializeAsync();
-                    if (!_embeddingService.IsInitialized)
-                    {
-                        result.ErrorMessage = "Failed to initialize embedding service";
-                        _logger.LogError(result.ErrorMessage);
-                        return result;
-                    }
+                    result.ErrorMessage = "Embedding service is not initialized. Please initialize it before generating embeddings.";
+                    _logger.LogError(result.ErrorMessage);
+                    result.Success = false;
+                    return result;
                 }
 
                 // Pobierz wszystkie wiadomości bez embeddingów

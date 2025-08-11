@@ -88,6 +88,7 @@ namespace LLMClient.ViewModels
         private int _messagesWithEmbeddings;
         private double _embeddingCoverage;
         private bool _isDownloadingModel;
+        private bool _isInitializing;
 
         public ObservableCollection<SemanticSearchResult> SearchResults { get; } = new();
 
@@ -282,7 +283,13 @@ namespace LLMClient.ViewModels
             // Load initial embedding stats
             _ = Task.Run(async () => await CheckEmbeddingStatsAsync());
             // Uruchamiamy inicjalizację na wątku UI – DisplayAlert musi działać na głównym wątku
-            MainThread.BeginInvokeOnMainThread(async () => await InitializeEmbeddingServiceAsync());
+            // MainThread.BeginInvokeOnMainThread(async () => await InitializeEmbeddingServiceAsync());
+        }
+
+        public async Task OnAppearingAsync()
+        {
+            await InitializeEmbeddingServiceAsync();
+            await RefreshAsync();
         }
 
         /// <summary>
@@ -328,14 +335,19 @@ namespace LLMClient.ViewModels
 
         private async Task InitializeEmbeddingServiceAsync()
         {
-            if (_embeddingService == null)
+            if (_isInitializing || _embeddingService == null) return;
+
+            if (_embeddingService.IsInitialized)
             {
-                StatusMessage = "❌ Embedding service nie jest dostępny";
+                IsEmbeddingInitialized = true;
+                StatusMessage = "Semantic search gotowy";
                 return;
             }
 
+            _isInitializing = true;
+
             // Zapytaj użytkownika, czy chce pobrać duży model, jeśli nie jest jeszcze zainicjalizowany
-            if (!_embeddingService.IsInitialized)
+            if (!await _embeddingService.IsModelDownloadedAsync())
             {
                 bool proceed = await Application.Current.MainPage.DisplayAlert(
                     "Pobieranie modelu",
@@ -344,6 +356,7 @@ namespace LLMClient.ViewModels
                 if (!proceed)
                 {
                     await Shell.Current.GoToAsync("//MainPage");
+                    _isInitializing = false;
                     return;
                 }
             }
@@ -382,6 +395,7 @@ namespace LLMClient.ViewModels
             finally
             {
                 IsSearching = false;
+                _isInitializing = false;
             }
         }
 

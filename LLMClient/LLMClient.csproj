@@ -87,4 +87,22 @@
     </None>
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+    <AndroidNdkDirectory>C:\Users\hdtdt\Downloads\android-ndk-r27d-windows\android-ndk-r27d</AndroidNdkDirectory>
+    <AndroidNdkToolchainPath>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\windows-x86_64\bin</AndroidNdkToolchainPath>
+  </PropertyGroup>
+
+  <!-- Rust libraries are pre-built, no need to build during compilation -->
+  <Target Name="BuildRustLibraryForAndroid" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net9.0-android'">
+    <Message Text="Using pre-built Rust libraries for Android..." Importance="high" />
+    <!-- Libraries are already built in TokenizerRust/target/*/release/libtokenizer_rust.so -->
+  </Target>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+    <AndroidNativeLibrary Include="..\TokenizerRust\target\aarch64-linux-android\release\libtokenizer_rust.so" Abi="arm64-v8a" />
+    <AndroidNativeLibrary Include="..\TokenizerRust\target\armv7-linux-androideabi\release\libtokenizer_rust.so" Abi="armeabi-v7a" />
+    <AndroidNativeLibrary Include="..\TokenizerRust\target\i686-linux-android\release\libtokenizer_rust.so" Abi="x86" />
+    <AndroidNativeLibrary Include="..\TokenizerRust\target\x86_64-linux-android\release\libtokenizer_rust.so" Abi="x86_64" />
+  </ItemGroup>
+
 </Project>

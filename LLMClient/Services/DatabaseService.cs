@@ -32,9 +32,10 @@ namespace LLMClient.Services
         {
             if (_migrationCompleted) return;
 
+            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "llmclient.db3");
+            
             try
             {
-                var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "llmclient.db3");
                 System.Diagnostics.Debug.WriteLine($"DatabaseService: Initializing database at {dbPath}");
                 
                 // Pobierz lub wygeneruj klucz szyfrowania
@@ -66,6 +67,82 @@ namespace LLMClient.Services
             {
                 System.Diagnostics.Debug.WriteLine($"DatabaseService: CRITICAL ERROR during initialization: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"DatabaseService: Stack trace: {ex.StackTrace}");
+                
+                // Jeśli baza danych jest uszkodzona, spróbuj ją usunąć i utworzyć ponownie
+                if (ex.Message.Contains("file is not a database") || ex.Message.Contains("database disk image is malformed"))
+                {
+                    System.Diagnostics.Debug.WriteLine("DatabaseService: Database appears corrupted, attempting to recreate...");
+                    try
+                    {
+                        // Zamknij istniejące połączenie jeśli istnieje
+                        _database?.CloseAsync()?.Wait();
+                        _database = null;
+                        
+                        // Usuń uszkodzoną bazę danych
+                        if (File.Exists(dbPath))
+                        {
+                            File.Delete(dbPath);
+                            System.Diagnostics.Debug.WriteLine($"DatabaseService: Corrupted database deleted: {dbPath}");
+                        }
+                        
+                        // Opóźnienie żeby upewnić się że plik jest zwolniony
+                        await Task.Delay(100);
+                        
+                        // Sprawdź czy plik rzeczywiście został usunięty
+                        if (File.Exists(dbPath))
+                        {
+                            System.Diagnostics.Debug.WriteLine("DatabaseService: Failed to delete corrupted database file");
+                            throw new Exception("Cannot delete corrupted database file");
+                        }
+                        
+                        // Spróbuj ponownie utworzyć bazę danych z nowym kluczem
+                        var newEncryptionKey = await GetOrGenerateEncryptionKeyAsync();
+                        var connectionString = new SQLiteConnectionString(dbPath, true, key: newEncryptionKey);
+                        _database = new SQLiteAsyncConnection(connectionString);
+                        
+                        await _database.CreateTableAsync<AiModel>();
+                        await _database.CreateTableAsync<LLMClient.Models.Conversation>();
+                        await _database.CreateTableAsync<LLMClient.Models.Message>();
+                        
+                        _migrationCompleted = true;
+                        System.Diagnostics.Debug.WriteLine("DatabaseService: Database successfully recreated after corruption");
+                        return;
+                    }
+                    catch (Exception recreateEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"DatabaseService: Failed to recreate database: {recreateEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"DatabaseService: Recreation error stack trace: {recreateEx.StackTrace}");
+                        
+                        // Jako ostatnia deska ratunku, spróbuj bez szyfrowania
+                        try
+                        {
+                            System.Diagnostics.Debug.WriteLine("DatabaseService: Attempting to create unencrypted database as fallback...");
+                            _database?.CloseAsync()?.Wait();
+                            _database = null;
+                            
+                            if (File.Exists(dbPath))
+                                File.Delete(dbPath);
+                            
+                            await Task.Delay(100);
+                            
+                            var unencryptedConnectionString = new SQLiteConnectionString(dbPath, false);
+                            _database = new SQLiteAsyncConnection(unencryptedConnectionString);
+                            
+                            await _database.CreateTableAsync<AiModel>();
+                            await _database.CreateTableAsync<LLMClient.Models.Conversation>();
+                            await _database.CreateTableAsync<LLMClient.Models.Message>();
+                            
+                            _migrationCompleted = true;
+                            System.Diagnostics.Debug.WriteLine("DatabaseService: Unencrypted fallback database created successfully");
+                            return;
+                        }
+                        catch (Exception fallbackEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"DatabaseService: Fallback unencrypted database also failed: {fallbackEx.Message}");
+                        }
+                    }
+                }
+                
                 throw; 
             }
         }

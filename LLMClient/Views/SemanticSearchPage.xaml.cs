@@ -15,7 +15,7 @@ public partial class SemanticSearchPage : ContentPage
         base.OnAppearing();
         if (BindingContext is SemanticSearchViewModel vm)
         {
-            await vm.RefreshAsync();
+            await vm.OnAppearingAsync();
         }
     }
 } 

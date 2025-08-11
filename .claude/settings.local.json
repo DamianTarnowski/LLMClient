@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rustup target list:*)",
+      "Bash(cargo build:*)",
+      "Bash(where:*)",
+      "Bash(echo $ANDROID_HOME)",
+      "Bash(echo $ANDROID_NDK_ROOT)",
+      "Bash(dotnet build:*)"
+    ],
+    "deny": []
+  }
+}

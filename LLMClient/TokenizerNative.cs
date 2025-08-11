@@ -7,7 +7,7 @@ public static class TokenizerNative
 #if WINDOWS
     const string DllName = "tokenizer_rust.dll";
 #elif ANDROID
-    const string DllName = "libtokenizer_rust.so";
+    const string DllName = "tokenizer_rust";
 #elif IOS
     const string DllName = "__Internal";
 #else
@@ -27,19 +27,50 @@ public static class TokenizerNative
     public static extern void tokenizer_cleanup();
 
     public static Task<int> InitAsync(string path) =>
-        Task.Run(() => tokenizer_init(path));
+        Task.Run(() => {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[TokenizerNative] Próba inicjalizacji z: {path}");
+                var result = tokenizer_init(path);
+                System.Diagnostics.Debug.WriteLine($"[TokenizerNative] Rezultat inicjalizacji: {result}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TokenizerNative] Błąd inicjalizacji: {ex.Message}");
+                return -999; // Custom error code for exceptions
+            }
+        });
 
     public static Task<int> EncodeAsync(string text, int[] out_ids, int maxLen) =>
-        Task.Run(() => tokenizer_encode(text, out_ids, (UIntPtr)maxLen));
+        Task.Run(() => {
+            try
+            {
+                return tokenizer_encode(text, out_ids, (UIntPtr)maxLen);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TokenizerNative] Błąd encode: {ex.Message}");
+                return -1;
+            }
+        });
 
     public static Task<string> DecodeAsync(int[] ids, int len) =>
         Task.Run(() =>
         {
-            var ptr = tokenizer_decode(ids, (UIntPtr)len);
-            if (ptr == IntPtr.Zero) return null;
-            var str = Marshal.PtrToStringAnsi(ptr);
-            // Marshal.FreeHGlobal(ptr); // Rust zarządza pamięcią
-            return str;
+            try
+            {
+                var ptr = tokenizer_decode(ids, (UIntPtr)len);
+                if (ptr == IntPtr.Zero) return null;
+                var str = Marshal.PtrToStringAnsi(ptr);
+                // Marshal.FreeHGlobal(ptr); // Rust zarządza pamięcią
+                return str;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TokenizerNative] Błąd decode: {ex.Message}");
+                return null;
+            }
         });
 
     public static void Cleanup() => tokenizer_cleanup();
