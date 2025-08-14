@@ -30,6 +30,7 @@ namespace LLMClient
 
             // Rejestracja serwisów dla Dependency Injection
             builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
             builder.Services.AddSingleton<IStreamingBatchService, StreamingBatchService>();
             builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
@@ -83,9 +84,10 @@ namespace LLMClient
                 var searchService = provider.GetRequiredService<ISearchService>();
                 var exportService = provider.GetRequiredService<IExportService>();
                 var embeddingService = provider.GetRequiredService<IEmbeddingService>();
+                var localizationService = provider.GetRequiredService<ILocalizationService>();
                 var memoryExtractionService = provider.GetService<IMemoryExtractionService>();
                 
-                return new MainPageViewModel(aiService, databaseService, streamingBatchService, errorHandlingService, searchService, exportService, embeddingService, memoryExtractionService);
+                return new MainPageViewModel(aiService, databaseService, streamingBatchService, errorHandlingService, searchService, exportService, embeddingService, localizationService, memoryExtractionService);
             });
             builder.Services.AddTransient<ModelConfigurationViewModel>();
             builder.Services.AddTransient<SemanticSearchViewModel>(provider =>

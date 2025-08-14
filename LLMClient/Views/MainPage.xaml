@@ -8,21 +8,27 @@
              Title="LLMClient">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Pamięć"
-                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🧠, Color={AppThemeBinding Light=Black, Dark=White}}"
+        <ToolbarItem Text="{Binding L[Memory]}"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe322;, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Command="{Binding GoToMemoryCommand}"
                      Order="Primary"
                      Priority="0" />
-        <ToolbarItem Text="Wyszukaj"
-                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=🔍, Color={AppThemeBinding Light=Black, Dark=White}}"
+        <ToolbarItem Text="{Binding L[Search]}"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe8b6;, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Command="{Binding GoToSearchCommand}"
                      Order="Primary"
                      Priority="1" />
-        <ToolbarItem Text="Ustawienia"
-                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=⚙, Color={AppThemeBinding Light=Black, Dark=White}}"
+        <ToolbarItem x:Name="LanguageToolbarItem"
+                     Text="{Binding L[Language]}"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe894;, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Order="Primary"
+                     Priority="2"
+                     Clicked="LanguageToolbarItem_Clicked" />
+        <ToolbarItem Text="{Binding L[Settings]}"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe8b8;, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Command="{Binding SettingsCommand}"
                      Order="Primary"
-                     Priority="2" />
+                     Priority="3" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>
@@ -110,11 +116,20 @@
                 <Border Grid.Row="0" 
                         BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}"
                         Padding="15,10">
-                    <Label Text="Konwersacje" 
-                           TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
-                           FontSize="18"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <Label Grid.Column="0"
+                               Text="{Binding L[Conversations]}" 
+                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" 
+                               Grid.ColumnSpan="2" />
+                    </Grid>
                 </Border>
 
                 <!-- Komunikat o braku konwersacji -->
@@ -233,7 +248,7 @@
 
                 <!-- Przycisk nowej konwersacji -->
                 <Button Grid.Row="4"
-                        Text="+ Nowa konwersacja"
+                        Text="{Binding L[NewConversation], StringFormat='+ {0}'}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource PrimaryDarkText}}"
                         Margin="15,10"
@@ -824,7 +839,7 @@
                         </Grid.ColumnDefinitions>
                         
                         <Label Grid.Column="0"
-                               Text="Konwersacje" 
+                               Text="{Binding L[Conversations]}" 
                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                                FontSize="18"
                                FontAttributes="Bold"

@@ -1,4 +1,6 @@
-﻿using LLMClient.ViewModels;
+﻿using System.Linq;
+using LLMClient.ViewModels;
+using LLMClient.Services;
 
 namespace LLMClient;
 
@@ -19,6 +21,9 @@ public partial class MainPage : ContentPage
         {
             ScrollToMessage(message);
         });
+
+        // Setup language menu
+        SetupLanguageMenu();
 
         // Keyboard handling is now done via EditorKeyboardBehavior
     }
@@ -130,6 +135,56 @@ public partial class MainPage : ContentPage
         if (FindByName("ConversationsOverlay") is Border overlay)
         {
             overlay.IsVisible = false;
+        }
+    }
+
+    private void SetupLanguageMenu()
+    {
+        // Language menu is now handled by LanguageToolbarItem_Clicked
+    }
+
+    private async void LanguageToolbarItem_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MainPageViewModel viewModel)
+        {
+            try
+            {
+                var languageNames = viewModel.AvailableLanguages.Select(l => l.NativeName).ToArray();
+                var currentLanguage = viewModel.SelectedLanguage?.NativeName ?? "English";
+                
+                System.Diagnostics.Debug.WriteLine($"[MainPage] Current language: {currentLanguage}");
+                System.Diagnostics.Debug.WriteLine($"[MainPage] Available languages: {string.Join(", ", languageNames)}");
+                System.Diagnostics.Debug.WriteLine($"[MainPage] SelectLanguage text: {viewModel.L["SelectLanguage"]}");
+                System.Diagnostics.Debug.WriteLine($"[MainPage] Cancel text: {viewModel.L["Cancel"]}");
+                
+                var result = await DisplayActionSheet(
+                    viewModel.L["SelectLanguage"], 
+                    viewModel.L["Cancel"], 
+                    null, 
+                    languageNames);
+                    
+                System.Diagnostics.Debug.WriteLine($"[MainPage] User selected: {result}");
+                
+                if (result != null && result != viewModel.L["Cancel"] && !string.IsNullOrEmpty(result))
+                {
+                    var selectedLanguage = viewModel.AvailableLanguages.FirstOrDefault(l => l.NativeName == result);
+                    if (selectedLanguage != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainPage] Setting language to: {selectedLanguage.Code} ({selectedLanguage.NativeName})");
+                        viewModel.SelectedLanguage = selectedLanguage;
+                        System.Diagnostics.Debug.WriteLine($"[MainPage] Language set successfully");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainPage] Could not find language for result: {result}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainPage] Error in language selection: {ex.Message}");
+                await DisplayAlert("Error", $"Error changing language: {ex.Message}", "OK");
+            }
         }
     }
 }

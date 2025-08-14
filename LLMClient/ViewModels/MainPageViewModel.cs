@@ -33,6 +33,7 @@ namespace LLMClient.ViewModels
         private const int PAGE_SIZE = 50;
         private readonly IEmbeddingService _embeddingService;
         private readonly IMemoryExtractionService? _memoryExtractionService;
+        private readonly ILocalizationService _localizationService;
         private double _downloadProgressValue;
 
         public ObservableCollection<Conversation> Conversations
@@ -198,6 +199,28 @@ namespace LLMClient.ViewModels
             }
         }
 
+        public ILocalizationService L => _localizationService;
+
+        private LanguageOption? _selectedLanguage;
+        public LanguageOption? SelectedLanguage
+        {
+            get => _selectedLanguage;
+            set
+            {
+                if (_selectedLanguage != value)
+                {
+                    _selectedLanguage = value;
+                    OnPropertyChanged();
+                    if (value != null)
+                    {
+                        _localizationService.SetCulture(value.Code);
+                    }
+                }
+            }
+        }
+
+        public List<LanguageOption> AvailableLanguages => _localizationService.AvailableLanguages;
+
         public ICommand NewConversationCommand { get; }
         public ICommand SelectConversationCommand { get; }
         public ICommand SendMessageCommand { get; }
@@ -220,7 +243,7 @@ namespace LLMClient.ViewModels
 
         public bool IsConversationsEmpty => Conversations.Count == 0;
 
-        public MainPageViewModel(IAiService aiService, DatabaseService databaseService, IStreamingBatchService streamingBatchService, IErrorHandlingService errorHandlingService, ISearchService searchService, IExportService exportService, IEmbeddingService embeddingService, IMemoryExtractionService? memoryExtractionService = null)
+        public MainPageViewModel(IAiService aiService, DatabaseService databaseService, IStreamingBatchService streamingBatchService, IErrorHandlingService errorHandlingService, ISearchService searchService, IExportService exportService, IEmbeddingService embeddingService, ILocalizationService localizationService, IMemoryExtractionService? memoryExtractionService = null)
         {
             _aiService = aiService;
             _databaseService = databaseService;
@@ -229,6 +252,7 @@ namespace LLMClient.ViewModels
             _searchService = searchService;
             _exportService = exportService;
             _embeddingService = embeddingService;
+            _localizationService = localizationService;
             _memoryExtractionService = memoryExtractionService;
 
             // Initialize AiConfiguration and subscribe to its PropertyChanged event
@@ -263,6 +287,10 @@ namespace LLMClient.ViewModels
 
             Task.Run(async () => await LoadDataAsync());
             Task.Run(async () => await LoadThemeAsync());
+            
+            // Initialize selected language
+            var currentCulture = _localizationService.CurrentCulture;
+            _selectedLanguage = _localizationService.AvailableLanguages.FirstOrDefault(l => l.Code == currentCulture);
         }
 
         // Implementacja obsługi parametrów nawigacji
