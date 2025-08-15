@@ -35,7 +35,7 @@
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
@@ -70,9 +70,12 @@
 		<PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
 		<PackageReference Include="SQLiteNetExtensions.Async" Version="2.1.0" />
 		<!-- Embeddings & ONNX Runtime for semantic search -->
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.19.2" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
 		<PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
+		<!-- ONNX Runtime GenAI for local model inference (latest versions) -->
+		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.8.0" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Managed" Version="0.8.3" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -36,6 +36,15 @@ namespace LLMClient
             builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
             builder.Services.AddSingleton<IEmbeddingService, EmbeddingService>();
             builder.Services.AddSingleton<IEmbeddingPipelineService, EmbeddingPipelineService>();
+            builder.Services.AddSingleton<ILocalModelService>(provider =>
+            {
+                var wrapperLogger = provider.GetRequiredService<ILogger<SafeLocalModelWrapper>>();
+                var innerLogger = provider.GetRequiredService<ILogger<RobustLocalModelService>>();
+                var errorHandling = provider.GetService<IErrorHandlingService>();
+                var databaseService = provider.GetService<DatabaseService>();
+                return new SafeLocalModelWrapper(wrapperLogger, innerLogger, errorHandling, databaseService);
+            });
+            builder.Services.AddSingleton<IOnboardingService, OnboardingService>();
             
             // Rejestracja serwisu pamięci - używa tej samej bazy co reszta aplikacji
             builder.Services.AddSingleton<IMemoryService>(provider =>
@@ -52,11 +61,13 @@ namespace LLMClient
                 return new MemoryContextService(memoryService, lazyAiService);
             });
             
-            // Rejestracja AiService z dostępem do kontekstu pamięci
+            // Rejestracja AiService z dostępem do kontekstu pamięci i lokalnych modeli
             builder.Services.AddSingleton<IAiService>(provider =>
             {
                 var memoryContextService = provider.GetService<IMemoryContextService>();
-                return new AiService(memoryContextService);
+                var localModelService = provider.GetService<ILocalModelService>();
+                var databaseService = provider.GetService<DatabaseService>();
+                return new AiService(memoryContextService, localModelService, databaseService);
             });
             
             // Rejestracja serwisu wydobywania pamięci
@@ -85,9 +96,10 @@ namespace LLMClient
                 var exportService = provider.GetRequiredService<IExportService>();
                 var embeddingService = provider.GetRequiredService<IEmbeddingService>();
                 var localizationService = provider.GetRequiredService<ILocalizationService>();
+                var localModelService = provider.GetRequiredService<ILocalModelService>();
                 var memoryExtractionService = provider.GetService<IMemoryExtractionService>();
                 
-                return new MainPageViewModel(aiService, databaseService, streamingBatchService, errorHandlingService, searchService, exportService, embeddingService, localizationService, memoryExtractionService);
+                return new MainPageViewModel(aiService, databaseService, streamingBatchService, errorHandlingService, searchService, exportService, embeddingService, localizationService, localModelService, memoryExtractionService);
             });
             builder.Services.AddTransient<ModelConfigurationViewModel>();
             builder.Services.AddTransient<SemanticSearchViewModel>(provider =>
@@ -102,12 +114,19 @@ namespace LLMClient
             
             // Rejestracja MemoryPageViewModel
             builder.Services.AddTransient<MemoryPageViewModel>();
+            
+            // Rejestracja LocalModelStatusViewModel
+            builder.Services.AddTransient<LocalModelStatusViewModel>();
+            
+            // Rejestracja ModelSettingsViewModel
+            builder.Services.AddTransient<ModelSettingsViewModel>();
 
             // Rejestracja Pages
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<ModelConfigurationPage>();
             builder.Services.AddTransient<SemanticSearchPage>();
             builder.Services.AddTransient<MemoryPage>();
+            builder.Services.AddTransient<ModelSettingsPage>();
 
             //Rejestracja Shell
             builder.Services.AddSingleton<AppShell>();

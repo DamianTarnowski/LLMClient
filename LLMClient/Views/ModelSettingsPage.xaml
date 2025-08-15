@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LLMClient.Views.ModelSettingsPage"
+             Title="Model Settings">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="← Back"
+                     Priority="0"
+                     Order="Primary"
+                     Command="{Binding GoBackCommand}" />
+    </ContentPage.ToolbarItems>
+    
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            
+            <!-- Header -->
+            <Label Text="AI Model Configuration" 
+                   FontSize="24" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"/>
+            
+            <!-- Current Model Info -->
+            <Frame BackgroundColor="#40444B" Padding="15" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="Current Active Model" 
+                           FontSize="16" 
+                           FontAttributes="Bold" 
+                           TextColor="White"/>
+                    <Label Text="{Binding CurrentModelName}" 
+                           FontSize="14" 
+                           TextColor="#B9BBBE"/>
+                    <Label Text="{Binding ModelType}" 
+                           FontSize="12" 
+                           TextColor="#43B581"/>
+                </StackLayout>
+            </Frame>
+            
+            <!-- System Prompt Section -->
+            <Label Text="System Prompt" 
+                   FontSize="18" 
+                   FontAttributes="Bold"/>
+            
+            <Frame BackgroundColor="#36393F" 
+                   Padding="10" 
+                   CornerRadius="8"
+                   HeightRequest="120">
+                <Editor Text="{Binding SystemPrompt}" 
+                        BackgroundColor="Transparent"
+                        TextColor="White"
+                        Placeholder="Enter system prompt to guide AI behavior..."
+                        PlaceholderColor="#72767D"/>
+            </Frame>
+
+            <!-- Include Memory Toggle (cloud only) -->
+            <Grid ColumnDefinitions="Auto,*">
+                <CheckBox IsChecked="{Binding IncludeMemoryInSystemPrompt}"/>
+                <Label Grid.Column="1" Text="Include user memory in system prompt (cloud models only)" VerticalTextAlignment="Center" TextColor="#B9BBBE"/>
+            </Grid>
+            
+            <!-- Local Model Settings (visible only when local model is active) -->
+            <StackLayout IsVisible="{Binding IsLocalModelActive}" Spacing="15">
+                
+                <Label Text="Local Model Parameters" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       Margin="0,15,0,0"/>
+                
+                <!-- Temperature -->
+                <StackLayout>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Temperature (Creativity)" 
+                               FontSize="14" 
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1" 
+                               Text="{Binding Temperature, StringFormat='{0:F1}'}" 
+                               FontSize="12" 
+                               TextColor="#B9BBBE" 
+                               VerticalOptions="Center"/>
+                    </Grid>
+                    <Slider Value="{Binding Temperature}" 
+                            Minimum="0.1" 
+                            Maximum="1.0" 
+                            ThumbColor="#5865F2" 
+                            MinimumTrackColor="#5865F2" 
+                            MaximumTrackColor="#40444B"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Focused" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="Start"/>
+                        <Label Grid.Column="1" 
+                               Text="Creative" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="End"/>
+                    </Grid>
+                </StackLayout>
+                
+                <!-- Max Length -->
+                <StackLayout>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Max Response Length" 
+                               FontSize="14" 
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1" 
+                               Text="{Binding MaxLength}" 
+                               FontSize="12" 
+                               TextColor="#B9BBBE" 
+                               VerticalOptions="Center"/>
+                    </Grid>
+                    <Slider Value="{Binding MaxLength}" 
+                            Minimum="128" 
+                            Maximum="2048" 
+                            ThumbColor="#5865F2" 
+                            MinimumTrackColor="#5865F2" 
+                            MaximumTrackColor="#40444B"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Short" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="Start"/>
+                        <Label Grid.Column="1" 
+                               Text="Long" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="End"/>
+                    </Grid>
+                </StackLayout>
+                
+                <!-- Repetition Penalty -->
+                <StackLayout>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Repetition Penalty" 
+                               FontSize="14" 
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1" 
+                               Text="{Binding RepetitionPenalty, StringFormat='{0:F2}'}" 
+                               FontSize="12" 
+                               TextColor="#B9BBBE" 
+                               VerticalOptions="Center"/>
+                    </Grid>
+                    <Slider Value="{Binding RepetitionPenalty}" 
+                            Minimum="1.0" 
+                            Maximum="1.5" 
+                            ThumbColor="#5865F2" 
+                            MinimumTrackColor="#5865F2" 
+                            MaximumTrackColor="#40444B"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="More Repetition" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="Start"/>
+                        <Label Grid.Column="1" 
+                               Text="Less Repetition" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="End"/>
+                    </Grid>
+                </StackLayout>
+                
+                <!-- Top P -->
+                <StackLayout>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Top P (Nucleus Sampling)" 
+                               FontSize="14" 
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1" 
+                               Text="{Binding TopP, StringFormat='{0:F2}'}" 
+                               FontSize="12" 
+                               TextColor="#B9BBBE" 
+                               VerticalOptions="Center"/>
+                    </Grid>
+                    <Slider Value="{Binding TopP}" 
+                            Minimum="0.1" 
+                            Maximum="1.0" 
+                            ThumbColor="#5865F2" 
+                            MinimumTrackColor="#5865F2" 
+                            MaximumTrackColor="#40444B"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" 
+                               Text="Conservative" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="Start"/>
+                        <Label Grid.Column="1" 
+                               Text="Diverse" 
+                               FontSize="10" 
+                               TextColor="#72767D" 
+                               HorizontalOptions="End"/>
+                    </Grid>
+                </StackLayout>
+                
+            </StackLayout>
+            
+            <!-- Action Buttons -->
+            <StackLayout Orientation="Horizontal" 
+                         HorizontalOptions="Center" 
+                         Spacing="15" 
+                         Margin="0,30,0,0">
+                
+                <Button Text="Save Settings" 
+                        Command="{Binding SaveCommand}"
+                        BackgroundColor="#43B581" 
+                        TextColor="White" 
+                        CornerRadius="8" 
+                        WidthRequest="120"/>
+                
+                <Button Text="Reset to Defaults" 
+                        Command="{Binding ResetCommand}"
+                        BackgroundColor="#ED4245" 
+                        TextColor="White" 
+                        CornerRadius="8" 
+                        WidthRequest="120"/>
+                
+            </StackLayout>
+            
+        </StackLayout>
+    </ScrollView>
+    
+</ContentPage>

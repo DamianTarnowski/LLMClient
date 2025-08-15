@@ -5,6 +5,7 @@
              xmlns:converters="clr-namespace:LLMClient.Converters"
              xmlns:behaviors="clr-namespace:LLMClient.Behaviors"
              xmlns:markdown="clr-namespace:Indiko.Maui.Controls.Markdown;assembly=Indiko.Maui.Controls.Markdown"
+             xmlns:views="clr-namespace:LLMClient.Views"
              Title="LLMClient">
 
     <ContentPage.ToolbarItems>
@@ -18,17 +19,22 @@
                      Command="{Binding GoToSearchCommand}"
                      Order="Primary"
                      Priority="1" />
+        <ToolbarItem Text="Model Settings"
+                     IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe8ae;, Color={AppThemeBinding Light=Black, Dark=White}}"
+                     Command="{Binding ModelSettingsCommand}"
+                     Order="Primary"
+                     Priority="2" />
         <ToolbarItem x:Name="LanguageToolbarItem"
                      Text="{Binding L[Language]}"
                      IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe894;, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Order="Primary"
-                     Priority="2"
+                     Priority="3"
                      Clicked="LanguageToolbarItem_Clicked" />
         <ToolbarItem Text="{Binding L[Settings]}"
                      IconImageSource="{FontImageSource FontFamily=MaterialSymbols, Glyph=&#xe8b8;, Color={AppThemeBinding Light=Black, Dark=White}}"
                      Command="{Binding SettingsCommand}"
                      Order="Primary"
-                     Priority="3" />
+                     Priority="4" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>
@@ -261,6 +267,7 @@
         <Grid Grid.Column="1" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -332,6 +339,7 @@
                                 WidthRequest="100"
                                 FontSize="11"
                                 Margin="2,0"
+                                IsEnabled="{Binding IsCloudModelsEnabled}"
                                 IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionNotEmptyConverter}}" />
 
                         <!-- Komunikat o braku modeli (mobile) -->
@@ -474,11 +482,11 @@
                                 TextColor="White"
                                 WidthRequest="200"
                                 Margin="10,0"
+                                IsEnabled="{Binding IsCloudModelsEnabled}"
                                 IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionNotEmptyConverter}}" />
 
-                        <!-- Komunikat o braku modeli (desktop) -->
+                        <!-- Komunikat o modelu lokalnym lub braku modeli (desktop) -->
                         <Label Grid.Column="1"
-                               Text="Brak modeli - dodaj w konfiguracji"
                                BackgroundColor="#40444B"
                                TextColor="#B9BBBE"
                                FontSize="12"
@@ -486,7 +494,20 @@
                                HorizontalTextAlignment="Center"
                                WidthRequest="200"
                                Margin="10,0"
-                               IsVisible="{Binding AiConfiguration.Models, Converter={StaticResource CollectionEmptyConverter}}" />
+                               IsVisible="False">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding IsCloudModelsEnabled}" Value="False">
+                                    <Setter Property="Text" Value="Phi-4-mini (Local)" />
+                                    <Setter Property="TextColor" Value="#43B581" />
+                                    <Setter Property="IsVisible" Value="True" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label" Binding="{Binding AiConfiguration.Models, Converter={StaticResource CollectionEmptyConverter}}" Value="True">
+                                    <Setter Property="Text" Value="Brak modeli - dodaj w konfiguracji" />
+                                    <Setter Property="TextColor" Value="#B9BBBE" />
+                                    <Setter Property="IsVisible" Value="True" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
 
                         <!-- Przycisk motywu (desktop) -->
                         <Button Grid.Column="2"
@@ -590,8 +611,26 @@
                 </Grid>
             </Border>
 
+            <!-- Local Model Status -->
+            <views:LocalModelStatusView Grid.Row="1"
+                                       x:Name="LocalModelStatus" />
+
+            <!-- Spinner overlay podczas ładowania/pobierania modelu lokalnego -->
+            <Grid Grid.RowSpan="5"
+                  BackgroundColor="#00000055"
+                  IsVisible="{Binding IsLocalModelBusy}"
+                  InputTransparent="False">
+                <ActivityIndicator IsRunning="{Binding IsLocalModelBusy}"
+                                   IsVisible="{Binding IsLocalModelBusy}"
+                                   Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   WidthRequest="48"
+                                   HeightRequest="48" />
+            </Grid>
+
             <!-- Komunikat o braku wiadomości -->
-            <StackLayout Grid.Row="1" 
+            <StackLayout Grid.Row="2" 
                          HorizontalOptions="Center"
                          VerticalOptions="Center"
                          IsVisible="{Binding SelectedConversation.Messages.Count, Converter={StaticResource ZeroToBoolConverter}}"
@@ -612,7 +651,7 @@
             </StackLayout>
 
             <!-- Obszar wiadomości -->
-            <ScrollView Grid.Row="1" x:Name="MessagesScrollView"
+            <ScrollView Grid.Row="2" x:Name="MessagesScrollView"
                         IsVisible="{Binding SelectedConversation.Messages.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
                         Padding="10,0">
                 <CollectionView x:Name="MessagesCollectionView"
@@ -723,7 +762,7 @@
             </ScrollView>
 
             <!-- Preview wybranego obrazka -->
-            <Border Grid.Row="2" 
+            <Border Grid.Row="3" 
                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                     Margin="15,5,15,0"
                     StrokeShape="RoundRectangle 15"
@@ -762,7 +801,7 @@
             </Border>
 
             <!-- Pole wprowadzania -->
-            <Border Grid.Row="3" 
+            <Border Grid.Row="4" 
                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
                     Margin="15,5,15,10"
                     StrokeShape="RoundRectangle 25"

@@ -13,7 +13,7 @@ namespace LLMClient.Services
     {
         private readonly IMemoryService _memoryService;
         private readonly Lazy<IAiService?> _lazyAiService;
-        private const int MAX_MEMORY_CHARS = 30000;
+        private const int MAX_MEMORY_CHARS = 30000; // pełny kontekst dla dużych LLM
         private const int SUMMARY_TARGET_CHARS = 5000; // Docelowy rozmiar streszczenia
 
         public MemoryContextService(IMemoryService memoryService, Lazy<IAiService?> lazyAiService)

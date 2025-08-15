@@ -24,6 +24,13 @@ namespace LLMClient.Services
             if (!recentMessages.Any() || !_aiService.IsConfigured)
                 return;
 
+            // Gdy aktywny jest model lokalny – całkowicie pomijamy zapisy do pamięci
+            if ((_aiService as AiService)?.IsUsingLocalModel == true)
+            {
+                System.Diagnostics.Debug.WriteLine("[MemoryExtractionService] Skipping ALL memory extraction (local model active)");
+                return;
+            }
+
             try
             {
                 // Pobierz tylko najnowsze wiadomości użytkownika (max 5)
@@ -42,8 +49,16 @@ namespace LLMClient.Services
                 // Spróbuj najpierw prostymi regexami
                 await ExtractSimpleMemoryAsync(userMessages);
 
-                // Jeśli nie znajdzie nic prostego, użyj AI do wydobycia informacji
-                await ExtractComplexMemoryAsync(userMessages);
+                // Użyj AI do wydobycia informacji TYLKO gdy korzystamy z modelu chmurowego
+                // Lokalne modele (np. Phi-4-mini) często generują szum i psują pamięć
+                if (_aiService is AiService realAi && !realAi.IsUsingLocalModel)
+                {
+                    await ExtractComplexMemoryAsync(userMessages);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[MemoryExtractionService] Skipping complex memory extraction for local model");
+                }
             }
             catch (Exception ex)
             {
@@ -117,6 +132,12 @@ Lista informacji (klucz=wartość):";
         private async Task ParseAndSaveExtractedMemory(string extractedData)
         {
             var lines = extractedData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var allowedKeys = new HashSet<string>(new[]
+            {
+                "imie", "imię", "wiek", "miasto", "praca", "hobby",
+                "preferencje", "zainteresowania", "ulubiony_kolor", "ulubiony_sport",
+                "email", "telefon"
+            }, StringComparer.OrdinalIgnoreCase);
             
             foreach (var line in lines)
             {
@@ -128,8 +149,13 @@ Lista informacji (klucz=wartość):";
                     {
                         var key = parts[0].Trim().ToLower();
                         var value = parts[1].Trim();
-                        
-                        if (key.Length > 0 && value.Length > 1 && value.Length < 200)
+
+                        // Filtry jakości: dopuszczalne klucze i format
+                        var keyOk = allowedKeys.Contains(key)
+                                   && System.Text.RegularExpressions.Regex.IsMatch(key, @"^[a-ząćęłńóśźż0-9_]{2,30}$");
+                        var valueOk = value.Length > 1 && value.Length < 200 && !value.Contains("http://") && !value.Contains("https://");
+
+                        if (keyOk && valueOk)
                         {
                             await SaveMemoryAsync(key, value, "osobiste", "wydobyte_przez_ai");
                             System.Diagnostics.Debug.WriteLine($"[MemoryExtractionService] AI extraction: {key} = {value}");

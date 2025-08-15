@@ -22,4 +22,9 @@
         ContentTemplate="{DataTemplate views:MemoryPage}"
         Route="MemoryPage" />
 
+    <ShellContent
+        Title="Model Settings"
+        ContentTemplate="{DataTemplate views:ModelSettingsPage}"
+        Route="ModelSettingsPage" />
+
 </Shell>

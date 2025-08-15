@@ -85,6 +85,14 @@ LLMClient features an advanced memory system that automatically personalizes int
 
 4. **Memory Management:** An interface is available for viewing, editing, and categorizing saved memories.
 
+## Supported Languages
+
+- The app adapts to the language used by the user in each message.
+- Language coverage depends on the selected model:
+  - Cloud models (OpenAI/Gemini/OpenAI‑compatible): broad multilingual support.
+  - Local model (Phi‑4‑mini‑instruct via ONNX): best in English/Polish; quality may drop in some languages.
+- UI strings: English and Polish available (Polish resources included).
+
 ### Supported Information
 
 The system automatically recognizes and saves:
@@ -200,6 +208,14 @@ LLMClient posiada zaawansowany system pamięci, który automatycznie personalizu
 
 4. **Zarządzanie Pamięcią:** Dostępny jest interfejs do przeglądania, edycji i kategoryzowania zapisanych wspomnień.
 
+## Obsługiwane Języki
+
+- Aplikacja dostosowuje język odpowiedzi do języka wiadomości użytkownika.
+- Zakres języków zależy od wybranego modelu:
+  - Modele chmurowe (OpenAI/Gemini/OpenAI‑compatible): szeroka obsługa wielu języków.
+  - Model lokalny (Phi‑4‑mini‑instruct przez ONNX): najlepsza jakość EN/PL; jakość w innych językach może być niższa.
+- UI: dostępne zasoby PL i EN (w zestawie są zasoby PL).
+
 ### Obsługiwane Informacje
 
 System automatycznie rozpoznaje i zapisuje:
@@ -229,3 +245,39 @@ Projekt wykorzystuje wzorzec MVVM i jest podzielony na następujące warstwy:
 ## Licencja
 
 Ten projekt jest udostępniany na licencji [MIT](LICENSE).
+
+
+## Recent additions (English)
+
+- Local ONNX Runtime GenAI (Phi‑4‑mini‑instruct) with streaming, unified chat template, and safety controls
+- Editable system prompt stored in DB; if empty, no system message is injected
+- Optional memory injection (cloud models only) controlled by a toggle in Settings
+- Memory extraction disabled while a local model is active (reduces noise and hallucinations)
+- Adaptive language: the assistant answers in the same language as the user
+- Automatic conversation creation when none is active (Android/mobile friendly)
+- Cloud model picker automatically locks while a local model is loaded; unlocks after unload
+- Spinner overlay both for downloading and for loading the local model into RAM
+
+How to use the local model
+1) Settings → Local model → Download (if needed)
+2) Load model → overlay spinner shows during load
+3) Local model becomes active; cloud picker is disabled
+4) Unload to return to cloud models
+
+
+## Nowości (Polski)
+
+- Lokalny ONNX Runtime GenAI (Phi‑4‑mini‑instruct) ze strumieniowaniem, ujednoliconym szablonem czatu i kontrolą bezpieczeństwa
+- Edytowalny system prompt zapisywany w bazie; jeśli pusty, nie wstrzykujemy system message
+- Opcjonalne dołączanie pamięci (tylko dla modeli chmurowych) sterowane przełącznikiem w Ustawieniach
+- Ekstrakcja pamięci wyłączona, gdy aktywny jest model lokalny (mniej szumu/halucynacji)
+- Adaptacyjny język: asystent odpowiada w tym samym języku, w którym pisze użytkownik
+- Automatyczne tworzenie konwersacji, gdy nie ma aktywnej (wygodne na Androidzie)
+- Blokada wyboru modeli chmurowych, gdy lokalny model jest załadowany; odblokowanie po rozładowaniu
+- Overlay ze spinnerem zarówno podczas pobierania, jak i ładowania modelu lokalnego do RAM
+
+Jak korzystać z modelu lokalnego
+1) Ustawienia → Model lokalny → Pobierz (jeśli potrzeba)
+2) Załaduj model → w trakcie ładowania widoczny overlay ze spinnerem
+3) Model lokalny staje się aktywny; wybór modeli chmurowych jest zablokowany
+4) Rozładuj, aby wrócić do modeli chmurowych

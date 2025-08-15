@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView x:Class="LLMClient.Views.LocalModelStatusView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Name="LocalModelStatusRoot">
+             
+    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+            StrokeShape="RoundRectangle 10"
+            Padding="15,10"
+            Margin="15,5"
+            IsVisible="{Binding IsVisible}">
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Status Icon -->
+            <Label Grid.Column="0" Grid.Row="0"
+                   Text="{Binding StatusIcon}"
+                   FontSize="20"
+                   VerticalOptions="Center"
+                   Margin="0,0,10,0" />
+
+            <!-- Status Text -->
+            <Label Grid.Column="1" Grid.Row="0"
+                   Text="{Binding StatusText}"
+                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center" />
+
+            <!-- Action Button -->
+            <Button Grid.Column="2" Grid.Row="0"
+                    Text="{Binding ActionButtonText}"
+                    BackgroundColor="{Binding ActionButtonColor}"
+                    TextColor="White"
+                    FontSize="12"
+                    CornerRadius="6"
+                    Padding="12,6"
+                    Command="{Binding ActionCommand}"
+                    IsVisible="{Binding ShowActionButton}" />
+
+            <!-- Progress Bar (only shown during download) -->
+            <ProgressBar Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
+                         Progress="{Binding DownloadProgress}"
+                         ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                         BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}"
+                         HeightRequest="4"
+                         Margin="0,8,0,0"
+                         IsVisible="{Binding ShowProgressBar}" />
+
+            <!-- Progress Text -->
+            <Label Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"
+                   Text="{Binding ProgressText}"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}"
+                   FontSize="11"
+                   HorizontalOptions="Center"
+                   Margin="0,4,0,0"
+                   IsVisible="{Binding ShowProgressText}" />
+        </Grid>
+    </Border>
+</ContentView>

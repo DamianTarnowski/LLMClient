@@ -162,4 +162,111 @@
   <data name="ModelName" xml:space="preserve">
     <value>Model Name</value>
   </data>
+  
+  <!-- Onboarding strings -->
+  <data name="OnboardingWelcomeTitle" xml:space="preserve">
+    <value>Welcome to LLMClient</value>
+  </data>
+  <data name="OnboardingWelcomeDescription" xml:space="preserve">
+    <value>Your advanced AI companion</value>
+  </data>
+  <data name="OnboardingAiSetupTitle" xml:space="preserve">
+    <value>AI Configuration</value>
+  </data>
+  <data name="OnboardingAiSetupDescription" xml:space="preserve">
+    <value>Set up your AI models</value>
+  </data>
+  <data name="OnboardingMemoryTitle" xml:space="preserve">
+    <value>Memory System</value>
+  </data>
+  <data name="OnboardingMemoryDescription" xml:space="preserve">
+    <value>AI that remembers you</value>
+  </data>
+  <data name="OnboardingSearchTitle" xml:space="preserve">
+    <value>Semantic Search</value>
+  </data>
+  <data name="OnboardingSearchDescription" xml:space="preserve">
+    <value>Find anything in your chats</value>
+  </data>
+  <data name="OnboardingLanguageTitle" xml:space="preserve">
+    <value>13 Languages</value>
+  </data>
+  <data name="OnboardingLanguageDescription" xml:space="preserve">
+    <value>Global communication</value>
+  </data>
+  <data name="OnboardingLocalModelTitle" xml:space="preserve">
+    <value>Local AI Model</value>
+  </data>
+  <data name="OnboardingLocalModelDescription" xml:space="preserve">
+    <value>Privacy-first AI on your device</value>
+  </data>
+  <data name="GetStarted" xml:space="preserve">
+    <value>Get Started</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="LocalModel" xml:space="preserve">
+    <value>Local Model</value>
+  </data>
+  <data name="DownloadModel" xml:space="preserve">
+    <value>Download Model</value>
+  </data>
+  <data name="LoadModel" xml:space="preserve">
+    <value>Load Model</value>
+  </data>
+  <data name="UnloadModel" xml:space="preserve">
+    <value>Unload Model</value>
+  </data>
+  <data name="DeleteModel" xml:space="preserve">
+    <value>Delete Model</value>
+  </data>
+  <data name="ModelStatus" xml:space="preserve">
+    <value>Model Status</value>
+  </data>
+  <data name="LocalModelNotDownloaded" xml:space="preserve">
+    <value>Phi-4-mini model not downloaded</value>
+  </data>
+  <data name="LocalModelDownloading" xml:space="preserve">
+    <value>Downloading Phi-4-mini model...</value>
+  </data>
+  <data name="LocalModelDownloaded" xml:space="preserve">
+    <value>Phi-4-mini model ready to load</value>
+  </data>
+  <data name="LocalModelLoading" xml:space="preserve">
+    <value>Loading Phi-4-mini model...</value>
+  </data>
+  <data name="LocalModelReady" xml:space="preserve">
+    <value>Phi-4-mini model ready</value>
+  </data>
+  <data name="LocalModelError" xml:space="preserve">
+    <value>Local model error</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Load" xml:space="preserve">
+    <value>Load</value>
+  </data>
+  <data name="Unload" xml:space="preserve">
+    <value>Unload</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="ActionFailed" xml:space="preserve">
+    <value>Action failed</value>
+  </data>
+  <data name="Starting" xml:space="preserve">
+    <value>Starting...</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="ProgressFormat" xml:space="preserve">
+    <value>{0}% downloaded</value>
+  </data>
 </root>

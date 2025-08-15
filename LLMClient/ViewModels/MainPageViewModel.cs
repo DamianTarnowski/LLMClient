@@ -34,7 +34,11 @@ namespace LLMClient.ViewModels
         private readonly IEmbeddingService _embeddingService;
         private readonly IMemoryExtractionService? _memoryExtractionService;
         private readonly ILocalizationService _localizationService;
+        private readonly ILocalModelService _localModelService;
         private double _downloadProgressValue;
+        private bool _isCloudModelsEnabled = true;
+        private string? _currentActiveModel;
+        private bool _isLocalModelBusy;
 
         public ObservableCollection<Conversation> Conversations
         {
@@ -219,6 +223,36 @@ namespace LLMClient.ViewModels
             }
         }
 
+        public string? CurrentActiveModel 
+        {
+            get => _currentActiveModel;
+            set
+            {
+                _currentActiveModel = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsLocalModelBusy
+        {
+            get => _isLocalModelBusy;
+            set
+            {
+                _isLocalModelBusy = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsCloudModelsEnabled
+        {
+            get => _isCloudModelsEnabled;
+            set
+            {
+                _isCloudModelsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
         public List<LanguageOption> AvailableLanguages => _localizationService.AvailableLanguages;
 
         public ICommand NewConversationCommand { get; }
@@ -240,10 +274,11 @@ namespace LLMClient.ViewModels
         public ICommand GoToMemoryCommand { get; }
         public ICommand SetPassphraseCommand { get; }
         public ICommand LoadMoreMessagesCommand { get; }
+        public ICommand ModelSettingsCommand { get; }
 
         public bool IsConversationsEmpty => Conversations.Count == 0;
 
-        public MainPageViewModel(IAiService aiService, DatabaseService databaseService, IStreamingBatchService streamingBatchService, IErrorHandlingService errorHandlingService, ISearchService searchService, IExportService exportService, IEmbeddingService embeddingService, ILocalizationService localizationService, IMemoryExtractionService? memoryExtractionService = null)
+        public MainPageViewModel(IAiService aiService, DatabaseService databaseService, IStreamingBatchService streamingBatchService, IErrorHandlingService errorHandlingService, ISearchService searchService, IExportService exportService, IEmbeddingService embeddingService, ILocalizationService localizationService, ILocalModelService localModelService, IMemoryExtractionService? memoryExtractionService = null)
         {
             _aiService = aiService;
             _databaseService = databaseService;
@@ -253,7 +288,22 @@ namespace LLMClient.ViewModels
             _exportService = exportService;
             _embeddingService = embeddingService;
             _localizationService = localizationService;
+            _localModelService = localModelService;
             _memoryExtractionService = memoryExtractionService;
+
+            // Subscribe to local model state changes
+            _localModelService.StateChanged += OnLocalModelStateChanged;
+            
+            // Subscribe to messages from LocalModelStatusViewModel
+            MessagingCenter.Subscribe<LocalModelStatusViewModel>(this, "LocalModelLoaded", async (sender) =>
+            {
+                await OnLocalModelLoadedAsync();
+            });
+            
+            MessagingCenter.Subscribe<LocalModelStatusViewModel>(this, "LocalModelUnloaded", async (sender) =>
+            {
+                await OnLocalModelUnloadedAsync();
+            });
 
             // Initialize AiConfiguration and subscribe to its PropertyChanged event
             _aiConfiguration = new AiConfiguration();
@@ -278,6 +328,7 @@ namespace LLMClient.ViewModels
             GoToMemoryCommand = new Command(async () => await GoToMemoryAsync());
             SetPassphraseCommand = new Command(async () => await SetDatabasePassphraseAsync());
             LoadMoreMessagesCommand = new Command(async () => await LoadMoreMessagesAsync());
+            ModelSettingsCommand = new Command(async () => await GoToModelSettingsAsync());
 
             // Subskrypcja na powiadomienia o zmianach modeli
             MessagingCenter.Subscribe<ModelConfigurationViewModel>(this, "ModelsChanged", async (sender) =>
@@ -291,6 +342,130 @@ namespace LLMClient.ViewModels
             // Initialize selected language
             var currentCulture = _localizationService.CurrentCulture;
             _selectedLanguage = _localizationService.AvailableLanguages.FirstOrDefault(l => l.Code == currentCulture);
+        }
+
+        private void OnLocalModelStateChanged(LocalModelState state)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                switch (state)
+                {
+                    case LocalModelState.Loaded:
+                        // When local model is loaded, disable cloud models and set as active
+                        IsCloudModelsEnabled = false;
+                        IsLocalModelBusy = false;
+                        CurrentActiveModel = "Phi-4-mini (Local)";
+                        
+                        // Notify that cloud model selector should be disabled
+                        MessagingCenter.Send(this, "LocalModelActive", true);
+                        break;
+                    case LocalModelState.Loading:
+                        // Pokaż spinner w trakcie ładowania
+                        IsLocalModelBusy = true;
+                        CurrentActiveModel = "Phi-4-mini (Local)";
+                        break;
+                    case LocalModelState.Downloading:
+                        IsLocalModelBusy = true;
+                        break;
+                        
+                    case LocalModelState.Downloaded:
+                    case LocalModelState.NotDownloaded:
+                    case LocalModelState.Error:
+                        // When local model is not loaded, re-enable cloud models
+                        IsCloudModelsEnabled = true;
+                        IsLocalModelBusy = false;
+                        CurrentActiveModel = AiConfiguration?.SelectedModel?.Name;
+                        
+                        // Notify that cloud model selector should be re-enabled
+                        MessagingCenter.Send(this, "LocalModelActive", false);
+                        break;
+                }
+            });
+        }
+        
+        private async Task OnLocalModelLoadedAsync()
+        {
+            try
+            {
+                // Create a local model entry for AiService
+                var localModel = new AiModel
+                {
+                    Id = -1, // Special ID for local model
+                    Name = "Phi-4-mini (Local)",
+                    ModelId = "phi-4-mini",
+                    Provider = AiProvider.LocalModel,
+                    IsActive = true,
+                    // IsLocalModel is read-only property based on Provider
+                    SupportsStreaming = true,
+                    SupportsImages = false
+                };
+                
+                // Switch AiService to use local model
+                await _aiService.UpdateConfiguration(localModel);
+                // Ustaw też w UI jako wybrany model
+                AiConfiguration.SelectedModel = localModel;
+                
+                // Update UI state
+                IsCloudModelsEnabled = false;
+                IsLocalModelBusy = false;
+                CurrentActiveModel = "Phi-4-mini (Local)";
+                
+                // Save preference for local model usage
+                Preferences.Set("UseLocalModel", true);
+
+                // Jeśli nie ma żadnej aktywnej konwersacji – utwórz ją automatycznie
+                if (SelectedConversation == null)
+                {
+                    if (!Conversations.Any())
+                    {
+                        await CreateNewConversationAsync();
+                    }
+                    else
+                    {
+                        SelectedConversation = Conversations.First();
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine("[MainPageViewModel] Local model activated successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Error activating local model: {ex.Message}");
+            }
+        }
+        
+        private async Task OnLocalModelUnloadedAsync()
+        {
+            try
+            {
+                // Re-enable cloud models
+                IsCloudModelsEnabled = true;
+                IsLocalModelBusy = false;
+                
+                // Switch back to previously selected cloud model or first available
+                var modelToSelect = AiConfiguration.Models.FirstOrDefault(m => m.IsActive) ?? 
+                                  AiConfiguration.Models.FirstOrDefault();
+                
+                if (modelToSelect != null)
+                {
+                    AiConfiguration.SelectedModel = modelToSelect;
+                    await _aiService.UpdateConfiguration(modelToSelect);
+                    CurrentActiveModel = modelToSelect.Name;
+                }
+                else
+                {
+                    CurrentActiveModel = null;
+                }
+                
+                // Clear preference for local model usage
+                Preferences.Set("UseLocalModel", false);
+                
+                System.Diagnostics.Debug.WriteLine("[MainPageViewModel] Switched back to cloud model");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Error switching to cloud model: {ex.Message}");
+            }
         }
 
         // Implementacja obsługi parametrów nawigacji
@@ -373,6 +548,11 @@ namespace LLMClient.ViewModels
                         {
                             SelectedConversation = Conversations.First();
                         }
+                        else
+                        {
+                            // Jeśli nic nie zostało – utwórz nową, aby UI zawsze miał aktywną konwersację
+                            await CreateNewConversationAsync();
+                        }
                     }
                     OnPropertyChanged(nameof(IsConversationsEmpty));
                     await Application.Current.MainPage.DisplayAlert("Sukces", "Konwersacja została usunięta.", "OK");
@@ -413,6 +593,11 @@ namespace LLMClient.ViewModels
             {
                 SelectedConversation = Conversations.First();
             }
+            else
+            {
+                // Brak konwersacji? Utwórz automatycznie nową i ustaw jako aktywną
+                await CreateNewConversationAsync();
+            }
 
             var models = await _databaseService.GetModelsAsync();
             AiConfiguration.Models = new ObservableCollection<AiModel>(models);
@@ -452,6 +637,28 @@ namespace LLMClient.ViewModels
 
             StreamingEnabled = Preferences.Get("StreamingEnabled", true);
             
+            // Jeśli brak wybranego modelu chmurowego, ale lokalny jest już ZAŁADOWANY, ustaw lokalny jako aktywny
+            if (AiConfiguration.SelectedModel == null && _localModelService.State == LocalModelState.Loaded)
+            {
+                var localModel = new AiModel
+                {
+                    Id = -1,
+                    Name = "Phi-4-mini (Local)",
+                    ModelId = "phi-4-mini",
+                    Provider = AiProvider.LocalModel,
+                    IsActive = true,
+                    SupportsStreaming = true,
+                    SupportsImages = false
+                };
+                AiConfiguration.SelectedModel = localModel;
+                await _aiService.UpdateConfiguration(localModel);
+                IsCloudModelsEnabled = false;
+                CurrentActiveModel = localModel.Name;
+            }
+
+            // Ustal dostępność wyboru modeli chmurowych zależnie od stanu lokalnego modelu
+            IsCloudModelsEnabled = _localModelService.State != LocalModelState.Loaded;
+            
             // Sprawdź status szyfrowania bazy danych
             try
             {
@@ -481,18 +688,36 @@ namespace LLMClient.ViewModels
 
         private async Task CreateNewConversationAsync()
         {
-            // Sprawdź czy jest wybrany model AI
+            // Zapewnij aktywny model: jeśli brak chmurowego, a lokalny jest załadowany, użyj lokalnego
             if (AiConfiguration.SelectedModel == null)
             {
-                await ShowConfigurationRequiredAsync();
-                return;
+                if (_localModelService.State == LocalModelState.Loaded)
+                {
+                    var localModel = new AiModel
+                    {
+                        Id = -1,
+                        Name = "Phi-4-mini (Local)",
+                        ModelId = "phi-4-mini",
+                        Provider = AiProvider.LocalModel,
+                        IsActive = true,
+                        SupportsStreaming = true,
+                        SupportsImages = false
+                    };
+                    AiConfiguration.SelectedModel = localModel;
+                    await _aiService.UpdateConfiguration(localModel);
+                }
+                else
+                {
+                    // Na Androidzie UX: tworzymy konwersację bez modelu, by UI nie był zablokowany
+                    // Użytkownik i tak zobaczy komunikat przy próbie wysyłki wiadomości
+                }
             }
 
             var newConversation = new Conversation
             {
                 Title = "Nowa konwersacja",
                 CreatedAt = DateTime.Now,
-                AiModelId = AiConfiguration.SelectedModel.Id
+                AiModelId = AiConfiguration.SelectedModel?.Id ?? 0
             };
 
             // Teraz to będzie działać - metoda zwraca Task<int>
@@ -520,6 +745,9 @@ namespace LLMClient.ViewModels
 
         private void SelectConversation(Conversation conversation)
         {
+            if (conversation == null)
+                return;
+
             SelectedConversation = conversation;
             _messagesOffset = 0;
             SelectedConversation.Messages.Clear();
@@ -538,10 +766,12 @@ namespace LLMClient.ViewModels
 
         private async Task SendMessageAsync()
         {
+            // Jeśli brak aktywnej konwersacji – utwórz ją automatycznie
             if (SelectedConversation == null)
             {
-                await Application.Current.MainPage.DisplayAlert("Brak konwersacji", "Utwórz nową konwersację zanim wyślesz wiadomość.", "OK");
-                return;
+                await CreateNewConversationAsync();
+                if (SelectedConversation == null)
+                    return;
             }
 
             if (string.IsNullOrWhiteSpace(NewMessage))
@@ -759,7 +989,7 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                var titlePrompt = $"Stwórz krótki tytuł (max 5 słów) po polsku dla konwersacji o: {userMessageContent}";
+                var titlePrompt = $"Create a short conversation title (max 5 words) matching the user's language for: {userMessageContent}";
                 var titleResponse = await _aiService.GetResponseAsync(titlePrompt, new List<Message>());
 
                 string newTitle;
@@ -1090,6 +1320,11 @@ namespace LLMClient.ViewModels
         private async Task GoToMemoryAsync()
         {
             await Shell.Current.GoToAsync("///MemoryPage");
+        }
+
+        private async Task GoToModelSettingsAsync()
+        {
+            await Shell.Current.GoToAsync("///ModelSettingsPage");
         }
 
         private async Task SetDatabasePassphraseAsync()

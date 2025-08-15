@@ -63,6 +63,8 @@ namespace LLMClient.Services
                 
                 await _database.CreateTableAsync<LLMClient.Models.Memory>();
                 System.Diagnostics.Debug.WriteLine("DatabaseService: Memory table created/verified");
+                await _database.CreateTableAsync<LLMClient.ViewModels.ModelSettings>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: ModelSettings table created/verified");
                 
                 _migrationCompleted = true;
                 System.Diagnostics.Debug.WriteLine("DatabaseService: Initialization completed successfully");
@@ -108,6 +110,7 @@ namespace LLMClient.Services
                         await _database.CreateTableAsync<LLMClient.Models.Conversation>();
                         await _database.CreateTableAsync<LLMClient.Models.Message>();
                         await _database.CreateTableAsync<LLMClient.Models.Memory>();
+                        await _database.CreateTableAsync<LLMClient.ViewModels.ModelSettings>();
                         
                         _migrationCompleted = true;
                         System.Diagnostics.Debug.WriteLine("DatabaseService: Database successfully recreated after corruption");
@@ -137,6 +140,7 @@ namespace LLMClient.Services
                             await _database.CreateTableAsync<LLMClient.Models.Conversation>();
                             await _database.CreateTableAsync<LLMClient.Models.Message>();
                             await _database.CreateTableAsync<LLMClient.Models.Memory>();
+                            await _database.CreateTableAsync<LLMClient.ViewModels.ModelSettings>();
                             
                             _migrationCompleted = true;
                             System.Diagnostics.Debug.WriteLine("DatabaseService: Unencrypted fallback database created successfully");
@@ -923,6 +927,62 @@ namespace LLMClient.Services
             }
             
             return allTags.Distinct().OrderBy(t => t).ToList();
+        }
+        
+        // Model Settings methods
+        public async Task<LLMClient.ViewModels.ModelSettings?> GetModelSettingsAsync()
+        {
+            try
+            {
+                await EnsureDatabaseInitializedAsync();
+                var settings = await _database.Table<LLMClient.ViewModels.ModelSettings>().FirstOrDefaultAsync();
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Retrieved model settings: {settings?.SystemPrompt?.Substring(0, Math.Min(50, settings?.SystemPrompt?.Length ?? 0))}...");
+                return settings;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Error getting model settings: {ex.Message}");
+                return null;
+            }
+        }
+        
+        public async Task<bool> SaveModelSettingsAsync(LLMClient.ViewModels.ModelSettings settings)
+        {
+            try
+            {
+                await EnsureDatabaseInitializedAsync();
+                
+                // Check if settings already exist
+                var existingSettings = await _database.Table<LLMClient.ViewModels.ModelSettings>().FirstOrDefaultAsync();
+                
+                if (existingSettings != null)
+                {
+                    // Update existing settings
+                    existingSettings.SystemPrompt = settings.SystemPrompt;
+                    existingSettings.Temperature = settings.Temperature;
+                    existingSettings.MaxLength = settings.MaxLength;
+                    existingSettings.RepetitionPenalty = settings.RepetitionPenalty;
+                    existingSettings.TopP = settings.TopP;
+                    existingSettings.UpdatedAt = DateTime.UtcNow;
+                    
+                    var result = await _database.UpdateAsync(existingSettings);
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] Updated model settings, result: {result}");
+                    return result > 0;
+                }
+                else
+                {
+                    // Insert new settings
+                    settings.UpdatedAt = DateTime.UtcNow;
+                    var result = await _database.InsertAsync(settings);
+                    System.Diagnostics.Debug.WriteLine($"[DatabaseService] Inserted new model settings, result: {result}");
+                    return result > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Error saving model settings: {ex.Message}");
+                return false;
+            }
         }
     }
 }

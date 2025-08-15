@@ -10,7 +10,11 @@
       "Bash(dotnet test)",
       "Bash(mkdir:*)",
       "Bash(findstr:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:huggingface.co)",
+      "WebFetch(domain:github.com)",
+      "Bash(dotnet run:*)"
     ],
     "deny": []
   }

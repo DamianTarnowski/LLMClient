@@ -6,10 +6,13 @@ namespace LLMClient;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage(MainPageViewModel viewModel)
+    public MainPage(MainPageViewModel viewModel, LocalModelStatusViewModel localModelStatusViewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
+        
+        // Set up LocalModelStatusView
+        LocalModelStatus.BindingContext = localModelStatusViewModel;
 
         // Subscribe to scroll messages
         MessagingCenter.Subscribe<MainPageViewModel>(this, "ScrollToBottom", (sender) =>

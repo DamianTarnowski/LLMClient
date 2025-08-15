@@ -162,4 +162,149 @@
   <data name="ModelName" xml:space="preserve">
     <value>Nazwa modelu</value>
   </data>
+  
+  <!-- Onboarding strings -->
+  <data name="OnboardingWelcomeTitle" xml:space="preserve">
+    <value>Witaj w LLMClient</value>
+  </data>
+  <data name="OnboardingWelcomeDescription" xml:space="preserve">
+    <value>Twój zaawansowany towarzysz AI</value>
+  </data>
+  <data name="OnboardingAiSetupTitle" xml:space="preserve">
+    <value>Konfiguracja AI</value>
+  </data>
+  <data name="OnboardingAiSetupDescription" xml:space="preserve">
+    <value>Skonfiguruj swoje modele AI</value>
+  </data>
+  <data name="OnboardingMemoryTitle" xml:space="preserve">
+    <value>System Pamięci</value>
+  </data>
+  <data name="OnboardingMemoryDescription" xml:space="preserve">
+    <value>AI które Cię pamięta</value>
+  </data>
+  <data name="OnboardingSearchTitle" xml:space="preserve">
+    <value>Wyszukiwanie Semantyczne</value>
+  </data>
+  <data name="OnboardingSearchDescription" xml:space="preserve">
+    <value>Znajdź wszystko w swoich czatach</value>
+  </data>
+  <data name="OnboardingLanguageTitle" xml:space="preserve">
+    <value>13 Języków</value>
+  </data>
+  <data name="OnboardingLanguageDescription" xml:space="preserve">
+    <value>Globalna komunikacja</value>
+  </data>
+  <data name="OnboardingLocalModelTitle" xml:space="preserve">
+    <value>Lokalny Model AI</value>
+  </data>
+  <data name="OnboardingLocalModelDescription" xml:space="preserve">
+    <value>Prywatne AI na Twoim urządzeniu</value>
+  </data>
+  <data name="GetStarted" xml:space="preserve">
+    <value>Rozpocznij</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Dalej</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>Pomiń</value>
+  </data>
+  <data name="LocalModel" xml:space="preserve">
+    <value>Model Lokalny</value>
+  </data>
+  <data name="DownloadModel" xml:space="preserve">
+    <value>Pobierz Model</value>
+  </data>
+  <data name="LoadModel" xml:space="preserve">
+    <value>Załaduj Model</value>
+  </data>
+  <data name="UnloadModel" xml:space="preserve">
+    <value>Wyładuj Model</value>
+  </data>
+  <data name="DeleteModel" xml:space="preserve">
+    <value>Usuń Model</value>
+  </data>
+  <data name="ModelStatus" xml:space="preserve">
+    <value>Status Modelu</value>
+  </data>
+  
+  <!-- Download and error messages -->
+  <data name="DownloadProgress" xml:space="preserve">
+    <value>Postęp pobierania</value>
+  </data>
+  <data name="DownloadComplete" xml:space="preserve">
+    <value>Pobieranie zakończone</value>
+  </data>
+  <data name="DownloadResuming" xml:space="preserve">
+    <value>Wznawianie pobierania...</value>
+  </data>
+  <data name="DownloadResumed" xml:space="preserve">
+    <value>Pobieranie wznowione automatycznie</value>
+  </data>
+  <data name="DownloadFailed" xml:space="preserve">
+    <value>Pobieranie nie powiodło się</value>
+  </data>
+  <data name="RetryDownload" xml:space="preserve">
+    <value>Spróbuj ponownie</value>
+  </data>
+  <data name="AutoRetryInProgress" xml:space="preserve">
+    <value>Automatyczne ponowienie w toku...</value>
+  </data>
+  <data name="StorageSpaceWarning" xml:space="preserve">
+    <value>Brak miejsca na dysku</value>
+  </data>
+  <data name="FreeUpSpaceMessage" xml:space="preserve">
+    <value>Zwolnij co najmniej {0} MB miejsca i spróbuj ponownie</value>
+  </data>
+  <data name="NetworkError" xml:space="preserve">
+    <value>Problem z połączeniem sieciowym</value>
+  </data>
+  <data name="NetworkErrorSolution" xml:space="preserve">
+    <value>Sprawdź połączenie internetowe. Pobieranie zostanie automatycznie wznowione.</value>
+  </data>
+  <data name="PermissionError" xml:space="preserve">
+    <value>Odmowa dostępu</value>
+  </data>
+  <data name="PermissionErrorSolution" xml:space="preserve">
+    <value>Uruchom ponownie aplikację lub sprawdź uprawnienia w ustawieniach systemu</value>
+  </data>
+  <data name="CorruptedFileError" xml:space="preserve">
+    <value>Plik jest uszkodzony</value>
+  </data>
+  <data name="CorruptedFileErrorSolution" xml:space="preserve">
+    <value>Pobieranie zostanie automatycznie wznowione aby naprawić uszkodzony plik</value>
+  </data>
+  <data name="UnknownError" xml:space="preserve">
+    <value>Nieoczekiwany błąd</value>
+  </data>
+  <data name="UnknownErrorSolution" xml:space="preserve">
+    <value>Spróbuj ponownie później lub skontaktuj się z pomocą techniczną</value>
+  </data>
+  <data name="ModelSizeMB" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
+  <data name="EstimatedTime" xml:space="preserve">
+    <value>Szacowany czas: {0}</value>
+  </data>
+  <data name="DownloadSpeed" xml:space="preserve">
+    <value>Prędkość: {0}/s</value>
+  </data>
+  <data name="Resume" xml:space="preserve">
+    <value>Wznów</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>Wstrzymaj</value>
+  </data>
+  <data name="UseCloudModels" xml:space="preserve">
+    <value>Użyj modeli w chmurze</value>
+  </data>
+  <data name="ModelNotAvailable" xml:space="preserve">
+    <value>Model lokalny niedostępny</value>
+  </data>
+  <data name="ModelLoadingFailed" xml:space="preserve">
+    <value>Nie udało się załadować lokalnego modelu</value>
+  </data>
+  <data name="SwitchingToCloudModel" xml:space="preserve">
+    <value>Przełączanie na model chmurowy...</value>
+  </data>
 </root>

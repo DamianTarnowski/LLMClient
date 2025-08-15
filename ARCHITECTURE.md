@@ -1,4 +1,4 @@
-# Architektura Aplikacji Synapse AI
+# Architektura Aplikacji LLMClient
 
 Ten dokument opisuje architekturę i kluczowe decyzje projektowe stojące za aplikacją Synapse AI. Zrozumienie tych koncepcji jest kluczowe dla deweloperów chcących rozwijać i utrzymywać projekt.
 
@@ -44,7 +44,7 @@ Architektura opiera się na trzech głównych filarach:
 
 Serwisy stanowią rdzeń aplikacji. Są rejestrowane jako singletony lub obiekty przejściowe w kontenerze DI (`MauiProgram.cs`).
 
-- **`AiService`**: Abstrakcja nad **Microsoft.SemanticKernel**. Odpowiada za formatowanie zapytań, komunikację z API modeli językowych (OpenAI, Gemini) oraz obsługę odpowiedzi strumieniowych i standardowych.
+- **`AiService`**: Abstrakcja nad **Microsoft.SemanticKernel** oraz lokalnym backendem ONNX Runtime GenAI. Odpowiada za formatowanie zapytań, komunikację z API modeli językowych (OpenAI, Gemini) oraz obsługę odpowiedzi strumieniowych i standardowych. Czyta edytowalny System Prompt z bazy; pamięć użytkownika wstrzykuje wyłącznie dla modeli chmurowych (gdy włączone w ustawieniach). Dla modelu lokalnego używa szablonu czatu zgodnego z tokenizerem i bez pamięci.
 
 - **`DatabaseService`**: Zarządza lokalną bazą danych **SQLite**. Kluczowe decyzje:
     - **Szyfrowanie:** Użycie **SQLCipher** do szyfrowania całej bazy danych. Klucz szyfrujący jest generowany i bezpiecznie przechowywany w `SecureStorage` specyficznym dla platformy.
@@ -61,6 +61,12 @@ Serwisy stanowią rdzeń aplikacji. Są rejestrowane jako singletony lub obiekty
     - **Wyszukiwanie Semantyczne:** Wykorzystuje `EmbeddingService` do konwersji zapytania na wektor, a następnie prosi `DatabaseService` o znalezienie najbardziej podobnych wektorów w bazie danych za pomocą podobieństwa cosinusowego.
 
 - **`TokenizerRust` (Natywna Biblioteka):**
+#### 2.4.1. Lokalny model (ONNX Runtime GenAI)
+
+- **`LocalModelService` / `RobustLocalModelService`**: Załadunek/rozładunek lokalnego modelu (np. Phi‑4‑mini‑instruct), generacja odpowiedzi (streaming i non‑streaming), kontrola limitów i tokenów stop. Wspiera dynamiczne `max_length` (uwzględnia długość promptu) i dekodowanie tokenów w locie.
+- **Pobieranie i diagnostyka**: `NetworkAwareDownloadService`, `SmartDownloadManager`, `LocalModelDiagnosticService` odpowiadają za stabilne pobieranie modelu i raportowanie stanu.
+- **Integracja UI**: Podczas pobierania i ładowania modelu widoczny jest overlay ze spinnerem; gdy model lokalny jest załadowany, selektor modeli chmurowych jest zablokowany. Brak aktywnej konwersacji powoduje automatyczne utworzenie nowej.
+
     - **Powód decyzji:** Wydajność. Tokenizery oparte na C# są znacznie wolniejsze niż natywne implementacje. Rust został wybrany ze względu na bezpieczeństwo pamięci, wydajność i doskonałe biblioteki ekosystemu (np. `tokenizers` od Hugging Face).
     - **Implementacja:** Biblioteka Rust (`tokenizer_rust.dll`/`.so`/`.dylib`) eksponuje prosty interfejs C (`tokenizer_init`, `tokenizer_encode`, `tokenizer_decode`), który jest wywoływany z C#.
     - **Zarządzanie Pamięcią:** Pamięć jest zarządzana po stronie Rusta, co minimalizuje ryzyko wycieków w kodzie C#.
@@ -73,10 +79,27 @@ Serwisy stanowią rdzeń aplikacji. Są rejestrowane jako singletony lub obiekty
 2.  `SendMessageCommand` w `MainPageViewModel` zostaje wywołany.
 3.  ViewModel tworzy obiekt `Message`, zapisuje go w `DatabaseService` i dodaje do kolekcji w UI.
 4.  ViewModel wywołuje `_aiService.GetStreamingResponseAsync()`.
-5.  `AiService` buduje historię czatu i wysyła zapytanie do odpowiedniego modelu (np. Gemini).
+5.  `AiService` buduje historię czatu i wysyła zapytanie do odpowiedniego modelu (np. Gemini lub lokalny ONNX, gdy aktywny).
 6.  Gdy fragmenty odpowiedzi (chunk) napływają, `AiService` zwraca je jako `IAsyncEnumerable<string>`.
 7.  `MainPageViewModel` odbiera fragmenty i za pomocą `StreamingBatchService` aktualizuje ostatnią wiadomość w UI w czasie rzeczywistym.
 8.  Po zakończeniu strumienia, pełna wiadomość jest zapisywana w `DatabaseService`.
+
+### System pamięci i języki
+
+- **Pamięć (cloud‑only injection):**
+  - `MemoryExtractionService` wydobywa informacje (regex + AI) z wiadomości użytkownika i zapisuje w DB.
+  - `MemoryContextService` buduje kontekst pamięci (do 30k znaków) i — tylko dla modeli chmurowych, gdy włączone — dołącza go do system message w `AiService`.
+  - Gdy aktywny jest model lokalny, ekstrakcja AI i wstrzykiwanie pamięci są pomijane, by ograniczyć szum.
+
+- **Wielojęzyczność:**
+  - `AiService` nie wymusza języka — odpowiedzi dopasowują się do języka wiadomości użytkownika.
+  - Modele chmurowe zapewniają szeroką obsługę języków; lokalny Phi‑4‑mini‑instruct najlepiej działa w EN/PL.
+
+### Automatyka konwersacji i wybór modelu
+
+- Jeśli nie istnieje aktywna konwersacja, aplikacja automatycznie tworzy nową (np. na Androidzie po „Wyślij”).
+- Gdy lokalny model jest załadowany, staje się aktywnym backendem; wybór modeli chmurowych w UI jest zablokowany do czasu rozładowania lokalnego.
+
 
 ### Przepływ wyszukiwania semantycznego:
 

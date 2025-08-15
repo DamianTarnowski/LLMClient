@@ -7,7 +7,8 @@ namespace LLMClient.Models
     {
         OpenAI,
         Gemini,
-        OpenAICompatible
+        OpenAICompatible,
+        LocalModel
     }
 
     public class AiModel : INotifyPropertyChanged
@@ -49,6 +50,10 @@ namespace LLMClient.Models
         public string ProviderName => Provider.ToString();
 
         public bool RequiresEndpoint => Provider == AiProvider.OpenAICompatible;
+        
+        public bool IsLocalModel => Provider == AiProvider.LocalModel;
+        
+        public bool RequiresApiKey => Provider != AiProvider.LocalModel;
 
         public string ModelId
         {

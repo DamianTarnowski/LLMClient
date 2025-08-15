@@ -14,7 +14,7 @@ namespace LLMClient.Services
         IAsyncEnumerable<string> GetStreamingResponseAsync(string message, List<Message> conversationHistory, CancellationToken cancellationToken = default);
         IAsyncEnumerable<string> GetStreamingResponseAsync(string message, string? imageBase64, List<Message> conversationHistory, CancellationToken cancellationToken = default);
         bool IsConfigured { get; }
-        void UpdateConfiguration(AiModel model);
+        Task UpdateConfiguration(AiModel model);
     }
 
     public class AiService : IAiService
@@ -23,15 +23,22 @@ namespace LLMClient.Services
         private IChatCompletionService? _chatService;
         private AiModel? _currentModel;
         private readonly IMemoryContextService? _memoryContextService;
+        private readonly ILocalModelService? _localModelService;
+        private readonly DatabaseService? _databaseService;
 
-        public AiService(IMemoryContextService? memoryContextService = null)
+        public AiService(IMemoryContextService? memoryContextService = null, ILocalModelService? localModelService = null, DatabaseService? databaseService = null)
         {
             _memoryContextService = memoryContextService;
+            _localModelService = localModelService;
+            _databaseService = databaseService;
         }
 
-        public bool IsConfigured => _kernel != null && _chatService != null && _currentModel != null;
+        public bool IsConfigured => (_kernel != null && _chatService != null && _currentModel != null) || 
+                                    (_currentModel?.IsLocalModel == true && _localModelService?.IsLoaded == true);
+        
+        public bool IsUsingLocalModel => _currentModel?.IsLocalModel == true && _localModelService?.IsLoaded == true;
 
-        public void UpdateConfiguration(AiModel model)
+        public async Task UpdateConfiguration(AiModel model)
         {
             _currentModel = model;
 
@@ -59,6 +66,29 @@ namespace LLMClient.Services
                             apiKey: model.ApiKey,
                             endpoint: new Uri(model.Endpoint));
                         break;
+
+                    case AiProvider.LocalModel:
+                        // For local models, we don't use Semantic Kernel
+                        // Just validate that the local model service is available
+                        if (_localModelService == null)
+                        {
+                            throw new InvalidOperationException("Local model service is not available");
+                        }
+                        
+                        // Load the local model if not already loaded
+                        if (!_localModelService.IsLoaded)
+                        {
+                            var loadResult = await _localModelService.LoadModelAsync();
+                            if (!loadResult)
+                            {
+                                throw new InvalidOperationException("Failed to load local model");
+                            }
+                        }
+                        
+                        // Clear kernel and chat service for local models
+                        _kernel = null;
+                        _chatService = null;
+                        return; // Exit early, no need to build kernel
                 }
 
                 _kernel = builder.Build();
@@ -80,6 +110,19 @@ namespace LLMClient.Services
         {
             if (!IsConfigured)
                 throw new InvalidOperationException("AI Service nie jest skonfigurowany");
+
+            // Handle local model separately
+            if (_currentModel?.IsLocalModel == true)
+            {
+                if (_localModelService == null)
+                    throw new InvalidOperationException("Local model service is not available");
+
+                // Local models don't support images yet
+                if (!string.IsNullOrEmpty(imageBase64))
+                    throw new NotSupportedException("Local models don't support images yet");
+
+                return await _localModelService.GenerateResponseAsync(conversationHistory, message, cancellationToken);
+            }
 
             var chatHistory = await CreateChatHistoryAsync(conversationHistory);
             
@@ -132,6 +175,60 @@ namespace LLMClient.Services
             if (!IsConfigured)
                 throw new InvalidOperationException("AI Service nie jest skonfigurowany");
 
+            // Handle local model streaming separately
+            if (_currentModel?.IsLocalModel == true)
+            {
+                if (_localModelService == null)
+                    throw new InvalidOperationException("Local model service is not available");
+
+                // Local models don't support images yet
+                if (!string.IsNullOrEmpty(imageBase64))
+                    throw new NotSupportedException("Local models don't support images yet");
+
+                // Build conversation prompt using Phi-4-mini-instruct chat template
+                var promptBuilder = new System.Text.StringBuilder();
+
+                // Load user-defined system prompt for local models (no memory context)
+                var systemPrompt = await GetSystemPromptAsync();
+
+                // Use the same template as LocalModelService: <|im_start|>role<|im_sep|> ... <|im_end|>
+                if (!string.IsNullOrWhiteSpace(systemPrompt))
+                {
+                    promptBuilder.AppendLine("<|im_start|>system<|im_sep|>");
+                    promptBuilder.AppendLine(systemPrompt);
+                    promptBuilder.AppendLine("<|im_end|>");
+                }
+
+                // Add last few messages as chat turns
+                foreach (var msg in conversationHistory.TakeLast(3))
+                {
+                    if (msg.IsUser)
+                    {
+                        promptBuilder.AppendLine("<|im_start|>user<|im_sep|>");
+                        promptBuilder.AppendLine(msg.Content);
+                        promptBuilder.AppendLine("<|im_end|>");
+                    }
+                    else
+                    {
+                        promptBuilder.AppendLine("<|im_start|>assistant<|im_sep|>");
+                        promptBuilder.AppendLine(msg.Content);
+                        promptBuilder.AppendLine("<|im_end|>");
+                    }
+                }
+
+                // Current user turn, then start assistant turn (no end token)
+                promptBuilder.AppendLine("<|im_start|>user<|im_sep|>");
+                promptBuilder.AppendLine(message);
+                promptBuilder.AppendLine("<|im_end|>");
+                promptBuilder.AppendLine("<|im_start|>assistant<|im_sep|>");
+
+                await foreach (var chunk in _localModelService.GenerateStreamingResponseAsync(promptBuilder.ToString(), cancellationToken))
+                {
+                    yield return chunk;
+                }
+                yield break;
+            }
+
             var chatHistory = await CreateChatHistoryAsync(conversationHistory);
             
             // Dodaj wiadomość użytkownika z potencjalnym obrazkiem
@@ -173,11 +270,11 @@ namespace LLMClient.Services
         {
             var chatHistory = new ChatHistory();
 
-            // Podstawowy system message
-            var systemMessage = "Jesteś pomocnym asystentem AI. Odpowiadaj w języku polskim, chyba że użytkownik poprosi o inny język. Jeśli otrzymasz obrazek, opisz go szczegółowo.";
+            // Load system prompt from DB (editable in UI). If empty, omit the system message.
+            var systemMessage = await GetSystemPromptAsync();
             
-            // Dodaj kontekst pamięci jeśli dostępny
-            if (_memoryContextService != null)
+            // Dodaj kontekst pamięci tylko dla modeli chmurowych (i gdy włączone w ustawieniach)
+            if (_currentModel?.IsLocalModel != true && _memoryContextService != null && Preferences.Get("IncludeMemoryInSystemPrompt", true))
             {
                 System.Diagnostics.Debug.WriteLine("[AiService] Loading memory context");
                 var memoryContext = await _memoryContextService.GenerateMemoryContextAsync();
@@ -198,7 +295,10 @@ namespace LLMClient.Services
                 System.Diagnostics.Debug.WriteLine("[AiService] No memory context service available");
             }
             
-            chatHistory.AddSystemMessage(systemMessage);
+            if (!string.IsNullOrWhiteSpace(systemMessage))
+            {
+                chatHistory.AddSystemMessage(systemMessage);
+            }
 
             // Dodaj historię konwersacji
             foreach (var msg in conversationHistory.Take(20)) // Ogranicz do ostatnich 20 wiadomości
@@ -265,6 +365,23 @@ namespace LLMClient.Services
             
             System.Diagnostics.Debug.WriteLine($"[AiService] Execution settings configured for {_currentModel?.Provider}");
             return settings;
+        }
+
+        private async Task<string> GetSystemPromptAsync()
+        {
+            try
+            {
+                if (_databaseService != null)
+                {
+                    var settings = await _databaseService.GetModelSettingsAsync();
+                    return settings?.SystemPrompt?.Trim() ?? string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AiService] Failed to load system prompt from DB: {ex.Message}");
+            }
+            return string.Empty;
         }
     }
 }
