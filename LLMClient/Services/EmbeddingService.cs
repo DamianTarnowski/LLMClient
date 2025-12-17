@@ -51,7 +51,7 @@ namespace LLMClient.Services
         // E5-base zwraca 768-wymiarowy wektor – wersja v3 wymusza ponowną generację.
         public string ModelVersion => "intfloat-e5-large-multilingual-v1";
         public bool IsInitialized => _isInitialized;
-        public event Action<double> DownloadProgress;
+        public event Action<double>? DownloadProgress;
 
         public EmbeddingService(ILogger<EmbeddingService> logger)
         {
@@ -541,9 +541,28 @@ namespace LLMClient.Services
         public void Dispose()
         {
             _session?.Dispose();
-            TokenizerNative.Cleanup();
-            _isInitialized = false;
-            _logger.LogInformation("EmbeddingService disposed, Rust tokenizer cleaned up.");
+            try
+            {
+                if (_tokenizerReady)
+                {
+                    TokenizerNative.Cleanup();
+                }
+            }
+            catch (DllNotFoundException ex)
+            {
+                // During tests the native DLL may be absent; avoid throwing in Dispose
+                _logger.LogWarning(ex, "Pomijam czyszczenie tokenizera – brak tokenizer_rust.dll podczas Dispose");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Błąd podczas czyszczenia tokenizera w Dispose");
+            }
+            finally
+            {
+                _isInitialized = false;
+                _tokenizerReady = false;
+                _logger.LogInformation("EmbeddingService disposed");
+            }
         }
     }
 } 

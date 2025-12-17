@@ -54,6 +54,9 @@ namespace LLMClient.Services
         event Action<LocalModelState> StateChanged;
         event Action<double> DownloadProgress;
         event Action<string> ErrorOccurred;
+
+        // Device Compatibility (optional - not all implementations may have this)
+        // Implementations should return (true, null) if not supported
     }
 
     public class LocalModelService : ILocalModelService, IDisposable

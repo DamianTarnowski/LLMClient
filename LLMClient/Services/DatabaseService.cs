@@ -11,7 +11,7 @@ namespace LLMClient.Services
 {
     public class DatabaseService
     {
-        private SQLiteAsyncConnection _database;
+        private SQLiteAsyncConnection? _database;
         private readonly ISecureApiKeyService _secureApiKeyService;
         private readonly IEmbeddingService? _embeddingService;
         private bool _migrationCompleted = false;
@@ -386,9 +386,8 @@ namespace LLMClient.Services
                 var salt = new byte[16];
                 RandomNumberGenerator.Fill(salt);
 
-                // Derive key z passphrase
-                using var pbkdf2 = new Rfc2898DeriveBytes(passphrase, salt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256);
-                var keyBytes = pbkdf2.GetBytes(PBKDF2_KEY_SIZE);
+                // Derive key z passphrase using static Pbkdf2 method (.NET 10+)
+                var keyBytes = Rfc2898DeriveBytes.Pbkdf2(passphrase, salt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256, PBKDF2_KEY_SIZE);
                 var customKey = Convert.ToBase64String(keyBytes) + ":" + Convert.ToBase64String(salt); // Store key:salt
 
                 await SecureStorage.SetAsync(DB_CUSTOM_KEY_NAME, customKey);
@@ -796,7 +795,7 @@ namespace LLMClient.Services
             await EnsureDatabaseInitializedAsync();
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Database initialized, connection: {_database != null}");
             
-            var memories = await _database.Table<Memory>()
+            var memories = await _database!.Table<Memory>()
                 .OrderByDescending(m => m.UpdatedAt)
                 .ToListAsync();
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Retrieved {memories.Count} memories from database");
@@ -812,7 +811,7 @@ namespace LLMClient.Services
         public async Task<Memory?> GetMemoryByKeyAsync(string key)
         {
             await EnsureDatabaseInitializedAsync();
-            return await _database.Table<Memory>()
+            return await _database!.Table<Memory>()
                 .Where(m => m.Key == key)
                 .FirstOrDefaultAsync();
         }
@@ -821,7 +820,7 @@ namespace LLMClient.Services
         {
             await EnsureDatabaseInitializedAsync();
             var lowerSearchTerm = searchTerm.ToLower();
-            return await _database.Table<Memory>()
+            return await _database!.Table<Memory>()
                 .Where(m => m.Key.ToLower().Contains(lowerSearchTerm) || 
                            m.Value.ToLower().Contains(lowerSearchTerm) ||
                            m.Category.ToLower().Contains(lowerSearchTerm) ||
@@ -833,7 +832,7 @@ namespace LLMClient.Services
         public async Task<List<Memory>> GetMemoriesByCategoryAsync(string category)
         {
             await EnsureDatabaseInitializedAsync();
-            return await _database.Table<Memory>()
+            return await _database!.Table<Memory>()
                 .Where(m => m.Category == category)
                 .OrderByDescending(m => m.UpdatedAt)
                 .ToListAsync();
@@ -846,7 +845,7 @@ namespace LLMClient.Services
             memory.CreatedAt = DateTime.Now;
             memory.UpdatedAt = DateTime.Now;
             
-            var result = await _database.InsertAsync(memory);
+            var result = await _database!.InsertAsync(memory);
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Memory inserted with result: {result}, memory ID now: {memory.Id}");
             return result;
         }
@@ -855,13 +854,13 @@ namespace LLMClient.Services
         {
             await EnsureDatabaseInitializedAsync();
             memory.UpdatedAt = DateTime.Now;
-            return await _database.UpdateAsync(memory);
+            return await _database!.UpdateAsync(memory);
         }
 
         public async Task<int> DeleteMemoryAsync(int memoryId)
         {
             await EnsureDatabaseInitializedAsync();
-            return await _database.DeleteAsync<Memory>(memoryId);
+            return await _database!.DeleteAsync<Memory>(memoryId);
         }
 
         public async Task<int> UpsertMemoryAsync(string key, string value, string category = "", string tags = "", bool isImportant = false)

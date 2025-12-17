@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.Services;
 using LLMClient.Services;
 using LLMClient.ViewModels;
 using LLMClient.Views;
+using LLMClient.Models;
 
 
 namespace LLMClient
@@ -30,20 +31,128 @@ namespace LLMClient
 
             // Rejestracja serwisów dla Dependency Injection
             builder.Services.AddSingleton<DatabaseService>();
+
+            // MLC Model Download Service (Android/iOS)
+#if ANDROID || IOS
+            builder.Services.AddSingleton<MlcModelDownloadService>();
+#endif
             builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
             builder.Services.AddSingleton<IStreamingBatchService, StreamingBatchService>();
             builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
             builder.Services.AddSingleton<IEmbeddingService, EmbeddingService>();
             builder.Services.AddSingleton<IEmbeddingPipelineService, EmbeddingPipelineService>();
-            builder.Services.AddSingleton<ILocalModelService>(provider =>
+            // Concrete local model engines as singletons
+            builder.Services.AddSingleton<RobustLocalModelService>(provider =>
             {
-                var wrapperLogger = provider.GetRequiredService<ILogger<SafeLocalModelWrapper>>();
-                var innerLogger = provider.GetRequiredService<ILogger<RobustLocalModelService>>();
+                var onnxLogger = provider.GetRequiredService<ILogger<RobustLocalModelService>>();
                 var errorHandling = provider.GetService<IErrorHandlingService>();
                 var databaseService = provider.GetService<DatabaseService>();
-                return new SafeLocalModelWrapper(wrapperLogger, innerLogger, errorHandling, databaseService);
+                return new RobustLocalModelService(onnxLogger, errorHandling, databaseService);
             });
+
+#if WINDOWS
+            // LlamaSharp only supported on Windows - no Android native libraries available
+            builder.Services.AddSingleton<LlamaSharpLocalModelService>(provider =>
+            {
+                var llamaLogger = provider.GetRequiredService<ILogger<LlamaSharpLocalModelService>>();
+                return new LlamaSharpLocalModelService(llamaLogger);
+            });
+
+            // Switchable service to allow runtime engine switching (Windows only)
+            builder.Services.AddSingleton<SwitchableLocalModelService>(provider =>
+            {
+                var logger = provider.GetRequiredService<ILogger<SwitchableLocalModelService>>();
+                return new SwitchableLocalModelService(
+                    logger,
+                    () => provider.GetRequiredService<RobustLocalModelService>(),
+                    () => provider.GetRequiredService<LlamaSharpLocalModelService>());
+            });
+
+            // Expose ILocalModelService via safety wrapper around the switchable service
+            builder.Services.AddSingleton<ILocalModelService>(provider =>
+            {
+                var errorHandling = provider.GetService<IErrorHandlingService>();
+                var wrapperLogger = provider.GetRequiredService<ILogger<SafeLocalModelWrapper>>();
+                var switchable = provider.GetRequiredService<SwitchableLocalModelService>();
+                return new SafeLocalModelWrapper(wrapperLogger, switchable, errorHandling);
+            });
+#elif ANDROID
+            // Android: LLamaSharp (llama.cpp) for local inference
+            // MLC LLM temporarily disabled due to Samsung S25 OpenCL removal and Vulkan build issues
+            builder.Services.AddSingleton<LlamaSharpLocalModelService>(provider =>
+            {
+                var llamaLogger = provider.GetRequiredService<ILogger<LlamaSharpLocalModelService>>();
+                return new LlamaSharpLocalModelService(llamaLogger);
+            });
+
+            // Keep MLC registered but disabled (for future use when Vulkan is fixed)
+            builder.Services.AddSingleton<MlcLlmLocalModelService>(provider =>
+            {
+                var mlcLogger = provider.GetRequiredService<ILogger<MlcLlmLocalModelService>>();
+                var databaseService = provider.GetService<DatabaseService>();
+                var downloadService = provider.GetService<MlcModelDownloadService>();
+                return new MlcLlmLocalModelService(mlcLogger, databaseService, downloadService);
+            });
+
+            // Switchable service: ONNX + LLamaSharp (MLC disabled)
+            builder.Services.AddSingleton<SwitchableLocalModelService>(provider =>
+            {
+                var logger = provider.GetRequiredService<ILogger<SwitchableLocalModelService>>();
+                return new SwitchableLocalModelService(
+                    logger,
+                    () => provider.GetRequiredService<RobustLocalModelService>(),      // ONNX
+                    () => provider.GetRequiredService<LlamaSharpLocalModelService>(),  // LLamaSharp (llama.cpp)
+                    () => provider.GetRequiredService<MlcLlmLocalModelService>());     // MLC (disabled)
+            });
+
+            // Expose ILocalModelService via safety wrapper around the switchable service
+            builder.Services.AddSingleton<ILocalModelService>(provider =>
+            {
+                var errorHandling = provider.GetService<IErrorHandlingService>();
+                var wrapperLogger = provider.GetRequiredService<ILogger<SafeLocalModelWrapper>>();
+                var switchable = provider.GetRequiredService<SwitchableLocalModelService>();
+                return new SafeLocalModelWrapper(wrapperLogger, switchable, errorHandling);
+            });
+#elif IOS
+            // iOS: MLC LLM for Metal GPU acceleration + ONNX fallback
+            builder.Services.AddSingleton<MlcLlmLocalModelService>(provider =>
+            {
+                var mlcLogger = provider.GetRequiredService<ILogger<MlcLlmLocalModelService>>();
+                var databaseService = provider.GetService<DatabaseService>();
+                var downloadService = provider.GetService<MlcModelDownloadService>();
+                return new MlcLlmLocalModelService(mlcLogger, databaseService, downloadService);
+            });
+
+            // Switchable service for iOS
+            builder.Services.AddSingleton<SwitchableLocalModelService>(provider =>
+            {
+                var logger = provider.GetRequiredService<ILogger<SwitchableLocalModelService>>();
+                return new SwitchableLocalModelService(
+                    logger,
+                    () => provider.GetRequiredService<RobustLocalModelService>(),
+                    () => provider.GetRequiredService<RobustLocalModelService>(),
+                    () => provider.GetRequiredService<MlcLlmLocalModelService>());
+            });
+
+            // Expose ILocalModelService via safety wrapper around the switchable service
+            builder.Services.AddSingleton<ILocalModelService>(provider =>
+            {
+                var errorHandling = provider.GetService<IErrorHandlingService>();
+                var wrapperLogger = provider.GetRequiredService<ILogger<SafeLocalModelWrapper>>();
+                var switchable = provider.GetRequiredService<SwitchableLocalModelService>();
+                return new SafeLocalModelWrapper(wrapperLogger, switchable, errorHandling);
+            });
+#else
+            // Other platforms: Only ONNX Runtime available for local models
+            builder.Services.AddSingleton<ILocalModelService>(provider =>
+            {
+                var errorHandling = provider.GetService<IErrorHandlingService>();
+                var wrapperLogger = provider.GetRequiredService<ILogger<SafeLocalModelWrapper>>();
+                var onnx = provider.GetRequiredService<RobustLocalModelService>();
+                return new SafeLocalModelWrapper(wrapperLogger, onnx, errorHandling);
+            });
+#endif
             builder.Services.AddSingleton<IOnboardingService, OnboardingService>();
             
             // Rejestracja serwisu pamięci - używa tej samej bazy co reszta aplikacji
@@ -121,12 +230,27 @@ namespace LLMClient
             // Rejestracja ModelSettingsViewModel
             builder.Services.AddTransient<ModelSettingsViewModel>();
 
+            // MLC Model Selector ViewModel (Android/iOS only)
+#if ANDROID || IOS
+            builder.Services.AddTransient<MlcModelSelectorViewModel>();
+#endif
+
             // Rejestracja Pages
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<ModelConfigurationPage>();
             builder.Services.AddTransient<SemanticSearchPage>();
             builder.Services.AddTransient<MemoryPage>();
             builder.Services.AddTransient<ModelSettingsPage>();
+
+            // MLC Model Selector Page (Android/iOS only)
+#if ANDROID || IOS
+            builder.Services.AddTransient<MlcModelSelectorPage>();
+#endif
+
+            // GGUF Model Manager Page (Windows/Android - LLamaSharp)
+#if WINDOWS || ANDROID
+            builder.Services.AddTransient<GgufModelManagerPage>();
+#endif
 
             //Rejestracja Shell
             builder.Services.AddSingleton<AppShell>();

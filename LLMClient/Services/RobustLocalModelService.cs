@@ -6,6 +6,12 @@ using System.Text;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.IO;
+using System;
 
 namespace LLMClient.Services
 {
@@ -44,15 +50,21 @@ namespace LLMClient.Services
         private readonly LocalModelInfo _modelInfo;
         private CancellationTokenSource? _downloadCancellation;
         private readonly SemaphoreSlim _downloadSemaphore = new(1, 1);
+        private readonly SemaphoreSlim _inferenceSemaphore = new(1, 1);
         private readonly IErrorHandlingService? _errorHandling;
         private readonly DatabaseService? _databaseService;
         
         // Network and retry configuration
         private readonly HttpClient _httpClient;
         private const int DOWNLOAD_BUFFER_SIZE = 65536; // 64KB buffer
-        private const int CONNECTION_TIMEOUT_MINUTES = 10;
+        private const int CONNECTION_TIMEOUT_MINUTES = 60; // Increased for large files (4.86GB)
         private const int MAX_TOTAL_RETRIES = 5;
         private const int RETRY_DELAY_BASE_MS = 1000;
+
+        // Memory requirements
+        private const long MINIMUM_RAM_BYTES = 4L * 1024 * 1024 * 1024; // 4GB minimum
+        private const long RECOMMENDED_RAM_BYTES = 6L * 1024 * 1024 * 1024; // 6GB recommended
+        private const long MINIMUM_FREE_STORAGE_BYTES = 6L * 1024 * 1024 * 1024; // 6GB for model + temp
 
         public LocalModelState State
         {
@@ -124,6 +136,148 @@ namespace LLMClient.Services
         public async Task<LocalModelInfo> GetModelInfoAsync()
         {
             return await Task.FromResult(_modelInfo);
+        }
+
+        /// <summary>
+        /// Check if the device meets minimum requirements for running local models
+        /// </summary>
+        public async Task<(bool CanRun, string? WarningMessage)> CheckDeviceCompatibilityAsync()
+        {
+            var warnings = new List<string>();
+            bool canRun = true;
+
+            try
+            {
+                // Check architecture (ONNX GenAI only supports arm64-v8a and x86_64 on Android)
+#if ANDROID
+                var abi = Android.OS.Build.SupportedAbis?.FirstOrDefault() ?? "";
+                if (!abi.Contains("arm64") && !abi.Contains("x86_64"))
+                {
+                    warnings.Add($"Your device architecture ({abi}) may not be fully supported. 64-bit devices are recommended.");
+                    _logger.LogWarning($"Device ABI {abi} may not be compatible with ONNX GenAI");
+                }
+#endif
+
+                // Check available RAM
+                var totalRam = GetTotalDeviceMemory();
+                if (totalRam > 0)
+                {
+                    if (totalRam < MINIMUM_RAM_BYTES)
+                    {
+                        var ramGb = totalRam / (1024.0 * 1024 * 1024);
+                        warnings.Add($"Your device has {ramGb:F1}GB RAM. Minimum 4GB recommended for local AI models.");
+                        _logger.LogWarning($"Low RAM detected: {ramGb:F1}GB");
+                    }
+                    else if (totalRam < RECOMMENDED_RAM_BYTES)
+                    {
+                        var ramGb = totalRam / (1024.0 * 1024 * 1024);
+                        warnings.Add($"Your device has {ramGb:F1}GB RAM. 6GB+ recommended for optimal performance.");
+                    }
+                }
+
+                // Check available storage
+                var freeStorage = GetFreeStorageSpace();
+                if (freeStorage > 0 && freeStorage < MINIMUM_FREE_STORAGE_BYTES)
+                {
+                    var freeGb = freeStorage / (1024.0 * 1024 * 1024);
+                    warnings.Add($"Low storage: {freeGb:F1}GB free. Need at least 6GB for model download.");
+                    canRun = false;
+                }
+
+                var warningMessage = warnings.Count > 0 ? string.Join("\n", warnings) : null;
+                return (canRun, warningMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking device compatibility");
+                return (true, null); // Allow attempt if we can't check
+            }
+        }
+
+        private long GetTotalDeviceMemory()
+        {
+            try
+            {
+#if ANDROID
+                var activityManager = Android.App.Application.Context.GetSystemService(Android.Content.Context.ActivityService) as Android.App.ActivityManager;
+                if (activityManager != null)
+                {
+                    var memInfo = new Android.App.ActivityManager.MemoryInfo();
+                    activityManager.GetMemoryInfo(memInfo);
+                    return memInfo.TotalMem;
+                }
+#elif WINDOWS
+                // On Windows, use GC info as approximation
+                return (long)GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
+#endif
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get device memory info");
+                return 0;
+            }
+        }
+
+        private long GetAvailableMemory()
+        {
+            try
+            {
+#if ANDROID
+                var activityManager = Android.App.Application.Context.GetSystemService(Android.Content.Context.ActivityService) as Android.App.ActivityManager;
+                if (activityManager != null)
+                {
+                    var memInfo = new Android.App.ActivityManager.MemoryInfo();
+                    activityManager.GetMemoryInfo(memInfo);
+                    return memInfo.AvailMem;
+                }
+#elif WINDOWS
+                var gcInfo = GC.GetGCMemoryInfo();
+                return (long)(gcInfo.TotalAvailableMemoryBytes - gcInfo.MemoryLoadBytes);
+#endif
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get available memory info");
+                return 0;
+            }
+        }
+
+        private long GetFreeStorageSpace()
+        {
+            try
+            {
+                var modelDir = Path.GetDirectoryName(_modelPath) ?? _modelPath;
+                Directory.CreateDirectory(modelDir);
+                var driveInfo = new DriveInfo(Path.GetPathRoot(modelDir) ?? modelDir);
+                return driveInfo.AvailableFreeSpace;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get free storage space");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Get estimated download time based on a rough speed estimate
+        /// </summary>
+        public string GetEstimatedDownloadTime()
+        {
+            const long totalSize = 4_910_000_000; // ~4.91GB
+
+            // Estimate based on connection type (conservative estimates)
+            // WiFi: ~10 MB/s, 4G: ~2 MB/s, 3G: ~0.5 MB/s
+            var estimatedSpeedMBps = 5.0; // Assume average 5 MB/s
+            var estimatedSeconds = totalSize / (estimatedSpeedMBps * 1024 * 1024);
+
+            if (estimatedSeconds < 60)
+                return $"~{estimatedSeconds:F0} seconds";
+            else if (estimatedSeconds < 3600)
+                return $"~{estimatedSeconds / 60:F0} minutes";
+            else
+                return $"~{estimatedSeconds / 3600:F1} hours";
         }
 
         public async Task<bool> IsModelDownloadedAsync()
@@ -598,8 +752,8 @@ namespace LLMClient.Services
                 
                 // Note: Stop sequences will be handled in post-processing for this ONNX Runtime version
                 
-                // Add stop sequences to prevent loops
-                _generatorParams.TryGraphCaptureWithMaxBatchSize(1);
+                // Graph capture optimization may not be available in all ORT GenAI versions
+                // If needed, enable here when supported by the package version.
 
                 State = LocalModelState.Loaded;
                 _logger.LogInformation("Phi-4-mini model loaded successfully");
@@ -659,13 +813,14 @@ namespace LLMClient.Services
                 return false;
             }
         }
-
-        // Inference methods remain the same...
+        
+        // Inference methods
         public async Task<string> GenerateResponseAsync(string prompt, CancellationToken cancellationToken = default)
         {
             if (!IsLoaded)
                 throw new InvalidOperationException("Model is not loaded");
 
+            await _inferenceSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 var tokens = _tokenizer!.Encode(prompt);
@@ -682,36 +837,29 @@ namespace LLMClient.Services
                 // Allow long outputs while keeping control; respect model max_length
                 var maxTokens = Math.Min(2048, Math.Max(64, requiredMaxLen - promptLength));
                 var generatedTokens = 0;
-                
-                while (!generator.IsDone() && !cancellationToken.IsCancellationRequested && generatedTokens < maxTokens)
+                var sb = new StringBuilder();
+                var prevLength = promptLength;
+
+                while (!generator.IsDone() && generatedTokens < maxTokens && !cancellationToken.IsCancellationRequested)
                 {
                     generator.GenerateNextToken();
-                    generatedTokens++;
-                    
-                    // Check for stop sequences in the current output
-                    var currentSequence = generator.GetSequence(0);
-                    var currentOutput = _tokenizer.Decode(currentSequence);
-                    
-                    // Stop if we hit any end tokens (Microsoft's buggy format)
-                    if (currentOutput.Contains("<|end|>") || currentOutput.Contains("<|endoftext|>") || 
-                        currentOutput.Contains("<|im_end|>") || currentOutput.Contains("<|im_start|>"))
+                    var sequence = generator.GetSequence(0);
+
+                    if (sequence.Length > prevLength)
                     {
-                        break;
+                        var newSpan = sequence.Slice(prevLength);
+                        var newTokens = newSpan.ToArray();
+                        var chunk = _tokenizer.Decode(newTokens);
+                        sb.Append(chunk);
+                        prevLength = sequence.Length;
+                        generatedTokens += newTokens.Length;
+
+                        if (ContainsStopSequence(sb.ToString()))
+                            break;
                     }
                 }
 
-                var outputTokens = generator.GetSequence(0);
-                var response = _tokenizer.Decode(outputTokens.ToArray());
-                
-                // Remove the original prompt from response
-                if (response.StartsWith(prompt))
-                {
-                    response = response.Substring(prompt.Length).Trim();
-                }
-                
-                // Clean up response
-                response = CleanGeneratedResponse(response);
-                
+                var response = CleanResponse(sb.ToString());
                 return response;
             }
             catch (Exception ex)
@@ -719,24 +867,26 @@ namespace LLMClient.Services
                 _logger.LogError(ex, "Error generating response");
                 throw new InvalidOperationException($"Error generating response: {ex.Message}", ex);
             }
+            finally
+            {
+                _inferenceSemaphore.Release();
+            }
         }
 
         public async Task<string> GenerateResponseAsync(List<Message> conversationHistory, string newMessage, CancellationToken cancellationToken = default)
         {
+            if (conversationHistory == null) conversationHistory = new List<Message>();
+
+            var settings = await LoadModelSettingsAsync().ConfigureAwait(false);
+            var systemPrompt = string.IsNullOrWhiteSpace(settings.SystemPrompt)
+                ? "You are a helpful AI assistant. Respond in the same language the user writes in. Be concise, helpful, and avoid repetition."
+                : settings.SystemPrompt;
+
             var promptBuilder = new StringBuilder();
-            
-            // Load system prompt from database or use language-based default
-            var settings = await LoadModelSettingsAsync();
-            var systemPrompt = !string.IsNullOrEmpty(settings.SystemPrompt) 
-                ? settings.SystemPrompt 
-                : GetSystemPrompt(DetectLanguage(newMessage, conversationHistory));
-            
-            // Use Microsoft's chat template used by LocalModelService: <|im_start|>role<|im_sep|> ... <|im_end|>
             promptBuilder.AppendLine("<|im_start|>system<|im_sep|>");
             promptBuilder.AppendLine(systemPrompt);
             promptBuilder.AppendLine("<|im_end|>");
-            
-            // Add conversation history (limit to last 3 messages to prevent context overflow)
+
             foreach (var message in conversationHistory.TakeLast(3))
             {
                 if (message.IsUser)
@@ -752,19 +902,13 @@ namespace LLMClient.Services
                     promptBuilder.AppendLine("<|im_end|>");
                 }
             }
-            
-            // Add current user message
+
             promptBuilder.AppendLine("<|im_start|>user<|im_sep|>");
             promptBuilder.AppendLine(newMessage);
             promptBuilder.AppendLine("<|im_end|>");
             promptBuilder.AppendLine("<|im_start|>assistant<|im_sep|>");
 
-            var response = await GenerateResponseAsync(promptBuilder.ToString(), cancellationToken);
-            
-            // Clean up response - remove common prefixes and repetitions
-            response = CleanResponse(response, newMessage);
-            
-            return response;
+            return await GenerateResponseAsync(promptBuilder.ToString(), cancellationToken).ConfigureAwait(false);
         }
 
         public async IAsyncEnumerable<string> GenerateStreamingResponseAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -772,64 +916,147 @@ namespace LLMClient.Services
             if (!IsLoaded)
                 throw new InvalidOperationException("Model is not loaded");
 
-            var tokens = _tokenizer!.Encode(prompt);
-            var promptTokenSpan = tokens[0];
-            var promptLength = promptTokenSpan.Length;
-            
-            // Ensure max_length accommodates prompt length + streaming headroom
-            var requiredMaxLen = Math.Min(promptLength + 512, 4096);
-            _generatorParams!.SetSearchOption("max_length", requiredMaxLen);
-            
-            using var generator = new Generator(_model!, _generatorParams!);
-            generator.AppendTokenSequences(tokens);
-            
-            // Apply sane streaming limits to avoid infinite loops and verbosity
-            // Allow long streaming within model context window
-            var maxStreamTokens = Math.Min(2048, Math.Max(64, requiredMaxLen - promptLength));
-            var generatedTokens = 0;
-            
-            // Helper to detect end/stop patterns in currently generated text
-            bool ShouldStop(string currentText)
+            await _inferenceSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                if (string.IsNullOrEmpty(currentText)) return false;
-                if (currentText.Contains("<|end|>") || currentText.Contains("<|endoftext|>") || currentText.Contains("<|im_end|>")) return true;
-                // stop if assistant tag leaks again (model loop)
-                if (currentText.Contains("<|user|>") || currentText.Contains("<|system|>")) return true;
-                return false;
-            }
+                var tokens = _tokenizer!.Encode(prompt);
+                var promptTokenSpan = tokens[0];
+                var promptLength = promptTokenSpan.Length;
 
-            var sb = new System.Text.StringBuilder();
-            
-            while (!generator.IsDone() && !cancellationToken.IsCancellationRequested && generatedTokens < maxStreamTokens)
-            {
-                generator.GenerateNextToken();
-                generatedTokens++;
-                
-                var sequence = generator.GetSequence(0);
-                if (sequence.Length > 0)
+                var requiredMaxLen = Math.Min(promptLength + 512, 4096);
+                _generatorParams!.SetSearchOption("max_length", requiredMaxLen);
+
+                using var generator = new Generator(_model!, _generatorParams!);
+                generator.AppendTokenSequences(tokens);
+
+                var maxStreamTokens = Math.Min(2048, Math.Max(64, requiredMaxLen - promptLength));
+                var prevLength = promptLength;
+                var generatedTokens = 0;
+                var sb = new StringBuilder();
+                var lastSentLength = 0;
+
+                while (!generator.IsDone() && generatedTokens < maxStreamTokens && !cancellationToken.IsCancellationRequested)
                 {
-                    var lastToken = sequence[sequence.Length - 1];
-                    var chunk = _tokenizer.Decode(new[] { lastToken });
-                    if (!string.IsNullOrEmpty(chunk))
-                    {
-                        sb.Append(chunk);
-                        yield return chunk;
+                    // Offload blocking token generation to background to avoid UI stalls
+                    await Task.Run(() => generator.GenerateNextToken(), cancellationToken).ConfigureAwait(false);
 
-                        if (ShouldStop(sb.ToString()))
+                    var sequence = generator.GetSequence(0);
+                    if (sequence.Length > prevLength)
+                    {
+                        var newSpan = sequence.Slice(prevLength);
+                        var newTokens = newSpan.ToArray();
+                        var chunk = _tokenizer.Decode(newTokens);
+                        sb.Append(chunk);
+                        prevLength = sequence.Length;
+                        generatedTokens += newTokens.Length;
+
+                        var currentText = sb.ToString();
+                        if (ContainsStopSequence(currentText))
                         {
+                            // Trim stop tokens and send only the remaining delta
+                            var cleaned = CleanResponse(currentText);
+                            if (cleaned.Length > lastSentLength)
+                            {
+                                var deltaLen = cleaned.Length - lastSentLength;
+                                var delta = cleaned.Substring(lastSentLength, deltaLen);
+                                if (!string.IsNullOrEmpty(delta))
+                                    yield return delta;
+                            }
                             break;
                         }
+
+                        // Send only the new delta
+                        if (sb.Length > lastSentLength)
+                        {
+                            var deltaLen = sb.Length - lastSentLength;
+                            var delta = sb.ToString(lastSentLength, deltaLen);
+                            if (!string.IsNullOrEmpty(delta))
+                                yield return delta;
+                            lastSentLength = sb.Length;
+                        }
+                    }
+
+                    // Yield to keep UI responsive
+                    await Task.Yield();
+                }
+            }
+            finally
+            {
+                _inferenceSemaphore.Release();
+            }
+        }
+
+        private static bool ContainsStopSequence(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            if (text.Contains("<|end|>", StringComparison.Ordinal) ||
+                text.Contains("<|im_end|>", StringComparison.Ordinal) ||
+                text.Contains("</s>", StringComparison.Ordinal))
+                return true;
+            if (text.Contains("<|im_start|>assistant", StringComparison.Ordinal))
+                return true;
+            return false;
+        }
+
+        private string CleanResponse(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response)) return string.Empty;
+
+            var cleaned = response;
+            // Cut at stop tokens if present
+            var stops = new[] { "<|end|>", "<|im_end|>", "</s>" };
+            foreach (var stop in stops)
+            {
+                var idx = cleaned.IndexOf(stop, StringComparison.Ordinal);
+                if (idx >= 0)
+                {
+                    cleaned = cleaned.Substring(0, idx);
+                }
+            }
+
+            // Remove leading/trailing whitespace artifacts
+            cleaned = cleaned.Trim();
+            return cleaned;
+        }
+
+        private async Task<LLMClient.ViewModels.ModelSettings> LoadModelSettingsAsync()
+        {
+            try
+            {
+                if (_databaseService != null)
+                {
+                    var settings = await _databaseService.GetModelSettingsAsync().ConfigureAwait(false);
+                    if (settings != null)
+                    {
+                        // Normalize values
+                        settings.MaxLength = settings.MaxLength <= 0 ? 4096 : Math.Clamp(settings.MaxLength, 512, 4096);
+                        settings.Temperature = settings.Temperature <= 0 ? 0.6 : settings.Temperature;
+                        settings.TopP = settings.TopP <= 0 ? 0.9 : settings.TopP;
+                        settings.RepetitionPenalty = settings.RepetitionPenalty <= 0 ? 1.1 : settings.RepetitionPenalty;
+                        return settings;
                     }
                 }
-
-                await Task.Delay(8, cancellationToken);
             }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load model settings, using defaults");
+            }
+
+            return new LLMClient.ViewModels.ModelSettings
+            {
+                SystemPrompt = "You are a helpful AI assistant. Respond in the same language the user writes in. Be concise, helpful, and avoid repetition.",
+                Temperature = 0.6,
+                MaxLength = 4096,
+                RepetitionPenalty = 1.1,
+                TopP = 0.9,
+                UpdatedAt = DateTime.UtcNow
+            };
         }
 
         public async Task<string> GenerateOnboardingResponseAsync(string userLanguage, string topic = "general", CancellationToken cancellationToken = default)
         {
             var languageName = GetLanguageName(userLanguage);
-            
+
             var onboardingPrompts = new Dictionary<string, string>
             {
                 ["general"] = $"You are a helpful AI assistant for the LLMClient app. Please introduce yourself in {languageName} and explain the key features of this AI chat application: conversations, memory system, semantic search, multi-language support, and local AI models. Be friendly and concise.",
@@ -839,49 +1066,22 @@ namespace LLMClient.Services
             };
 
             var prompt = onboardingPrompts.GetValueOrDefault(topic, onboardingPrompts["general"]);
-            return await GenerateResponseAsync(prompt, cancellationToken);
+            return await GenerateResponseAsync(prompt, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<string> GenerateHelpResponseAsync(string question, string userLanguage, CancellationToken cancellationToken = default)
         {
             var languageName = GetLanguageName(userLanguage);
-            var prompt = $"You are a helpful assistant for the LLMClient app. Answer this question in {languageName}: {question}. " +
-                        $"Provide a helpful answer about the app's features like AI chat, memory system, search, export, and settings.";
-            
-            return await GenerateResponseAsync(prompt, cancellationToken);
+            var prompt = $"You are a helpful assistant for the LLMClient app. Answer this question in {languageName}: {question}. Provide a helpful answer about the app's features like AI chat, memory system, search, export, and settings.";
+            return await GenerateResponseAsync(prompt, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task<LLMClient.ViewModels.ModelSettings> LoadModelSettingsAsync()
-        {
-            try
-            {
-                if (_databaseService != null)
-                {
-                    var settings = await _databaseService.GetModelSettingsAsync();
-                    if (settings != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[RobustLocalModelService] Loaded settings from database: Temperature={settings.Temperature}, MaxLength={settings.MaxLength}");
-                        return settings;
-                    }
-                }
-                
-                // Return default settings if none found in database
-                System.Diagnostics.Debug.WriteLine("[RobustLocalModelService] Using default settings");
-                return new LLMClient.ViewModels.ModelSettings();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading model settings from database");
-                return new LLMClient.ViewModels.ModelSettings();
-            }
-        }
-        
         private string GetLanguageName(string languageCode)
         {
-            return languageCode.ToLower() switch
+            return languageCode?.ToLower() switch
             {
                 "pl" or "pl-pl" => "Polish",
-                "de" or "de-de" => "German", 
+                "de" or "de-de" => "German",
                 "es" or "es-es" => "Spanish",
                 "fr" or "fr-fr" => "French",
                 "it" or "it-it" => "Italian",
@@ -895,117 +1095,6 @@ namespace LLMClient.Services
                 _ => "English"
             };
         }
-        
-        private string DetectLanguage(string message, List<Message> conversationHistory)
-        {
-            // Simple language detection based on keywords
-            var text = (message + " " + string.Join(" ", conversationHistory.TakeLast(2).Select(m => m.Content))).ToLower();
-            
-            if (System.Text.RegularExpressions.Regex.IsMatch(text, @"\b(cześć|hej|dzień|dobry|jak|co|gdzie|dlaczego|jestem|jesli|czy|które|która|które)\b"))
-                return "pl";
-            if (System.Text.RegularExpressions.Regex.IsMatch(text, @"\b(hello|hi|how|what|where|why|am|if|are|which|that|this)\b"))
-                return "en";
-            if (System.Text.RegularExpressions.Regex.IsMatch(text, @"\b(hola|como|que|donde|por|soy|si|son|cual|esto)\b"))
-                return "es";
-            if (System.Text.RegularExpressions.Regex.IsMatch(text, @"\b(bonjour|salut|comment|quoi|où|pourquoi|suis|si|sont|quel|cette)\b"))
-                return "fr";
-            if (System.Text.RegularExpressions.Regex.IsMatch(text, @"\b(hallo|wie|was|wo|warum|bin|wenn|sind|welche|diese)\b"))
-                return "de";
-            
-            // Default to Polish if can't detect
-            return "pl";
-        }
-        
-        private string GetSystemPrompt(string language)
-        {
-            return language switch
-            {
-                "en" => "You are a helpful, harmless, and honest AI assistant. Always follow the user's instructions carefully. Respond in English with clear, concise, and accurate information.",
-                "es" => "Eres un asistente de IA útil, inofensivo y honesto. Siempre sigue cuidadosamente las instrucciones del usuario. Responde en español con información clara, concisa y precisa.",
-                "fr" => "Vous êtes un assistant IA utile, inoffensif et honnête. Suivez toujours attentivement les instructions de l'utilisateur. Répondez en français avec des informations claires, concises et précises.",
-                "de" => "Sie sind ein hilfreicher, harmloser und ehrlicher KI-Assistent. Befolgen Sie immer sorgfältig die Anweisungen des Benutzers. Antworten Sie auf Deutsch mit klaren, prägnanten und genauen Informationen.",
-                "pl" or _ => "Jesteś pomocnym, nieszkodliwym i uczciwym asystentem AI. Odpowiadaj jasno i precyzyjnie, w tym samym języku co użytkownik."
-            };
-        }
-        
-        private string CleanGeneratedResponse(string response)
-        {
-            if (string.IsNullOrWhiteSpace(response))
-                return "Sorry, I couldn't generate a response.";
-            
-            // Remove common problematic patterns
-            response = response.Trim();
-            
-            // Remove Phi-4 chat template tokens if they leaked through
-            response = System.Text.RegularExpressions.Regex.Replace(response, @"<\|im_start\|>|<\|im_sep\|>|<\|im_end\|>", "");
-            
-            // Remove Japanese/Chinese characters that might appear due to model confusion
-            response = System.Text.RegularExpressions.Regex.Replace(response, @"[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]", "");
-            
-            // Remove excessive repetitive patterns (3+ repetitions) - more aggressive
-            response = System.Text.RegularExpressions.Regex.Replace(response, @"(\b[\w\s]{1,15}\b)\s*\1\s*\1", "$1");
-            response = System.Text.RegularExpressions.Regex.Replace(response, @"(.{10,}?)\1{2,}", "$1");
-            
-            // Detect and stop at repetitive patterns
-            var lines = response.Split('\n');
-            var cleanLines = new List<string>();
-            var lastLine = "";
-            var repetitionCount = 0;
-            
-            foreach (var line in lines)
-            {
-                var trimmedLine = line.Trim();
-                if (string.IsNullOrEmpty(trimmedLine)) continue;
-                
-                if (trimmedLine.Equals(lastLine, StringComparison.OrdinalIgnoreCase))
-                {
-                    repetitionCount++;
-                    if (repetitionCount >= 2) // Stop after 2 repetitions
-                        break;
-                }
-                else
-                {
-                    repetitionCount = 0;
-                    lastLine = trimmedLine;
-                }
-                
-                cleanLines.Add(line);
-            }
-            
-            response = string.Join("\n", cleanLines);
-            
-            // Remove role prefixes if they leaked
-            response = System.Text.RegularExpressions.Regex.Replace(response, @"^(system|user|assistant|Asystent|Assistant|User|Użytkownik|Answer):\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            
-            // Remove weird patterns that appeared in your example
-            response = System.Text.RegularExpressions.Regex.Replace(response, @"Answer\s+[\w\s]*?\d+\.\d+", "");
-            
-            // Stop at end tokens that might indicate the model is continuing
-            var stopPatterns = new[] { "<|im_start|>", "<|im_end|>", "<|im_sep|>" };
-            foreach (var pattern in stopPatterns)
-            {
-                var index = response.IndexOf(pattern);
-                if (index >= 0)
-                {
-                    response = response.Substring(0, index).Trim();
-                }
-            }
-            
-            return response.Trim();
-        }
-        
-        private string CleanResponse(string response, string originalMessage)
-        {
-            response = CleanGeneratedResponse(response);
-            
-            // If response is too similar to the input, provide a fallback
-            if (string.IsNullOrWhiteSpace(response) || response.Length < 10)
-            {
-                return $"I received your message: '{originalMessage}'. How can I help you specifically?";
-            }
-            
-            return response;
-        }
 
         public void Dispose()
         {
@@ -1013,18 +1102,20 @@ namespace LLMClient.Services
             {
                 _downloadCancellation?.Cancel();
                 _downloadCancellation?.Dispose();
-                
+
                 _generatorParams?.Dispose();
                 _tokenizer?.Dispose();
                 _model?.Dispose();
-                
                 _httpClient?.Dispose();
+
                 _downloadSemaphore?.Dispose();
+                _inferenceSemaphore?.Dispose();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error disposing RobustLocalModelService");
             }
         }
+
     }
 }

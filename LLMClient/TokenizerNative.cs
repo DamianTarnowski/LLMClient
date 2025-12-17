@@ -55,7 +55,7 @@ public static class TokenizerNative
             }
         });
 
-    public static Task<string> DecodeAsync(int[] ids, int len) =>
+    public static Task<string?> DecodeAsync(int[] ids, int len) =>
         Task.Run(() =>
         {
             try
