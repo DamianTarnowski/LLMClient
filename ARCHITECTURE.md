@@ -1,10 +1,10 @@
 # Architektura Aplikacji LLMClient
 
-Ten dokument opisuje architekturę i kluczowe decyzje projektowe stojące za aplikacją Synapse AI. Zrozumienie tych koncepcji jest kluczowe dla deweloperów chcących rozwijać i utrzymywać projekt.
+Ten dokument opisuje architekturę i kluczowe decyzje projektowe stojące za aplikacją LLMClient. Zrozumienie tych koncepcji jest kluczowe dla deweloperów chcących rozwijać i utrzymywać projekt.
 
 ## 1. Przegląd Architektury
 
-Synapse AI jest zbudowany w oparciu o wzorzec **Model-View-ViewModel (MVVM)**, który jest standardem dla aplikacji .NET MAUI. Taka struktura zapewnia czysty podział odpowiedzialności między interfejsem użytkownika (View), logiką prezentacji (ViewModel) a danymi (Model).
+LLMClient jest zbudowany w oparciu o wzorzec **Model-View-ViewModel (MVVM)**, który jest standardem dla aplikacji .NET MAUI. Taka struktura zapewnia czysty podział odpowiedzialności między interfejsem użytkownika (View), logiką prezentacji (ViewModel) a danymi (Model).
 
 Architektura opiera się na trzech głównych filarach:
 
@@ -66,6 +66,12 @@ Serwisy stanowią rdzeń aplikacji. Są rejestrowane jako singletony lub obiekty
 - **`LocalModelService` / `RobustLocalModelService`**: Załadunek/rozładunek lokalnego modelu (np. Phi‑4‑mini‑instruct), generacja odpowiedzi (streaming i non‑streaming), kontrola limitów i tokenów stop. Wspiera dynamiczne `max_length` (uwzględnia długość promptu) i dekodowanie tokenów w locie.
 - **Pobieranie i diagnostyka**: `NetworkAwareDownloadService`, `SmartDownloadManager`, `LocalModelDiagnosticService` odpowiadają za stabilne pobieranie modelu i raportowanie stanu.
 - **Integracja UI**: Podczas pobierania i ładowania modelu widoczny jest overlay ze spinnerem; gdy model lokalny jest załadowany, selektor modeli chmurowych jest zablokowany. Brak aktywnej konwersacji powoduje automatyczne utworzenie nowej.
+
+##### 2.4.1.a. Bezpieczeństwo i przełączalne silniki
+
+- **`SafeLocalModelWrapper`**: Obejmuje dowolny `ILocalModelService`, śledzi kolejne niepowodzenia i tymczasowo wyłącza usługę po przekroczeniu progu, aby zapobiec awariom. Wymusza okres „cooldown” i zapewnia bezpieczne wartości domyślne.
+- **Przełączalne silniki lokalne**: Rejestracja w DI pozwala przełączać implementacje (np. `RobustLocalModelService`, `LlamaSharpLocalModelService`) w runtime poprzez `EngineSettings`. Dzięki temu UI może zmieniać backend bez restartu aplikacji.
+- **Przepływy zdarzeń (`MessagingCenter`)**: `MainPageViewModel` i `ModelSettingsViewModel` subskrybują zdarzenia takie jak `LocalModelLoaded`, `LocalModelUnloaded`, `ModelsChanged`, synchronizując stan UI (busy/overlay, blokada wyboru chmury) z aktualnym stanem modelu lokalnego.
 
     - **Powód decyzji:** Wydajność. Tokenizery oparte na C# są znacznie wolniejsze niż natywne implementacje. Rust został wybrany ze względu na bezpieczeństwo pamięci, wydajność i doskonałe biblioteki ekosystemu (np. `tokenizers` od Hugging Face).
     - **Implementacja:** Biblioteka Rust (`tokenizer_rust.dll`/`.so`/`.dylib`) eksponuje prosty interfejs C (`tokenizer_init`, `tokenizer_encode`, `tokenizer_decode`), który jest wywoływany z C#.

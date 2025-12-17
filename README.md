@@ -117,7 +117,18 @@ The project uses the MVVM pattern and is divided into the following layers:
   - **`ViewModels/`**: Business logic and state for individual views.
   - **`Models/`**: Data models (e.g., `Conversation`, `Message`).
   - **`Services/`**: Services responsible for key functionalities (e.g., `AiService`, `DatabaseService`, `EmbeddingService`, `MemoryContextService`, `MemoryExtractionService`).
-- **`TokenizerRust/`**: Rust project containing tokenization logic, exposed as a native library.
+ - **`TokenizerRust/`**: Rust project containing tokenization logic, exposed as a native library.
+
+## Local Model Services (overview)
+
+- Local backend: ONNX Runtime GenAI (Phi‑4‑mini‑instruct) with streaming, unified chat template
+- Safety layer: `SafeLocalModelWrapper` wraps `ILocalModelService`, tracks failures, enforces cooldowns
+- Switchable engines: `RobustLocalModelService`, `LlamaSharpLocalModelService` selectable via `EngineSettings`
+- Diagnostics: `LocalModelDiagnosticService` with periodic checks and persisted reports
+- Downloads: `NetworkAwareDownloadService` with auto‑resume and connectivity awareness
+- UI flow: `MainPageViewModel` listens to `MessagingCenter` events (`LocalModelLoaded`/`LocalModelUnloaded`, `ModelsChanged`), locks cloud picker while local is active
+
+See the project roadmap for planned enhancements: [ROADMAP.md](./ROADMAP.md)
 
 ## License
 
@@ -240,13 +251,22 @@ Projekt wykorzystuje wzorzec MVVM i jest podzielony na następujące warstwy:
   - **`ViewModels/`**: Logika biznesowa i stan dla poszczególnych widoków.
   - **`Models/`**: Modele danych (np. `Conversation`, `Message`).
   - **`Services/`**: Serwisy odpowiedzialne za kluczowe funkcjonalności (np. `AiService`, `DatabaseService`, `EmbeddingService`, `MemoryContextService`, `MemoryExtractionService`).
-- **`TokenizerRust/`**: Projekt Rust zawierający logikę tokenizacji, udostępnioną jako natywna biblioteka.
+ - **`TokenizerRust/`**: Projekt Rust zawierający logikę tokenizacji, udostępnioną jako natywna biblioteka.
+
+## Usługi Modelu Lokalnego (przegląd)
+
+- Backend lokalny: ONNX Runtime GenAI (Phi‑4‑mini‑instruct) ze strumieniowaniem i ujednoliconym szablonem czatu
+- Warstwa bezpieczeństwa: `SafeLocalModelWrapper` opakowuje `ILocalModelService`, śledzi błędy i wymusza cooldown
+- Przełączalne silniki: `RobustLocalModelService`, `LlamaSharpLocalModelService` wybierane przez `EngineSettings`
+- Diagnostyka: `LocalModelDiagnosticService` z okresowymi checkami i zapisem raportów
+- Pobieranie: `NetworkAwareDownloadService` z auto‑wznawianiem i świadomością łączności
+- Przepływ UI: `MainPageViewModel` subskrybuje zdarzenia `MessagingCenter` (`LocalModelLoaded`/`LocalModelUnloaded`, `ModelsChanged`), blokuje wybór chmury gdy lokalny jest aktywny
+
+Planowane ulepszenia znajdziesz tutaj: [ROADMAP.md](./ROADMAP.md)
 
 ## Licencja
 
 Ten projekt jest udostępniany na licencji [MIT](LICENSE).
-
-
 ## Recent additions (English)
 
 - Local ONNX Runtime GenAI (Phi‑4‑mini‑instruct) with streaming, unified chat template, and safety controls
