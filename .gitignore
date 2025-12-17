@@ -81,3 +81,10 @@ LLMClient.Tests/TestResults/
 # Secrets files that should never be committed
 secrets.json
 appsettings.Development.json
+
+# Screenshots folder (development only)
+screenshoty/
+
+# Android: do not commit custom llama.cpp builds (we use LLamaSharp.Backend.Cpu.Android)
+LLMClient/Platforms/Android/libs/**/libllama.so
+LLMClient/Platforms/Android/libs/**/libggml*.so

@@ -9,7 +9,7 @@ namespace LLMClient.Services
     /// </summary>
     public class SafeLocalModelWrapper : ILocalModelService
     {
-        private readonly RobustLocalModelService _innerService;
+        private readonly ILocalModelService _innerService;
         private readonly ILogger<SafeLocalModelWrapper> _logger;
         private readonly IErrorHandlingService? _errorHandling;
         private bool _isDisabled = false;
@@ -20,14 +20,13 @@ namespace LLMClient.Services
 
         public SafeLocalModelWrapper(
             ILogger<SafeLocalModelWrapper> logger,
-            ILogger<RobustLocalModelService> innerLogger,
-            IErrorHandlingService? errorHandling = null,
-            DatabaseService? databaseService = null)
+            ILocalModelService innerService,
+            IErrorHandlingService? errorHandling = null)
         {
             _logger = logger;
             _errorHandling = errorHandling;
-            _innerService = new RobustLocalModelService(innerLogger, errorHandling, databaseService);
-            
+            _innerService = innerService;
+
             // Subscribe to inner service events
             _innerService.StateChanged += OnInnerStateChanged;
             _innerService.DownloadProgress += OnInnerDownloadProgress;
@@ -38,6 +37,11 @@ namespace LLMClient.Services
         public bool IsLoaded => !_isDisabled && _innerService.IsLoaded;
         public bool IsDownloading => !_isDisabled && _innerService.IsDownloading;
 
+        /// <summary>
+        /// Gets the underlying service for type checking (e.g., to detect LlamaSharpLocalModelService)
+        /// </summary>
+        public ILocalModelService InnerService => _innerService;
+
         public event Action<LocalModelState>? StateChanged;
         public event Action<double>? DownloadProgress;
         public event Action<string>? ErrorOccurred;
@@ -47,7 +51,7 @@ namespace LLMClient.Services
             if (!_isDisabled)
             {
                 StateChanged?.Invoke(state);
-                
+
                 // Reset failure counter on successful state changes
                 if (state == LocalModelState.Loaded || state == LocalModelState.Downloaded)
                 {
@@ -75,15 +79,15 @@ namespace LLMClient.Services
         {
             _consecutiveFailures++;
             _lastFailureTime = DateTime.UtcNow;
-            
+
             _logger.LogWarning($"Local model failure #{_consecutiveFailures}: {error}");
-            
+
             // Disable if too many consecutive failures
             if (_consecutiveFailures >= MAX_CONSECUTIVE_FAILURES)
             {
                 _isDisabled = true;
                 _logger.LogError($"Local model disabled after {MAX_CONSECUTIVE_FAILURES} consecutive failures");
-                
+
                 var safeError = "Local model temporarily unavailable. App functionality not affected.";
                 ErrorOccurred?.Invoke(safeError);
                 StateChanged?.Invoke(LocalModelState.Error);
@@ -96,20 +100,27 @@ namespace LLMClient.Services
 
         private bool ShouldAttemptOperation()
         {
-            // Check if in cooldown period
-            if (_lastFailureTime.HasValue && 
+            // Before disable: always allow attempts so we can reach failure threshold
+            if (!_isDisabled)
+            {
+                return true;
+            }
+
+            // When disabled: enforce cooldown window
+            if (_lastFailureTime.HasValue &&
                 DateTime.UtcNow - _lastFailureTime.Value < TimeSpan.FromMinutes(COOLDOWN_MINUTES))
             {
                 return false;
             }
 
-            // Re-enable if cooldown expired
-            if (_isDisabled && _lastFailureTime.HasValue && 
+            // Cooldown expired: re-enable and reset counter
+            if (_isDisabled && _lastFailureTime.HasValue &&
                 DateTime.UtcNow - _lastFailureTime.Value >= TimeSpan.FromMinutes(COOLDOWN_MINUTES))
             {
                 _isDisabled = false;
                 _consecutiveFailures = 0;
                 _logger.LogInformation("Local model re-enabled after cooldown period");
+                return true;
             }
 
             return !_isDisabled;
@@ -266,7 +277,7 @@ namespace LLMClient.Services
             }
 
             IAsyncEnumerable<string>? stream = null;
-            
+
             try
             {
                 stream = _innerService.GenerateStreamingResponseAsync(prompt, cancellationToken);
@@ -353,7 +364,10 @@ namespace LLMClient.Services
         {
             try
             {
-                _innerService?.Dispose();
+                if (_innerService is IDisposable d)
+                {
+                    d.Dispose();
+                }
             }
             catch (Exception ex)
             {

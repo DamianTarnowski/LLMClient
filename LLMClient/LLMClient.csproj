@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
+		<!-- <TargetFrameworks>$(TargetFrameworks);net10.0-tizen</TargetFrameworks> -->
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -19,6 +19,11 @@
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+
+		<!-- Android: Extract native libraries on install (required for MLC LLM) -->
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<AndroidUseAapt2>true</AndroidUseAapt2>
+		<AndroidExtractNativeLibsOnInstall>true</AndroidExtractNativeLibsOnInstall>
 
 		<!-- Display name -->
 		<ApplicationTitle>LLMClient</ApplicationTitle>
@@ -60,22 +65,42 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Override transitive Newtonsoft.Json 9.0.1 with secure version -->
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Indiko.Maui.Controls.Markdown" Version="1.3.9" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.82" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.7" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Microsoft.SemanticKernel" Version="1.60.0" />
 		<PackageReference Include="Microsoft.SemanticKernel.Connectors.Google" Version="1.60.0-alpha" />
 		<PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.60.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 		<PackageReference Include="sqlite-net-sqlcipher" Version="1.9.172" />
 		<PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
 		<PackageReference Include="SQLiteNetExtensions.Async" Version="2.1.0" />
-		<!-- Embeddings & ONNX Runtime for semantic search -->
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
-		<PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
-		<!-- ONNX Runtime GenAI for local model inference (latest versions) -->
-		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.8.0" />
-		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Managed" Version="0.8.3" />
+  		<!-- Embeddings & ONNX Runtime for semantic search -->
+  		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+  		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.1" />
+  		<PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2" />
+  		<!-- ONNX Runtime GenAI for local model inference (latest versions) -->
+  		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.8.0" />
+  		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Managed" Version="0.8.3" />
+		<!-- LLamaSharp for llama.cpp backend (Windows + Android) -->
+		<!-- v0.25.0 has official Android ARM64 support with libllama.so -->
+		<PackageReference Include="LLamaSharp" Version="0.25.0" Condition="$(TargetFramework.Contains('windows')) OR $(TargetFramework.Contains('android'))" />
+		
+		<!-- Windows backends: CPU + CUDA -->
+		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
+			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
+			<ExcludeAssets>none</ExcludeAssets>
+			<PrivateAssets>none</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
+			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
+			<ExcludeAssets>none</ExcludeAssets>
+		</PackageReference>
+		
+		<!-- Android: Use official LLamaSharp.Backend.Cpu.Android instead of custom libllama.so -->
+		<PackageReference Include="LLamaSharp.Backend.Cpu.Android" Version="0.25.0" Condition="$(TargetFramework.Contains('android'))" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -85,27 +110,160 @@
 	</ItemGroup>
 
 	<ItemGroup>
-    <None Update="..\TokenizerRust\target\release\tokenizer_rust.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	  <None Update="..\TokenizerRust\target\release\tokenizer_rust.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(TargetFramework)' == 'net10.0-android'">
+		<AndroidUseFastDeployment>false</AndroidUseFastDeployment>
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		<AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+	</PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
     <AndroidNdkDirectory>C:\Users\hdtdt\Downloads\android-ndk-r27d-windows\android-ndk-r27d</AndroidNdkDirectory>
     <AndroidNdkToolchainPath>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\windows-x86_64\bin</AndroidNdkToolchainPath>
   </PropertyGroup>
 
   <!-- Rust libraries are pre-built, no need to build during compilation -->
-  <Target Name="BuildRustLibraryForAndroid" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net9.0-android'">
+  <Target Name="BuildRustLibraryForAndroid" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net10.0-android'">
     <Message Text="Using pre-built Rust libraries for Android..." Importance="high" />
     <!-- Libraries are already built in TokenizerRust/target/*/release/libtokenizer_rust.so -->
   </Target>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+    <!-- Tokenizer Rust libraries -->
     <AndroidNativeLibrary Include="..\TokenizerRust\target\aarch64-linux-android\release\libtokenizer_rust.so" Abi="arm64-v8a" />
     <AndroidNativeLibrary Include="..\TokenizerRust\target\armv7-linux-androideabi\release\libtokenizer_rust.so" Abi="armeabi-v7a" />
     <AndroidNativeLibrary Include="..\TokenizerRust\target\i686-linux-android\release\libtokenizer_rust.so" Abi="x86" />
     <AndroidNativeLibrary Include="..\TokenizerRust\target\x86_64-linux-android\release\libtokenizer_rust.so" Abi="x86_64" />
+    <!-- C++ runtime required by custom model libraries -->
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libc++_shared.so" Abi="arm64-v8a" />
+    
+    <AndroidNativeLibrary Remove="Platforms\Android\libs\arm64-v8a\libllama.so" />
+    <AndroidNativeLibrary Remove="Platforms\Android\libs\arm64-v8a\libggml.so" />
+    <AndroidNativeLibrary Remove="Platforms\Android\libs\arm64-v8a\libggml-base.so" />
+    <AndroidNativeLibrary Remove="Platforms\Android\libs\arm64-v8a\libggml-cpu.so" />
+
+    <!-- LLamaSharp native libs now come from LLamaSharp.Backend.Cpu.Android NuGet package -->
+    
+    <!-- MLC LLM TVM runtime (disabled on Android, kept for iOS) -->
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm4j_runtime_packed.so" Abi="arm64-v8a" />
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm_ffi.so" Abi="arm64-v8a" />
+    <!-- Phi-2 model library compiled for OpenCL -->
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libphi2_q4f16_1_.so" Abi="arm64-v8a" />
+    <!-- RTLD_GLOBAL native helper for loading TVM runtime with global symbol visibility -->
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\librtld_global_loader.so" Abi="arm64-v8a" />
+
+    <!-- Java source files for MLC LLM / TVM integration -->
+    <!-- Apache TVM Java bindings (org.apache.tvm package) -->
+    <AndroidJavaSource Include="Platforms\Android\Java\org\apache\tvm\*.java" />
+    <AndroidJavaSource Include="Platforms\Android\Java\org\apache\tvm\rpc\*.java" />
+    <!-- MLC LLM FFI engine (ai.mlc.mlcllm package) -->
+    <AndroidJavaSource Include="Platforms\Android\Java\ai\mlc\mlcllm\*.java" />
+    <!-- RTLD_GLOBAL loader helper (com.llmclient.mlcllm package) -->
+    <AndroidJavaSource Include="Platforms\Android\Java\com\llmclient\mlcllm\*.java" />
   </ItemGroup>
+
+	<!-- Generate path property for LLamaSharp.Backend.Cpu to allow runtime asset filtering -->
+	<ItemGroup>
+		<PackageReference Update="LLamaSharp.Backend.Cpu">
+			<GeneratePathProperty>true</GeneratePathProperty>
+		</PackageReference>
+	</ItemGroup>
+
+	<!-- Platform-specific runtime asset exclusions for LLamaSharp -->
+	<ItemGroup Condition="$(TargetFramework.Contains('windows'))">
+		<!-- Windows: Exclude Linux/OSX/Android runtime assets -->
+		<ReferenceCopyLocalPaths Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\linux-**\**" />
+		<ReferenceCopyLocalPaths Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
+		<ReferenceCopyLocalPaths Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\android-**\**" />
+
+		<Content Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\linux-**\**" />
+		<Content Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
+		<Content Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\android-**\**" />
+
+		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\linux-**\**" />
+		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
+		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\android-**\**" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework.Contains('android'))">
+		<!-- Android: Exclude Windows/Linux/OSX runtime assets -->
+		<ReferenceCopyLocalPaths Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\win-**\**" />
+		<ReferenceCopyLocalPaths Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\linux-**\**" />
+		<ReferenceCopyLocalPaths Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
+
+		<Content Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\win-**\**" />
+		<Content Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\linux-**\**" />
+		<Content Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
+
+		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\win-**\**" />
+		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\linux-**\**" />
+		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
+	</ItemGroup>
+
+	<!-- Additional filtering to be extra safe at build time -->
+	<Target Name="FilterRuntimeAssets" BeforeTargets="AssignTargetPaths;ResolveAssemblyReferences;PrepareForBuild;_ComputeFilesToPublishForRuntimeIdentifiers">
+		<!-- Windows build: Remove Linux/OSX/Android assets -->
+		<ItemGroup Condition="$(TargetFramework.Contains('windows'))">
+			<RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+			<RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(Identity)').Contains('android-'))" />
+
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('android-'))" />
+
+			<Content Remove="@(Content)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<Content Remove="@(Content)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+			<Content Remove="@(Content)" Condition="$([System.String]::Copy('%(Identity)').Contains('android-'))" />
+
+			<NativeLibrary Remove="@(NativeLibrary)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<NativeLibrary Remove="@(NativeLibrary)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+			<NativeLibrary Remove="@(NativeLibrary)" Condition="$([System.String]::Copy('%(Identity)').Contains('android-'))" />
+		</ItemGroup>
+
+		<!-- Android build: Remove Windows/Linux/OSX assets -->
+		<ItemGroup Condition="$(TargetFramework.Contains('android'))">
+			<RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(Identity)').Contains('win-'))" />
+			<RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('win-'))" />
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+
+			<Content Remove="@(Content)" Condition="$([System.String]::Copy('%(Identity)').Contains('win-'))" />
+			<Content Remove="@(Content)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<Content Remove="@(Content)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+
+			<NativeLibrary Remove="@(NativeLibrary)" Condition="$([System.String]::Copy('%(Identity)').Contains('win-'))" />
+			<NativeLibrary Remove="@(NativeLibrary)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<NativeLibrary Remove="@(NativeLibrary)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+
+			<!-- Remove duplicated native libraries with same name from different AVX variants -->
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('linux-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('win-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('osx-'))" />
+		</ItemGroup>
+
+		<Message Text="Filtered out incompatible runtime assets for $(TargetFramework)" Importance="high" />
+	</Target>
+
+	<!-- More aggressive filtering for Android publish to handle LLamaSharp AVX variants -->
+	<Target Name="RemoveDuplicateNativeLibraries" BeforeTargets="_ComputeFilesToPublishForRuntimeIdentifiers;ComputeFilesToPublish;_GenerateAndroidAssetsContents" Condition="$(TargetFramework.Contains('android'))">
+		<ItemGroup>
+			<!-- Remove all linux native libraries that cause duplicate errors -->
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('\runtimes\linux-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/runtimes/linux-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('\runtimes\win-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/runtimes/win-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('\runtimes\osx-'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/runtimes/osx-'))" />
+		</ItemGroup>
+		<Message Text="Removed duplicate native libraries for Android build" Importance="high" />
+	</Target>
 
 </Project>

@@ -185,44 +185,10 @@ namespace LLMClient.Services
                 if (!string.IsNullOrEmpty(imageBase64))
                     throw new NotSupportedException("Local models don't support images yet");
 
-                // Build conversation prompt using Phi-4-mini-instruct chat template
-                var promptBuilder = new System.Text.StringBuilder();
-
-                // Load user-defined system prompt for local models (no memory context)
-                var systemPrompt = await GetSystemPromptAsync();
-
-                // Use the same template as LocalModelService: <|im_start|>role<|im_sep|> ... <|im_end|>
-                if (!string.IsNullOrWhiteSpace(systemPrompt))
-                {
-                    promptBuilder.AppendLine("<|im_start|>system<|im_sep|>");
-                    promptBuilder.AppendLine(systemPrompt);
-                    promptBuilder.AppendLine("<|im_end|>");
-                }
-
-                // Add last few messages as chat turns
-                foreach (var msg in conversationHistory.TakeLast(3))
-                {
-                    if (msg.IsUser)
-                    {
-                        promptBuilder.AppendLine("<|im_start|>user<|im_sep|>");
-                        promptBuilder.AppendLine(msg.Content);
-                        promptBuilder.AppendLine("<|im_end|>");
-                    }
-                    else
-                    {
-                        promptBuilder.AppendLine("<|im_start|>assistant<|im_sep|>");
-                        promptBuilder.AppendLine(msg.Content);
-                        promptBuilder.AppendLine("<|im_end|>");
-                    }
-                }
-
-                // Current user turn, then start assistant turn (no end token)
-                promptBuilder.AppendLine("<|im_start|>user<|im_sep|>");
-                promptBuilder.AppendLine(message);
-                promptBuilder.AppendLine("<|im_end|>");
-                promptBuilder.AppendLine("<|im_start|>assistant<|im_sep|>");
-
-                await foreach (var chunk in _localModelService.GenerateStreamingResponseAsync(promptBuilder.ToString(), cancellationToken))
+                // Delegate to the local model service which handles proper chat template formatting
+                // based on the selected model (Gemma, Qwen, TinyLlama, etc.)
+                await foreach (var chunk in _localModelService.GenerateStreamingResponseAsync(
+                    await BuildLocalModelPromptAsync(conversationHistory, message), cancellationToken))
                 {
                     yield return chunk;
                 }
@@ -382,6 +348,140 @@ namespace LLMClient.Services
                 System.Diagnostics.Debug.WriteLine($"[AiService] Failed to load system prompt from DB: {ex.Message}");
             }
             return string.Empty;
+        }
+
+        /// <summary>
+        /// Build prompt for local model based on model type (Gemma, Qwen, TinyLlama, etc.)
+        /// </summary>
+        private async Task<string> BuildLocalModelPromptAsync(List<Message> conversationHistory, string message)
+        {
+            var promptBuilder = new System.Text.StringBuilder();
+            var systemPrompt = await GetSystemPromptAsync();
+            if (string.IsNullOrWhiteSpace(systemPrompt))
+                systemPrompt = "You are a helpful AI assistant. Answer in the user's language.";
+
+            var historyEndsWithSameUserMessage = conversationHistory.Count > 0
+                && conversationHistory[^1].IsUser
+                && string.Equals(conversationHistory[^1].Content?.Trim(), message?.Trim(), StringComparison.Ordinal);
+
+            // Detect model type from LlamaSharpLocalModelService if available
+            string modelId = "";
+#if WINDOWS || ANDROID
+            var serviceToCheck = _localModelService;
+            if (serviceToCheck is SafeLocalModelWrapper wrapper)
+            {
+                serviceToCheck = wrapper.InnerService;
+            }
+            if (serviceToCheck is SwitchableLocalModelService switchable)
+            {
+                serviceToCheck = switchable.CurrentService;
+            }
+            if (serviceToCheck is LlamaSharpLocalModelService llamaService)
+            {
+                modelId = llamaService.SelectedModel?.Id ?? "";
+            }
+#endif
+
+            // Gemma models use <start_of_turn> / <end_of_turn> format
+            bool isGemma = modelId.Contains("gemma", StringComparison.OrdinalIgnoreCase);
+            // Qwen/TinyLlama/SmolLM use ChatML format
+            bool useChatMl = modelId.Contains("qwen", StringComparison.OrdinalIgnoreCase)
+                          || modelId.Contains("smollm", StringComparison.OrdinalIgnoreCase)
+                          || modelId.Contains("tinyllama", StringComparison.OrdinalIgnoreCase);
+
+            if (isGemma)
+            {
+                // Gemma 3 format: <bos><start_of_turn>user\n...<end_of_turn>\n<start_of_turn>model\n
+                promptBuilder.Append("<bos>");
+                foreach (var msg in conversationHistory.TakeLast(3))
+                {
+                    if (msg.IsUser)
+                    {
+                        promptBuilder.Append("<start_of_turn>user\n");
+                        promptBuilder.Append(msg.Content);
+                        promptBuilder.Append("<end_of_turn>\n");
+                    }
+                    else
+                    {
+                        promptBuilder.Append("<start_of_turn>model\n");
+                        promptBuilder.Append(msg.Content);
+                        promptBuilder.Append("<end_of_turn>\n");
+                    }
+                }
+                if (historyEndsWithSameUserMessage)
+                {
+                    promptBuilder.Append("<start_of_turn>model\n");
+                }
+                else
+                {
+                    promptBuilder.Append("<start_of_turn>user\n");
+                    promptBuilder.Append(message);
+                    promptBuilder.Append("<end_of_turn>\n");
+                    promptBuilder.Append("<start_of_turn>model\n");
+                }
+            }
+            else if (useChatMl)
+            {
+                // ChatML format
+                var imStart = "<" + "|im_start|" + ">";
+                var imEnd = "<" + "|im_end|" + ">";
+                promptBuilder.Append(imStart + "system\n");
+                promptBuilder.Append(systemPrompt);
+                promptBuilder.Append(imEnd + "\n");
+
+                foreach (var msg in conversationHistory.TakeLast(3))
+                {
+                    if (msg.IsUser)
+                    {
+                        promptBuilder.Append(imStart + "user\n");
+                        promptBuilder.Append(msg.Content);
+                        promptBuilder.Append(imEnd + "\n");
+                    }
+                    else
+                    {
+                        promptBuilder.Append(imStart + "assistant\n");
+                        promptBuilder.Append(msg.Content);
+                        promptBuilder.Append(imEnd + "\n");
+                    }
+                }
+                if (historyEndsWithSameUserMessage)
+                {
+                    promptBuilder.Append(imStart + "assistant\n");
+                }
+                else
+                {
+                    promptBuilder.Append(imStart + "user\n");
+                    promptBuilder.Append(message);
+                    promptBuilder.Append(imEnd + "\n");
+                    promptBuilder.Append(imStart + "assistant\n");
+                }
+            }
+            else
+            {
+                // Plain instruct format for other models
+                promptBuilder.Append("System: ");
+                promptBuilder.Append(systemPrompt);
+                promptBuilder.Append("\n\n");
+
+                foreach (var msg in conversationHistory.TakeLast(3))
+                {
+                    promptBuilder.Append(msg.IsUser ? "User: " : "Assistant: ");
+                    promptBuilder.Append(msg.Content);
+                    promptBuilder.Append('\n');
+                }
+                if (historyEndsWithSameUserMessage)
+                {
+                    promptBuilder.Append("Assistant: ");
+                }
+                else
+                {
+                    promptBuilder.Append("User: ");
+                    promptBuilder.Append(message);
+                    promptBuilder.Append("\nAssistant: ");
+                }
+            }
+
+            return promptBuilder.ToString();
         }
     }
 }
