@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using LLMClient.Models;
@@ -6,6 +6,9 @@ using LLMClient.Services;
 using LLMClient.Views;
 using Microsoft.Maui.Controls;
 using System.Globalization;
+using System.Linq;
+using CommunityToolkit.Mvvm.Messaging;
+using LLMClient.Messaging;
 
 namespace LLMClient.ViewModels
 {
@@ -17,6 +20,10 @@ namespace LLMClient.ViewModels
         private readonly IErrorHandlingService _errorHandlingService;
         private readonly ISearchService _searchService;
         private readonly IExportService _exportService;
+        private readonly IEmbeddingService _embeddingService;
+        private readonly ILocalizationService _localizationService;
+        private readonly ILocalModelService _localModelService;
+        private readonly IMemoryExtractionService? _memoryExtractionService;
         private ObservableCollection<Conversation> _conversations = new();
         private Conversation? _selectedConversation;
         private string _newMessage = string.Empty;
@@ -31,14 +38,11 @@ namespace LLMClient.ViewModels
         private string? _selectedImageBase64;
         private int _messagesOffset = 0;
         private const int PAGE_SIZE = 50;
-        private readonly IEmbeddingService _embeddingService;
-        private readonly IMemoryExtractionService? _memoryExtractionService;
-        private readonly ILocalizationService _localizationService;
-        private readonly ILocalModelService _localModelService;
         private double _downloadProgressValue;
         private bool _isCloudModelsEnabled = true;
         private string? _currentActiveModel;
         private bool _isLocalModelBusy;
+        private bool _isUpdatingFilteredMessages;
 
         public ObservableCollection<Conversation> Conversations
         {
@@ -253,6 +257,21 @@ namespace LLMClient.ViewModels
             }
         }
 
+        // UI toggle for switching between local model and cloud models
+        public bool UseLocalModel
+        {
+            get => _localModelService.State == LocalModelState.Loaded;
+            set
+            {
+                // Execute asynchronously; revert UI if operation fails
+                _ = SetUseLocalModelAsync(value);
+            }
+        }
+
+        // Commands for segmented toggle
+        public ICommand EnableLocalModelCommand { get; }
+        public ICommand EnableApiModelCommand { get; }
+
         public List<LanguageOption> AvailableLanguages => _localizationService.AvailableLanguages;
 
         public ICommand NewConversationCommand { get; }
@@ -294,13 +313,28 @@ namespace LLMClient.ViewModels
             // Subscribe to local model state changes
             _localModelService.StateChanged += OnLocalModelStateChanged;
             
-            // Subscribe to messages from LocalModelStatusViewModel
-            MessagingCenter.Subscribe<LocalModelStatusViewModel>(this, "LocalModelLoaded", async (sender) =>
+            // Subscribe to local model download progress and errors
+            _localModelService.DownloadProgress += (p) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() => DownloadProgressValue = p);
+            };
+            _localModelService.ErrorOccurred += (err) =>
+            {
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    IsLocalModelBusy = false;
+                    await DisplayAlertAsync("Błąd modelu lokalnego", err, "OK");
+                    OnPropertyChanged(nameof(UseLocalModel));
+                });
+            };
+            
+            // Subscribe to messages from LocalModelStatusViewModel via WeakReferenceMessenger
+            WeakReferenceMessenger.Default.Register<LocalModelLoadedMessage>(this, async (r, m) =>
             {
                 await OnLocalModelLoadedAsync();
             });
-            
-            MessagingCenter.Subscribe<LocalModelStatusViewModel>(this, "LocalModelUnloaded", async (sender) =>
+
+            WeakReferenceMessenger.Default.Register<LocalModelUnloadedMessage>(this, async (r, m) =>
             {
                 await OnLocalModelUnloadedAsync();
             });
@@ -330,8 +364,12 @@ namespace LLMClient.ViewModels
             LoadMoreMessagesCommand = new Command(async () => await LoadMoreMessagesAsync());
             ModelSettingsCommand = new Command(async () => await GoToModelSettingsAsync());
 
+            // Segment toggle commands
+            EnableLocalModelCommand = new Command(async () => await SetUseLocalModelAsync(true));
+            EnableApiModelCommand = new Command(async () => await SetUseLocalModelAsync(false));
+
             // Subskrypcja na powiadomienia o zmianach modeli
-            MessagingCenter.Subscribe<ModelConfigurationViewModel>(this, "ModelsChanged", async (sender) =>
+            WeakReferenceMessenger.Default.Register<ModelsChangedMessage>(this, async (r, m) =>
             {
                 await RefreshModelsAsync();
             });
@@ -343,6 +381,18 @@ namespace LLMClient.ViewModels
             var currentCulture = _localizationService.CurrentCulture;
             _selectedLanguage = _localizationService.AvailableLanguages.FirstOrDefault(l => l.Code == currentCulture);
         }
+
+        // Helper accessors for current Page (MAUI recommendation: use Windows[0].Page instead of obsolete MainPage)
+        private Page? CurrentPage => Application.Current?.Windows?.FirstOrDefault()?.Page;
+
+        private Task<bool> DisplayAlertAsync(string title, string message, string accept, string cancel)
+            => CurrentPage != null ? CurrentPage.DisplayAlertAsync(title, message, accept, cancel) : Task.FromResult(false);
+
+        private Task DisplayAlertAsync(string title, string message, string cancel)
+            => CurrentPage != null ? CurrentPage.DisplayAlertAsync(title, message, cancel) : Task.CompletedTask;
+
+        private Task<string?> DisplayPromptAsync(string title, string message, string accept, string cancel, int maxLength, Keyboard keyboard)
+            => CurrentPage != null ? CurrentPage.DisplayPromptAsync(title, message, accept, cancel, maxLength: maxLength, keyboard: keyboard) : Task.FromResult<string?>(null);
 
         private void OnLocalModelStateChanged(LocalModelState state)
         {
@@ -357,7 +407,7 @@ namespace LLMClient.ViewModels
                         CurrentActiveModel = "Phi-4-mini (Local)";
                         
                         // Notify that cloud model selector should be disabled
-                        MessagingCenter.Send(this, "LocalModelActive", true);
+                        WeakReferenceMessenger.Default.Send(new LocalModelActiveChangedMessage(true));
                         break;
                     case LocalModelState.Loading:
                         // Pokaż spinner w trakcie ładowania
@@ -377,9 +427,12 @@ namespace LLMClient.ViewModels
                         CurrentActiveModel = AiConfiguration?.SelectedModel?.Name;
                         
                         // Notify that cloud model selector should be re-enabled
-                        MessagingCenter.Send(this, "LocalModelActive", false);
+                        WeakReferenceMessenger.Default.Send(new LocalModelActiveChangedMessage(false));
                         break;
                 }
+
+                // Update toggle state in UI
+                OnPropertyChanged(nameof(UseLocalModel));
             });
         }
         
@@ -443,8 +496,8 @@ namespace LLMClient.ViewModels
                 IsLocalModelBusy = false;
                 
                 // Switch back to previously selected cloud model or first available
-                var modelToSelect = AiConfiguration.Models.FirstOrDefault(m => m.IsActive) ?? 
-                                  AiConfiguration.Models.FirstOrDefault();
+                var modelToSelect = AiConfiguration.Models.FirstOrDefault(m => m.IsActive) ??
+                                      AiConfiguration.Models.FirstOrDefault();
                 
                 if (modelToSelect != null)
                 {
@@ -468,6 +521,138 @@ namespace LLMClient.ViewModels
             }
         }
 
+        private async Task SetUseLocalModelAsync(bool enable)
+        {
+            try
+            {
+                // Prevent re-entrant operations while busy
+                if (IsLocalModelBusy)
+                {
+                    System.Diagnostics.Debug.WriteLine("[MainPageViewModel] Local model operation already in progress");
+                    OnPropertyChanged(nameof(UseLocalModel));
+                    return;
+                }
+
+                if (enable)
+                {
+                    if (_localModelService.State == LocalModelState.Loaded)
+                    {
+                        OnPropertyChanged(nameof(UseLocalModel));
+                        return;
+                    }
+
+                    if (_localModelService.State == LocalModelState.NotDownloaded || _localModelService.State == LocalModelState.Error)
+                    {
+                        // Get model info dynamically instead of hardcoding
+                        var modelInfo = await _localModelService.GetModelInfoAsync();
+                        var sizeText = modelInfo.SizeInMB > 0 
+                            ? (modelInfo.SizeInMB < 1024 ? $"{modelInfo.SizeInMB:F0} MB" : $"{modelInfo.SizeInMB / 1024.0:F1} GB") 
+                            : "~4.9 GB"; // Fallback for Phi-4 default
+                        var modelName = !string.IsNullOrEmpty(modelInfo.DisplayName) ? modelInfo.DisplayName : "Model lokalny";
+
+                        bool confirm = await DisplayAlertAsync(
+                            "Pobieranie modelu",
+                            $"Model '{modelName}' nie jest pobrany ({sizeText}). Czy chcesz pobrać go teraz?",
+                            "Tak",
+                            "Nie");
+
+                        if (!confirm)
+                        {
+                            OnPropertyChanged(nameof(UseLocalModel));
+                            return;
+                        }
+
+                        IsLocalModelBusy = true;
+                        var progress = new Progress<double>(p => DownloadProgressValue = p);
+                        
+                        // Execute download
+                        var downloaded = await _localModelService.DownloadModelAsync(progress);
+                        
+                        // Check if state is valid for loading (Downloaded or already Loaded)
+                        bool readyToLoad = downloaded || _localModelService.State == LocalModelState.Downloaded;
+                        
+                        if (!readyToLoad)
+                        {
+                            if (_localModelService.IsDownloading)
+                            {
+                                // Download started in background/service
+                                void ContinueAfterDownload(LocalModelState s)
+                                {
+                                    if (s == LocalModelState.Downloaded)
+                                    {
+                                        _localModelService.StateChanged -= ContinueAfterDownload;
+                                        MainThread.BeginInvokeOnMainThread(async () =>
+                                        {
+                                            IsLocalModelBusy = true;
+                                            var loadedAfter = await _localModelService.LoadModelAsync();
+                                            IsLocalModelBusy = false;
+                                            if (loadedAfter)
+                                            {
+                                                WeakReferenceMessenger.Default.Send(new LocalModelLoadedMessage());
+                                            }
+                                        });
+                                    }
+                                    else if (s == LocalModelState.Error)
+                                    {
+                                        _localModelService.StateChanged -= ContinueAfterDownload;
+                                        MainThread.BeginInvokeOnMainThread(async () => 
+                                        {
+                                            IsLocalModelBusy = false;
+                                            await DisplayAlertAsync("Błąd", "Pobieranie modelu zakończyło się błędem.", "OK");
+                                            OnPropertyChanged(nameof(UseLocalModel));
+                                        });
+                                    }
+                                }
+                                _localModelService.StateChanged += ContinueAfterDownload;
+                                return; // UI stays busy or updates via progress
+                            }
+                            else
+                            {
+                                IsLocalModelBusy = false;
+                                await DisplayAlertAsync("Błąd", "Nie udało się zainicjować pobierania modelu.", "OK");
+                                OnPropertyChanged(nameof(UseLocalModel));
+                                return;
+                            }
+                        }
+                    }
+
+                    // Try to load the model when downloaded
+                    IsLocalModelBusy = true;
+                    var loaded = await _localModelService.LoadModelAsync();
+                    IsLocalModelBusy = false;
+
+                    if (loaded)
+                    {
+                        WeakReferenceMessenger.Default.Send(new LocalModelLoadedMessage());
+                    }
+                    else
+                    {
+                        await DisplayAlertAsync("Błąd", "Nie udało się załadować modelu lokalnego.", "OK");
+                        OnPropertyChanged(nameof(UseLocalModel));
+                    }
+                }
+                else
+                {
+                    if (_localModelService.State == LocalModelState.Loaded)
+                    {
+                        IsLocalModelBusy = true;
+                        await _localModelService.UnloadModelAsync();
+                        IsLocalModelBusy = false;
+                        WeakReferenceMessenger.Default.Send(new LocalModelUnloadedMessage());
+                    }
+
+                    OnPropertyChanged(nameof(UseLocalModel));
+                }
+            }
+            catch (Exception ex)
+            {
+                IsLocalModelBusy = false;
+                System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Toggle local model error: {ex.Message}");
+                await DisplayAlertAsync("Błąd", $"Wystąpił błąd: {ex.Message}", "OK");
+                OnPropertyChanged(nameof(UseLocalModel));
+            }
+        }
+
         // Implementacja obsługi parametrów nawigacji
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -483,7 +668,7 @@ namespace LLMClient.ViewModels
                         if (message != null)
                         {
                             // Wyślij komunikat do widoku, aby przewinąć do tej wiadomości
-                            MessagingCenter.Send(this, "ScrollToMessage", message);
+                            WeakReferenceMessenger.Default.Send(new ScrollToMessageMessage(message));
                         }
                     }
                 }
@@ -495,7 +680,7 @@ namespace LLMClient.ViewModels
             if (message == null || SelectedConversation == null)
                 return;
 
-            bool confirm = await Application.Current.MainPage.DisplayAlert("Usuń wiadomość", "Czy na pewno chcesz usunąć tę wiadomość?", "Tak", "Nie");
+            bool confirm = await DisplayAlertAsync("Usuń wiadomość", "Czy na pewno chcesz usunąć tę wiadomość?", "Tak", "Nie");
             if (confirm)
             {
                 try
@@ -503,11 +688,11 @@ namespace LLMClient.ViewModels
                     await _databaseService.DeleteMessageAsync(message);
                     SelectedConversation.Messages.Remove(message);
                     UpdateFilteredMessages(); // Aktualizuj UI po usunięciu wiadomości
-                    await Application.Current.MainPage.DisplayAlert("Sukces", "Wiadomość została usunięta.", "OK");
+                    await DisplayAlertAsync("Sukces", "Wiadomość została usunięta.", "OK");
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Błąd", $"Nie udało się usunąć wiadomości: {ex.Message}", "OK");
+                    await DisplayAlertAsync("Błąd", $"Nie udało się usunąć wiadomości: {ex.Message}", "OK");
                 }
             }
         }
@@ -520,11 +705,11 @@ namespace LLMClient.ViewModels
             try
             {
                 await Clipboard.SetTextAsync(message.Content);
-                await Application.Current.MainPage.DisplayAlert("Sukces", "Wiadomość skopiowana do schowka.", "OK");
+                await DisplayAlertAsync("Sukces", "Wiadomość skopiowana do schowka.", "OK");
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Błąd", $"Nie udało się skopiować wiadomości: {ex.Message}", "OK");
+                await DisplayAlertAsync("Błąd", $"Nie udało się skopiować wiadomości: {ex.Message}", "OK");
             }
         }
 
@@ -533,7 +718,7 @@ namespace LLMClient.ViewModels
             if (conversation == null)
                 return;
 
-            bool confirm = await Application.Current.MainPage.DisplayAlert("Usuń konwersację", $"Czy na pewno chcesz usunąć konwersację '{conversation.Title}'?", "Tak", "Nie");
+            bool confirm = await DisplayAlertAsync("Usuń konwersację", $"Czy na pewno chcesz usunąć konwersację '{conversation.Title}'?", "Tak", "Nie");
             if (confirm)
             {
                 try
@@ -555,11 +740,11 @@ namespace LLMClient.ViewModels
                         }
                     }
                     OnPropertyChanged(nameof(IsConversationsEmpty));
-                    await Application.Current.MainPage.DisplayAlert("Sukces", "Konwersacja została usunięta.", "OK");
+                    await DisplayAlertAsync("Sukces", "Konwersacja została usunięta.", "OK");
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Błąd", $"Nie udało się usunąć konwersacji: {ex.Message}", "OK");
+                    await DisplayAlertAsync("Błąd", $"Nie udało się usunąć konwersacji: {ex.Message}", "OK");
                 }
             }
         }
@@ -570,7 +755,7 @@ namespace LLMClient.ViewModels
             {
                 try
                 {
-                    _aiService.UpdateConfiguration(AiConfiguration.SelectedModel);
+                    await Task.Run(() => _aiService.UpdateConfiguration(AiConfiguration.SelectedModel));
                     // Save the ID of the selected model
                     Preferences.Set("LastSelectedModelId", AiConfiguration.SelectedModel.Id);
                     // Powiadom o zmianie obsługi obrazków
@@ -578,7 +763,7 @@ namespace LLMClient.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current?.MainPage?.DisplayAlert("Błąd konfiguracji AI", $"Nie udało się skonfigurować wybranego modelu AI: {ex.Message}", "OK");
+                    await DisplayAlertAsync("Błąd konfiguracji AI", $"Nie udało się skonfigurować wybranego modelu AI: {ex.Message}", "OK");
                 }
             }
         }
@@ -627,12 +812,12 @@ namespace LLMClient.ViewModels
                 if (modelToSelect != null)
                 {
                     AiConfiguration.SelectedModel = modelToSelect;
-                    _aiService.UpdateConfiguration(modelToSelect);
+                    await _aiService.UpdateConfiguration(modelToSelect);
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current?.MainPage?.DisplayAlert("Błąd konfiguracji AI", $"Nie udało się skonfigurować aktywnego modelu AI: {ex.Message}", "OK");
+                await DisplayAlertAsync("Błąd konfiguracji AI", $"Nie udało się skonfigurować aktywnego modelu AI: {ex.Message}", "OK");
             }
 
             StreamingEnabled = Preferences.Get("StreamingEnabled", true);
@@ -658,6 +843,24 @@ namespace LLMClient.ViewModels
 
             // Ustal dostępność wyboru modeli chmurowych zależnie od stanu lokalnego modelu
             IsCloudModelsEnabled = _localModelService.State != LocalModelState.Loaded;
+            
+            // Przywróć preferencję używania modelu lokalnego po starcie aplikacji
+            try
+            {
+                var preferLocal = Preferences.Get("UseLocalModel", false);
+                if (preferLocal && _localModelService.State == LocalModelState.Downloaded)
+                {
+                    var loaded = await _localModelService.LoadModelAsync();
+                    if (loaded)
+                    {
+                        WeakReferenceMessenger.Default.Send(new LocalModelLoadedMessage());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Failed to restore local model preference: {ex.Message}");
+            }
             
             // Sprawdź status szyfrowania bazy danych
             try
@@ -740,7 +943,7 @@ namespace LLMClient.ViewModels
 
             UpdateFilteredMessages();
             _messagesOffset += newMessages.Count;
-            MessagingCenter.Send(this, "ScrollToBottom");
+            WeakReferenceMessenger.Default.Send(new ScrollToBottomMessage());
         }
 
         private void SelectConversation(Conversation conversation)
@@ -780,13 +983,13 @@ namespace LLMClient.ViewModels
             // Nowa walidacja
             if (NewMessage.Trim().Length > MAX_MESSAGE_LENGTH)
             {
-                await Application.Current.MainPage.DisplayAlert("Błąd", $"Wiadomość zbyt długa (max {MAX_MESSAGE_LENGTH} znaków).", "OK");
+                await DisplayAlertAsync("Błąd", $"Wiadomość zbyt długa (max {MAX_MESSAGE_LENGTH} znaków).", "OK");
                 return;
             }
 
             if (!string.IsNullOrEmpty(SelectedImageBase64) && Convert.FromBase64String(SelectedImageBase64).Length > MAX_IMAGE_SIZE_BYTES)
             {
-                await Application.Current.MainPage.DisplayAlert("Błąd", "Obrazek zbyt duży (max 5MB).", "OK");
+                await DisplayAlertAsync("Błąd", "Obrazek zbyt duży (max 5MB).", "OK");
                 return;
             }
 
@@ -817,7 +1020,7 @@ namespace LLMClient.ViewModels
                 
                 SelectedConversation.Messages.Add(userMessage);
                 UpdateFilteredMessages(); // Dodaj wiadomość do UI natychmiast
-                MessagingCenter.Send(this, "ScrollToBottom");
+                WeakReferenceMessenger.Default.Send(new ScrollToBottomMessage());
 
                 var messageToSend = NewMessage.Trim();
                 var imageToSend = SelectedImageBase64;
@@ -839,7 +1042,7 @@ namespace LLMClient.ViewModels
                 
                 SelectedConversation.Messages.Add(botMessage);
                 UpdateFilteredMessages(); // Dodaj pustą wiadomość bota do UI
-                MessagingCenter.Send(this, "ScrollToBottom");
+                WeakReferenceMessenger.Default.Send(new ScrollToBottomMessage());
 
                 var conversationHistory = SelectedConversation.Messages
                     .Where(m => m != botMessage)
@@ -872,7 +1075,7 @@ namespace LLMClient.ViewModels
                     finally
                     {
                         _streamingBatchService.StopBatching();
-                        MessagingCenter.Send(this, "ScrollToBottom");
+                        WeakReferenceMessenger.Default.Send(new ScrollToBottomMessage());
                     }
                 }
                 else
@@ -888,7 +1091,7 @@ namespace LLMClient.ViewModels
                         "saving AI response");
                     
                     OnPropertyChanged(nameof(FilteredMessages)); // Aktualizuj UI z pełną odpowiedzią
-                    MessagingCenter.Send(this, "ScrollToBottom");
+                    WeakReferenceMessenger.Default.Send(new ScrollToBottomMessage());
                 }
 
                 // Generate conversation title if this is the first exchange
@@ -955,7 +1158,7 @@ namespace LLMClient.ViewModels
 
         private async Task ShowConfigurationRequiredAsync()
         {
-            await Application.Current?.MainPage?.DisplayAlert(
+            await DisplayAlertAsync(
                 "Konfiguracja wymagana",
                 "Aby rozpocząć rozmowę, skonfiguruj model AI w ustawieniach.",
                 "OK");
@@ -969,7 +1172,7 @@ namespace LLMClient.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current?.MainPage?.DisplayAlert("Błąd", $"Nie udało się otworzyć konfiguracji: {ex.Message}", "OK");
+                await DisplayAlertAsync("Błąd", $"Nie udało się otworzyć konfiguracji: {ex.Message}", "OK");
             }
         }
 
@@ -987,6 +1190,9 @@ namespace LLMClient.ViewModels
 
         private async Task GenerateConversationTitleAsync(string userMessageContent)
         {
+            if (SelectedConversation == null)
+                return;
+
             try
             {
                 var titlePrompt = $"Create a short conversation title (max 5 words) matching the user's language for: {userMessageContent}";
@@ -1005,9 +1211,12 @@ namespace LLMClient.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"Błąd podczas generowania tytułu: {ex.Message}");
-                SelectedConversation.Title = "Nowa konwersacja";
-                await _databaseService.SaveConversationAsync(SelectedConversation);
-                OnPropertyChanged(nameof(SelectedConversation));
+                if (SelectedConversation != null)
+                {
+                    SelectedConversation.Title = "Nowa konwersacja";
+                    await _databaseService.SaveConversationAsync(SelectedConversation);
+                    OnPropertyChanged(nameof(SelectedConversation));
+                }
             }
         }
 
@@ -1047,20 +1256,30 @@ namespace LLMClient.ViewModels
 
         private void UpdateFilteredMessages()
         {
-            FilteredMessages.Clear();
+            if (_isUpdatingFilteredMessages)
+                return;
             
-            if (SelectedConversation?.Messages != null)
+            _isUpdatingFilteredMessages = true;
+            try
             {
-                foreach (var message in SelectedConversation.Messages)
+                var messages = SelectedConversation?.Messages?.ToList() ?? new List<Message>();
+                
+                FilteredMessages.Clear();
+                foreach (var message in messages)
                 {
                     FilteredMessages.Add(message);
                 }
+            }
+            finally
+            {
+                _isUpdatingFilteredMessages = false;
             }
         }
 
         private void FilterMessagesBySearchResults()
         {
-            FilteredMessages.Clear();
+            if (_isUpdatingFilteredMessages)
+                return;
             
             if (_searchService.HasResults)
             {
@@ -1114,7 +1333,7 @@ namespace LLMClient.ViewModels
             var currentResult = _searchService.GetCurrentResult();
             if (currentResult != null)
             {
-                MessagingCenter.Send(this, "ScrollToMessage", currentResult.Message);
+                WeakReferenceMessenger.Default.Send(new ScrollToMessageMessage(currentResult.Message));
             }
         }
 
@@ -1126,7 +1345,7 @@ namespace LLMClient.ViewModels
         {
             if (SelectedConversation == null || SelectedConversation.Messages.Count == 0)
             {
-                await Application.Current?.MainPage?.DisplayAlert("Błąd", "Brak konwersacji do eksportu.", "OK");
+                await DisplayAlertAsync("Błąd", "Brak konwersacji do eksportu.", "OK");
                 return;
             }
 
@@ -1141,29 +1360,33 @@ namespace LLMClient.ViewModels
 
                 if (result.Success)
                 {
-                    await Application.Current?.MainPage?.DisplayAlert("Sukces", 
+                    await DisplayAlertAsync("Sukces", 
                         $"Konwersacja została wyeksportowana do:\n{result.FilePath}", "OK");
                 }
                 else
                 {
-                    await Application.Current?.MainPage?.DisplayAlert("Błąd", 
+                    await DisplayAlertAsync("Błąd", 
                         $"Nie udało się wyeksportować konwersacji:\n{result.ErrorMessage}", "OK");
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current?.MainPage?.DisplayAlert("Błąd", 
+                await DisplayAlertAsync("Błąd", 
                     $"Wystąpił błąd podczas eksportu: {ex.Message}", "OK");
             }
         }
 
         private async Task<ExportFormat?> ShowExportFormatSelectionAsync()
         {
-            var action = await Application.Current?.MainPage?.DisplayActionSheet(
-                "Wybierz format eksportu", "Anuluj", null, 
-                "JSON (strukturalne dane)", 
-                "Markdown (czytelny format)", 
-                "TXT (prosty tekst)");
+            string? action = null;
+            if (CurrentPage != null)
+            {
+                action = await CurrentPage.DisplayActionSheetAsync(
+                    "Wybierz format eksportu", "Anuluj", null,
+                    "JSON (strukturalne dane)",
+                    "Markdown (czytelny format)",
+                    "TXT (prosty tekst)");
+            }
 
             return action switch
             {
@@ -1188,7 +1411,7 @@ namespace LLMClient.ViewModels
                     if (currentModel != null)
                     {
                         AiConfiguration.SelectedModel = currentModel;
-                        _aiService.UpdateConfiguration(currentModel);
+                        await _aiService.UpdateConfiguration(currentModel);
                     }
                     else
                     {
@@ -1197,7 +1420,7 @@ namespace LLMClient.ViewModels
                         if (modelToSelect != null)
                         {
                             AiConfiguration.SelectedModel = modelToSelect;
-                            _aiService.UpdateConfiguration(modelToSelect);
+                            await _aiService.UpdateConfiguration(modelToSelect);
                         }
                     }
                 }
@@ -1208,13 +1431,13 @@ namespace LLMClient.ViewModels
                     if (modelToSelect != null)
                     {
                         AiConfiguration.SelectedModel = modelToSelect;
-                        _aiService.UpdateConfiguration(modelToSelect);
+                        await _aiService.UpdateConfiguration(modelToSelect);
                     }
                 }
             }
             catch (Exception ex)
             {
-                await Application.Current?.MainPage?.DisplayAlert("Błąd", $"Nie udało się odświeżyć listy modeli: {ex.Message}", "OK");
+                await DisplayAlertAsync("Błąd", $"Nie udało się odświeżyć listy modeli: {ex.Message}", "OK");
             }
         }
 
@@ -1254,7 +1477,7 @@ namespace LLMClient.ViewModels
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Błąd", $"Nie udało się wybrać obrazka: {ex.Message}", "OK");
+                await DisplayAlertAsync("Błąd", $"Nie udało się wybrać obrazka: {ex.Message}", "OK");
             }
         }
 
@@ -1280,16 +1503,18 @@ namespace LLMClient.ViewModels
             try
             {
                 Preferences.Set("IsLightTheme", isLight);
-                
+
                 if (MainThread.IsMainThread)
                 {
-                    Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
+                    if (Application.Current != null)
+                        Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
                 }
                 else
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
+                        if (Application.Current != null)
+                            Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
                     });
                 }
             }
@@ -1324,27 +1549,28 @@ namespace LLMClient.ViewModels
 
         private async Task GoToModelSettingsAsync()
         {
+            // Use absolute route to ShellContent
             await Shell.Current.GoToAsync("///ModelSettingsPage");
         }
 
         private async Task SetDatabasePassphraseAsync()
         {
-            var passphrase = await Application.Current.MainPage.DisplayPromptAsync("Ustaw hasło bazy", "Podaj nowe hasło (min. 8 znaków):", "OK", "Anuluj", maxLength: 50, keyboard: Keyboard.Text);
+            var passphrase = await DisplayPromptAsync("Ustaw hasło bazy", "Podaj nowe hasło (min. 8 znaków):", "OK", "Anuluj", maxLength: 50, keyboard: Keyboard.Text);
             if (string.IsNullOrEmpty(passphrase) || passphrase.Length < 8)
                 return;
 
-            var confirm = await Application.Current.MainPage.DisplayPromptAsync("Potwierdź hasło", "Powtórz hasło:", "OK", "Anuluj", maxLength: 50, keyboard: Keyboard.Text);
+            var confirm = await DisplayPromptAsync("Potwierdź hasło", "Powtórz hasło:", "OK", "Anuluj", maxLength: 50, keyboard: Keyboard.Text);
             if (passphrase != confirm)
             {
-                await Application.Current.MainPage.DisplayAlert("Błąd", "Hasła nie pasują.", "OK");
+                await DisplayAlertAsync("Błąd", "Hasła nie pasują.", "OK");
                 return;
             }
 
             var success = await _databaseService.SetCustomPassphraseAsync(passphrase);
             if (success)
-                await Application.Current.MainPage.DisplayAlert("Sukces", "Hasło ustawione. Zrestartuj aplikację, by zmiany weszły w życie.", "OK");
+                await DisplayAlertAsync("Sukces", "Hasło ustawione. Zrestartuj aplikację, by zmiany weszły w życie.", "OK");
             else
-                await Application.Current.MainPage.DisplayAlert("Błąd", "Nie udało się ustawić hasła.", "OK");
+                await DisplayAlertAsync("Błąd", "Nie udało się ustawić hasła.", "OK");
         }
     }
 }

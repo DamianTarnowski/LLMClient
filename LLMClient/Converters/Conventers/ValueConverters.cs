@@ -4,7 +4,7 @@ namespace LLMClient.Converters
 {
     public class BoolToColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool isActive)
             {
@@ -13,7 +13,7 @@ namespace LLMClient.Converters
             return "#40444B";
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -21,12 +21,12 @@ namespace LLMClient.Converters
 
     public class IsNotNullConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             return value != null;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -113,7 +113,7 @@ namespace LLMClient.Converters
 
     public class IsNotNullOrEmptyConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string str)
             {
@@ -122,7 +122,7 @@ namespace LLMClient.Converters
             return value != null;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -130,7 +130,7 @@ namespace LLMClient.Converters
 
     public class InverseBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool boolValue)
                 return !boolValue;
@@ -138,7 +138,7 @@ namespace LLMClient.Converters
             return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool boolValue)
                 return !boolValue;
@@ -149,12 +149,14 @@ namespace LLMClient.Converters
 
     public class ZeroToBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            return (int)value == 0;
+            if (value is int intValue)
+                return intValue == 0;
+            return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -162,12 +164,14 @@ namespace LLMClient.Converters
 
     public class ZeroToInverseBoolConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            return (int)value != 0;
+            if (value is int intValue)
+                return intValue != 0;
+            return false;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -223,7 +227,7 @@ namespace LLMClient.Converters
 
     public class CollectionEmptyConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is System.Collections.ICollection collection)
             {
@@ -236,7 +240,7 @@ namespace LLMClient.Converters
             return true; // Jeśli null, to traktujemy jako pustą kolekcję
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -244,7 +248,7 @@ namespace LLMClient.Converters
 
     public class CollectionNotEmptyConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is System.Collections.ICollection collection)
             {
@@ -257,7 +261,7 @@ namespace LLMClient.Converters
             return false; // Jeśli null, to traktujemy jako pustą kolekcję
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -265,7 +269,7 @@ namespace LLMClient.Converters
 
     public class BoolToThemeIconConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool isLightTheme)
             {
@@ -274,7 +278,7 @@ namespace LLMClient.Converters
             return "🌙";
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -296,21 +300,21 @@ namespace LLMClient.Converters
             { "finanse", "#F97316" }
         };
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var category = value?.ToString() ?? string.Empty;
             var parameterCategory = parameter?.ToString() ?? category;
-            
+
             if (CategoryColors.TryGetValue(parameterCategory.ToLower(), out var color))
                 return color;
-                
+
             // Generuj kolor na podstawie hash kodu kategorii
             var hash = parameterCategory.GetHashCode();
             var colors = new[] { "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16", "#F97316" };
             return colors[Math.Abs(hash) % colors.Length];
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

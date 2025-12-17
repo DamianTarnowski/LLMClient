@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LLMClient.Views.GgufModelManagerPage"
+             Title="Modele GGUF"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Wróć"
+                     Priority="0"
+                     Order="Primary"
+                     Clicked="OnBackClicked">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource FontFamily="MaterialSymbols"
+                               Glyph="&#xe5c4;"
+                               Color="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <StackLayout Padding="16" Spacing="16">
+
+            <!-- Header -->
+            <Label Text="Zarządzanie Modelami GGUF"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                   Margin="0,0,0,8"/>
+            
+            <Label Text="Wybierz i pobierz model AI do lokalnej inferencji. Mniejsze modele są szybsze na urządzeniach mobilnych."
+                   FontSize="13"
+                   TextColor="{StaticResource Gray500}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,0,0,12"/>
+
+            <!-- Current Model Status -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="16">
+                <StackLayout Spacing="8">
+                    <Label Text="Aktualny Model"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Gray500}"/>
+                    <Label x:Name="CurrentModelLabel"
+                           Text="Ładowanie..."
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
+                    <Label x:Name="ModelStatusLabel"
+                           Text=""
+                           FontSize="13"
+                           TextColor="{StaticResource Secondary}"/>
+                </StackLayout>
+            </Border>
+
+            <!-- Download Progress -->
+            <Border x:Name="ProgressSection"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="16"
+                    IsVisible="False">
+                <StackLayout Spacing="8">
+                    <Label Text="Pobieranie modelu..."
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
+                    <ProgressBar x:Name="DownloadProgressBar"
+                                 Progress="0"
+                                 ProgressColor="{StaticResource Primary}"/>
+                    <Label x:Name="ProgressLabel"
+                           Text="0%"
+                           FontSize="12"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalTextAlignment="Center"/>
+                </StackLayout>
+            </Border>
+
+            <!-- Models List -->
+            <Label Text="Dostępne Modele"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                   Margin="0,8,0,0"/>
+
+            <CollectionView x:Name="ModelsCollectionView"
+                            SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                                StrokeShape="RoundRectangle 12"
+                                StrokeThickness="0"
+                                Padding="16"
+                                Margin="0,4">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <!-- Model Name -->
+                                <StackLayout Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                                    <Label Text="{Binding DisplayName}"
+                                           FontSize="16"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                                           VerticalOptions="Center"/>
+                                    <Border BackgroundColor="{StaticResource Primary}"
+                                            StrokeShape="RoundRectangle 8"
+                                            StrokeThickness="0"
+                                            Padding="6,2"
+                                            IsVisible="{Binding IsRecommended}">
+                                        <Label Text="Zalecany"
+                                               FontSize="10"
+                                               TextColor="White"
+                                               FontAttributes="Bold"/>
+                                    </Border>
+                                </StackLayout>
+                                
+                                <!-- Description -->
+                                <Label Grid.Column="0" Grid.Row="1"
+                                       Text="{Binding Description}"
+                                       FontSize="13"
+                                       TextColor="{StaticResource Gray500}"
+                                       Margin="0,4,0,0"/>
+                                
+                                <!-- Size -->
+                                <Label Grid.Column="0" Grid.Row="2"
+                                       Text="{Binding SizeInMB, StringFormat='Rozmiar: {0} MB'}"
+                                       FontSize="12"
+                                       TextColor="{StaticResource Gray400}"
+                                       Margin="0,4,0,0"/>
+                                
+                                <!-- Action Button -->
+                                <Button Grid.Column="1" Grid.RowSpan="3"
+                                        Text="{Binding ButtonText}"
+                                        Command="{Binding ActionCommand}"
+                                        BackgroundColor="{Binding ButtonColor}"
+                                        TextColor="White"
+                                        CornerRadius="10"
+                                        HeightRequest="44"
+                                        WidthRequest="100"
+                                        FontSize="13"
+                                        FontAttributes="Bold"
+                                        VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Actions -->
+            <Button x:Name="LoadModelButton"
+                    Text="Załaduj Wybrany Model"
+                    BackgroundColor="{StaticResource Secondary}"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="50"
+                    FontSize="15"
+                    FontAttributes="Bold"
+                    Margin="0,16,0,0"
+                    Clicked="OnLoadModelClicked"/>
+
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>

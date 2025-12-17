@@ -27,4 +27,20 @@
         ContentTemplate="{DataTemplate views:ModelSettingsPage}"
         Route="ModelSettingsPage" />
 
+    <!-- MLC Model Manager - TEMPORARILY DISABLED (see docs/MLC_LLM_ISSUES.md)
+         Issues: OpenCL removed on Samsung S25, Vulkan build problems
+         TODO: Re-enable when Vulkan backend is fixed
+    <ShellContent
+        Title="Model Manager"
+        ContentTemplate="{DataTemplate views:MlcModelSelectorPage}"
+        Route="MlcModelSelectorPage"
+        x:Name="MlcModelSelectorShellContent" />
+    -->
+
+    <!-- GGUF Model Manager - LLamaSharp (Gemma 3, Qwen3, Phi-3) -->
+    <ShellContent
+        Title="GGUF Models"
+        ContentTemplate="{DataTemplate views:GgufModelManagerPage}"
+        Route="GgufModelManagerPage" />
+
 </Shell>

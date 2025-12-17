@@ -1,30 +1,47 @@
 using LLMClient.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LLMClient.Views;
 
 public partial class MemoryPage : ContentPage
 {
-    private readonly MemoryPageViewModel _viewModel;
+    private MemoryPageViewModel? _viewModel;
+    private bool _initialized;
+
+    public MemoryPage()
+    {
+        InitializeComponent();
+    }
     
     public MemoryPage(MemoryPageViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = viewModel;
-        
-        // Inicjalizuj dane od razu po załadowaniu strony
-        System.Diagnostics.Debug.WriteLine("[MemoryPage] Constructor - scheduling immediate initialization");
-        Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(100), async () =>
-        {
-            System.Diagnostics.Debug.WriteLine("[MemoryPage] Delayed initialization starting");
-            await _viewModel.InitializeAsync();
-            System.Diagnostics.Debug.WriteLine("[MemoryPage] Delayed initialization completed");
-        });
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+
+        if (_viewModel == null)
+        {
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            _viewModel = services?.GetService<MemoryPageViewModel>();
+            if (_viewModel != null)
+            {
+                BindingContext = _viewModel;
+            }
+        }
+
+        if (_viewModel == null)
+            return;
+
+        if (_initialized)
+            return;
+
+        _initialized = true;
+
         System.Diagnostics.Debug.WriteLine("[MemoryPage] OnAppearing called - initializing ViewModel");
         await _viewModel.InitializeAsync();
         System.Diagnostics.Debug.WriteLine("[MemoryPage] OnAppearing completed");

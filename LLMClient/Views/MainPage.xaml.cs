@@ -1,28 +1,44 @@
-﻿using System.Linq;
+using System.Linq;
 using LLMClient.ViewModels;
 using LLMClient.Services;
+using CommunityToolkit.Mvvm.Messaging;
+using LLMClient.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LLMClient;
 
 public partial class MainPage : ContentPage
 {
+    private bool _initialized;
+
+    public MainPage()
+    {
+        InitializeComponent();
+    }
+
     public MainPage(MainPageViewModel viewModel, LocalModelStatusViewModel localModelStatusViewModel)
     {
         InitializeComponent();
+        InitializePage(viewModel, localModelStatusViewModel);
+        _initialized = true;
+    }
+
+    private void InitializePage(MainPageViewModel viewModel, LocalModelStatusViewModel localModelStatusViewModel)
+    {
         BindingContext = viewModel;
         
         // Set up LocalModelStatusView
         LocalModelStatus.BindingContext = localModelStatusViewModel;
 
-        // Subscribe to scroll messages
-        MessagingCenter.Subscribe<MainPageViewModel>(this, "ScrollToBottom", (sender) =>
+        // Subscribe to scroll messages via WeakReferenceMessenger
+        WeakReferenceMessenger.Default.Register<ScrollToBottomMessage>(this, (r, m) =>
         {
             ScrollToBottom();
         });
 
-        MessagingCenter.Subscribe<MainPageViewModel, object>(this, "ScrollToMessage", (sender, message) =>
+        WeakReferenceMessenger.Default.Register<ScrollToMessageMessage>(this, (r, m) =>
         {
-            ScrollToMessage(message);
+            ScrollToMessage(m.Value);
         });
 
         // Setup language menu
@@ -34,14 +50,27 @@ public partial class MainPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+
+        if (!_initialized)
+        {
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            var mainVm = services?.GetService<MainPageViewModel>();
+            var statusVm = services?.GetService<LocalModelStatusViewModel>();
+            if (mainVm != null && statusVm != null)
+            {
+                InitializePage(mainVm, statusVm);
+                _initialized = true;
+            }
+        }
+
         ScrollToBottom();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        MessagingCenter.Unsubscribe<MainPageViewModel>(this, "ScrollToBottom");
-        MessagingCenter.Unsubscribe<MainPageViewModel, object>(this, "ScrollToMessage");
+        WeakReferenceMessenger.Default.Unregister<ScrollToBottomMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<ScrollToMessageMessage>(this);
     }
 
     private void ScrollToBottom()
@@ -50,10 +79,10 @@ public partial class MainPage : ContentPage
             viewModel.SelectedConversation?.Messages?.Count > 0)
         {
             // Ensure the UI has updated before scrolling
-            Dispatcher.Dispatch(async () =>
+            _ = Dispatcher.DispatchAsync(async () =>
             {
                 await Task.Delay(100); // Small delay to allow UI to render new messages
-                MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, false);
+                await MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, false);
             });
         }
     }
@@ -62,11 +91,11 @@ public partial class MainPage : ContentPage
     {
         if (message != null)
         {
-            Dispatcher.Dispatch(async () =>
+            _ = Dispatcher.DispatchAsync(async () =>
             {
                 // Wait for UI to be updated and check if item exists in collection
                 await Task.Delay(200);
-                
+
                 try
                 {
                     // Verify the message exists in the current FilteredMessages collection
@@ -79,7 +108,7 @@ public partial class MainPage : ContentPage
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     // Fallback - try scrolling without verification
                     try
@@ -160,10 +189,10 @@ public partial class MainPage : ContentPage
                 System.Diagnostics.Debug.WriteLine($"[MainPage] SelectLanguage text: {viewModel.L["SelectLanguage"]}");
                 System.Diagnostics.Debug.WriteLine($"[MainPage] Cancel text: {viewModel.L["Cancel"]}");
                 
-                var result = await DisplayActionSheet(
-                    viewModel.L["SelectLanguage"], 
-                    viewModel.L["Cancel"], 
-                    null, 
+                var result = await DisplayActionSheetAsync(
+                    viewModel.L["SelectLanguage"],
+                    viewModel.L["Cancel"],
+                    null,
                     languageNames);
                     
                 System.Diagnostics.Debug.WriteLine($"[MainPage] User selected: {result}");
@@ -186,7 +215,7 @@ public partial class MainPage : ContentPage
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[MainPage] Error in language selection: {ex.Message}");
-                await DisplayAlert("Error", $"Error changing language: {ex.Message}", "OK");
+                await DisplayAlertAsync("Error", $"Error changing language: {ex.Message}", "OK");
             }
         }
     }

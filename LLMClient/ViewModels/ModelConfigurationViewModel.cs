@@ -1,5 +1,8 @@
-﻿using LLMClient.Models;
+using LLMClient.Models;
 using LLMClient.Services;
+using CommunityToolkit.Mvvm.Messaging;
+using LLMClient.Messaging;
+
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
@@ -169,7 +172,7 @@ namespace LLMClient.ViewModels
                 SetStatus("Model został zapisany pomyślnie.", "#57F287");
                 
                 // Powiadom MainPageViewModel o zmianie modeli
-                MessagingCenter.Send(this, "ModelsChanged");
+                WeakReferenceMessenger.Default.Send(new ModelsChangedMessage());
             }
             catch (Exception ex)
             {
@@ -189,13 +192,16 @@ namespace LLMClient.ViewModels
             SetStatus("Model został usunięty.", "#57F287");
             
             // Powiadom MainPageViewModel o zmianie modeli
-            MessagingCenter.Send(this, "ModelsChanged");
+            WeakReferenceMessenger.Default.Send(new ModelsChangedMessage());
         }
 
         private async Task CloseAsync()
         {
-
-            await Application.Current?.MainPage?.Navigation.PopAsync()!;
+            var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (page?.Navigation != null)
+            {
+                await page.Navigation.PopAsync();
+            }
         }
 
         private void SelectModel(AiModel model)
@@ -215,7 +221,7 @@ namespace LLMClient.ViewModels
             SetStatus("Testowanie modelu...", "#FEE75C");
             try
             {
-                _aiService.UpdateConfiguration(SelectedModelForEdit); // Update AI service with the selected model
+                await _aiService.UpdateConfiguration(SelectedModelForEdit); // Update AI service with the selected model
                 var testMessage = new Models.Message { Content = "Test message", IsUser = true };
                 var response = await _aiService.GetResponseAsync("Test message", new List<Models.Message> { testMessage });
 
@@ -264,13 +270,15 @@ namespace LLMClient.ViewModels
                 
                 if (MainThread.IsMainThread)
                 {
-                    Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
+                    if (Application.Current != null)
+                        Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
                 }
                 else
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
+                        if (Application.Current != null)
+                            Application.Current.UserAppTheme = isLight ? AppTheme.Light : AppTheme.Dark;
                     });
                 }
             }

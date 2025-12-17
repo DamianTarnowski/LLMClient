@@ -10,6 +10,9 @@ namespace LLMClient.ViewModels
     {
         private readonly IMemoryService _memoryService;
 
+        // Helper to get the current page for displaying alerts (handles .NET 10 deprecation of MainPage)
+        private static Page? CurrentPage => Application.Current?.Windows.FirstOrDefault()?.Page;
+
         private ObservableCollection<Memory> _memories = new();
         private ObservableCollection<Memory> _filteredMemories = new();
         private ObservableCollection<string> _categories = new();
@@ -151,7 +154,10 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                var result = await Application.Current.MainPage.DisplayPromptAsync(
+                if (CurrentPage == null)
+                    return;
+
+                var result = await CurrentPage.DisplayPromptAsync(
                     "Nowe wspomnienie",
                     "Podaj klucz (identyfikator):",
                     "OK", "Anuluj",
@@ -162,7 +168,7 @@ namespace LLMClient.ViewModels
 
                 var key = result.Trim();
 
-                var value = await Application.Current.MainPage.DisplayPromptAsync(
+                var value = await CurrentPage.DisplayPromptAsync(
                     "Nowe wspomnienie",
                     $"Podaj wartość dla '{key}':",
                     "OK", "Anuluj",
@@ -171,19 +177,19 @@ namespace LLMClient.ViewModels
                 if (string.IsNullOrWhiteSpace(value))
                     return;
 
-                var category = await Application.Current.MainPage.DisplayPromptAsync(
+                var category = await CurrentPage.DisplayPromptAsync(
                     "Kategoria (opcjonalna)",
                     "Podaj kategorię:",
                     "OK", "Pomiń",
                     placeholder: "np. osobiste, preferencje") ?? string.Empty;
 
-                var tags = await Application.Current.MainPage.DisplayPromptAsync(
+                var tags = await CurrentPage.DisplayPromptAsync(
                     "Tagi (opcjonalne)",
                     "Podaj tagi oddzielone przecinkami:",
                     "OK", "Pomiń",
                     placeholder: "tag1, tag2, tag3") ?? string.Empty;
 
-                var isImportant = await Application.Current.MainPage.DisplayAlert(
+                var isImportant = CurrentPage != null && await CurrentPage.DisplayAlertAsync(
                     "Ważność",
                     "Czy ta informacja jest szczególnie ważna?",
                     "Tak", "Nie");
@@ -203,7 +209,10 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                var newValue = await Application.Current.MainPage.DisplayPromptAsync(
+                if (CurrentPage == null)
+                    return;
+
+                var newValue = await CurrentPage.DisplayPromptAsync(
                     "Edytuj wspomnienie",
                     $"Edytuj wartość dla '{memory.Key}':",
                     "OK", "Anuluj",
@@ -212,19 +221,19 @@ namespace LLMClient.ViewModels
                 if (string.IsNullOrWhiteSpace(newValue) || newValue == memory.Value)
                     return;
 
-                var category = await Application.Current.MainPage.DisplayPromptAsync(
+                var category = await CurrentPage.DisplayPromptAsync(
                     "Kategoria",
                     "Edytuj kategorię:",
                     "OK", "Anuluj",
                     initialValue: memory.Category) ?? memory.Category;
 
-                var tags = await Application.Current.MainPage.DisplayPromptAsync(
+                var tags = await CurrentPage.DisplayPromptAsync(
                     "Tagi",
                     "Edytuj tagi (oddzielone przecinkami):",
                     "OK", "Anuluj",
                     initialValue: memory.Tags) ?? memory.Tags;
 
-                var isImportant = await Application.Current.MainPage.DisplayAlert(
+                var isImportant = CurrentPage != null && await CurrentPage.DisplayAlertAsync(
                     "Ważność",
                     "Czy ta informacja jest szczególnie ważna?",
                     "Tak", "Nie");
@@ -244,7 +253,7 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                var confirm = await Application.Current.MainPage.DisplayAlert(
+                var confirm = CurrentPage != null && await CurrentPage.DisplayAlertAsync(
                     "Usuń wspomnienie",
                     $"Czy na pewno chcesz usunąć '{memory.Key}'?",
                     "Usuń", "Anuluj");
@@ -314,12 +323,14 @@ namespace LLMClient.ViewModels
 
         private async Task ShowErrorAsync(string title, string message)
         {
-            await Application.Current.MainPage.DisplayAlert(title, message, "OK");
+            if (CurrentPage != null)
+                await CurrentPage.DisplayAlertAsync(title, message, "OK");
         }
 
         private async Task ShowSuccessAsync(string title, string message)
         {
-            await Application.Current.MainPage.DisplayAlert(title, message, "OK");
+            if (CurrentPage != null)
+                await CurrentPage.DisplayAlertAsync(title, message, "OK");
         }
 
         private async Task RunDebugTestAsync()
@@ -327,7 +338,8 @@ namespace LLMClient.ViewModels
             try
             {
                 var result = await DatabaseDebugHelper.TestMemoryPersistenceAsync(_memoryService);
-                await Application.Current.MainPage.DisplayAlert("Debug Test Results", result, "OK");
+                if (CurrentPage != null)
+                    await CurrentPage.DisplayAlertAsync("Debug Test Results", result, "OK");
                 await RefreshAsync();
             }
             catch (Exception ex)

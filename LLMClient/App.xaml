@@ -15,6 +15,7 @@
             <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:InverseBoolConverter x:Key="InvertedBoolConverter" />
             <converters:CollectionEmptyConverter x:Key="CollectionEmptyConverter" />
             <converters:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter" />
             <converters:BoolToThemeIconConverter x:Key="BoolToThemeIconConverter" />

@@ -2,68 +2,156 @@
 <ContentView x:Class="LLMClient.Views.LocalModelStatusView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:LLMClient.ViewModels"
+             x:DataType="viewModels:LocalModelStatusViewModel"
              x:Name="LocalModelStatusRoot">
-             
-    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-            StrokeShape="RoundRectangle 10"
-            Padding="15,10"
-            Margin="15,5"
+
+    <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+            StrokeShape="RoundRectangle 12"
+            StrokeThickness="0"
+            Padding="16,12"
+            Margin="16,8"
             IsVisible="{Binding IsVisible}">
-        
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <Border.Shadow>
+            <Shadow Brush="{StaticResource Gray400}" Offset="0,1" Radius="4" Opacity="0.1" />
+        </Border.Shadow>
+
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
 
             <!-- Status Icon -->
-            <Label Grid.Column="0" Grid.Row="0"
-                   Text="{Binding StatusIcon}"
-                   FontSize="20"
-                   VerticalOptions="Center"
-                   Margin="0,0,10,0" />
+            <Border Grid.Column="0" Grid.Row="0"
+                    WidthRequest="44"
+                    HeightRequest="44"
+                    StrokeShape="RoundRectangle 22"
+                    StrokeThickness="0"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
+                    Margin="0,0,12,0"
+                    VerticalOptions="Center">
+                <Label Text="{Binding StatusIcon}"
+                       FontSize="20"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Border>
 
-            <!-- Status Text -->
-            <Label Grid.Column="1" Grid.Row="0"
-                   Text="{Binding StatusText}"
-                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
-                   FontSize="14"
-                   FontAttributes="Bold"
-                   VerticalOptions="Center" />
+            <!-- Status Text and Model Info -->
+            <StackLayout Grid.Column="1" Grid.Row="0" VerticalOptions="Center" Spacing="2">
+                <Label Text="{Binding StatusText}"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                       FontSize="14"
+                       FontAttributes="Bold" />
+                <!-- Model details row (visible when not downloading) -->
+                <StackLayout Orientation="Horizontal" Spacing="8" IsVisible="{Binding ShowModelInfo}">
+                    <Label Text="{Binding ModelSize}"
+                           TextColor="{StaticResource Gray500}"
+                           FontSize="11" />
+                    <Label Text="•"
+                           TextColor="{StaticResource Gray400}"
+                           FontSize="11" />
+                    <Label Text="{Binding ModelCategory}"
+                           TextColor="{StaticResource Gray500}"
+                           FontSize="11" />
+                </StackLayout>
+                <!-- Download progress info -->
+                <Label Text="{Binding EstimatedTimeText}"
+                       TextColor="{StaticResource Gray500}"
+                       FontSize="11"
+                       IsVisible="{Binding ShowProgressText}" />
+            </StackLayout>
 
-            <!-- Action Button -->
-            <Button Grid.Column="2" Grid.Row="0"
-                    Text="{Binding ActionButtonText}"
-                    BackgroundColor="{Binding ActionButtonColor}"
-                    TextColor="White"
-                    FontSize="12"
-                    CornerRadius="6"
-                    Padding="12,6"
-                    Command="{Binding ActionCommand}"
-                    IsVisible="{Binding ShowActionButton}" />
+            <!-- Action Buttons -->
+            <StackLayout Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="8" VerticalOptions="Center">
+                <!-- Change Model Button (only when not downloaded/downloading) -->
+                <Button Text="Zmień"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                        TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                        FontSize="11"
+                        CornerRadius="8"
+                        Padding="10,6"
+                        HeightRequest="32"
+                        Command="{Binding SelectModelCommand}"
+                        IsVisible="{Binding ShowModelInfo}" />
+                
+                <!-- Main Action Button -->
+                <Button Text="{Binding ActionButtonText}"
+                        BackgroundColor="{Binding ActionButtonColor}"
+                        TextColor="White"
+                        FontSize="12"
+                        FontAttributes="Bold"
+                        CornerRadius="10"
+                        Padding="16,8"
+                        HeightRequest="36"
+                        Command="{Binding ActionCommand}"
+                        IsVisible="{Binding ShowActionButton}" />
+            </StackLayout>
 
-            <!-- Progress Bar (only shown during download) -->
-            <ProgressBar Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
-                         Progress="{Binding DownloadProgress}"
-                         ProgressColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                         BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}"
-                         HeightRequest="4"
-                         Margin="0,8,0,0"
-                         IsVisible="{Binding ShowProgressBar}" />
+            <!-- Warning Banner -->
+            <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
+                    BackgroundColor="{AppThemeBinding Light=#FEF3C7, Dark=#78350F}"
+                    StrokeShape="RoundRectangle 8"
+                    StrokeThickness="0"
+                    Padding="12,8"
+                    Margin="0,8,0,0"
+                    IsVisible="{Binding ShowWarning}">
+                <StackLayout Orientation="Horizontal" Spacing="8">
+                    <Label Text="&#xe002;"
+                           FontFamily="MaterialSymbols"
+                           FontSize="16"
+                           TextColor="{AppThemeBinding Light={StaticResource Warning}, Dark=#FCD34D}"
+                           VerticalOptions="Center" />
+                    <Label Text="{Binding WarningText}"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark=#FCD34D}"
+                           FontSize="12"
+                           VerticalOptions="Center"
+                           LineBreakMode="WordWrap"
+                           HorizontalOptions="FillAndExpand" />
+                </StackLayout>
+            </Border>
 
-            <!-- Progress Text -->
+            <!-- Model Description (visible when showing model info) -->
             <Label Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"
-                   Text="{Binding ProgressText}"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}"
+                   Text="{Binding ModelDescription}"
+                   TextColor="{StaticResource Gray500}"
                    FontSize="11"
+                   Margin="0,8,0,0"
+                   LineBreakMode="WordWrap"
+                   IsVisible="{Binding ShowModelInfo}" />
+
+            <!-- Languages Info -->
+            <StackLayout Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3"
+                         Orientation="Horizontal" Spacing="4"
+                         Margin="0,4,0,0"
+                         IsVisible="{Binding ShowModelInfo}">
+                <Label Text="🌍"
+                       FontSize="11"
+                       VerticalOptions="Center" />
+                <Label Text="{Binding ModelLanguages}"
+                       TextColor="{StaticResource Gray400}"
+                       FontSize="10"
+                       VerticalOptions="Center" />
+            </StackLayout>
+
+            <!-- Progress Bar -->
+            <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                    StrokeShape="RoundRectangle 4"
+                    StrokeThickness="0"
+                    HeightRequest="8"
+                    Margin="0,12,0,0"
+                    IsVisible="{Binding ShowProgressBar}">
+                <ProgressBar Progress="{Binding DownloadProgress}"
+                             ProgressColor="{StaticResource Primary}"
+                             BackgroundColor="Transparent"
+                             HeightRequest="8" />
+            </Border>
+
+            <!-- Progress Percentage Text -->
+            <Label Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="5"
+                   Text="{Binding ProgressText}"
+                   TextColor="{StaticResource Gray500}"
+                   FontSize="12"
+                   FontAttributes="Bold"
                    HorizontalOptions="Center"
-                   Margin="0,4,0,0"
+                   Margin="0,6,0,0"
                    IsVisible="{Binding ShowProgressText}" />
         </Grid>
     </Border>

@@ -2,260 +2,288 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="LLMClient.Views.ModelSettingsPage"
-             Title="Model Settings">
+             Title="Ustawienia Modelu"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="← Back"
+        <ToolbarItem Text="Wróć"
                      Priority="0"
                      Order="Primary"
-                     Command="{Binding GoBackCommand}" />
+                     Command="{Binding GoBackCommand}">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource FontFamily="MaterialSymbols"
+                               Glyph="&#xe5c4;"
+                               Color="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
     </ContentPage.ToolbarItems>
-    
-    <ScrollView>
-        <StackLayout Padding="20" Spacing="15">
-            
-            <!-- Header -->
-            <Label Text="AI Model Configuration" 
-                   FontSize="24" 
-                   FontAttributes="Bold" 
-                   HorizontalOptions="Center"
-                   Margin="0,0,0,20"/>
-            
-            <!-- Current Model Info -->
-            <Frame BackgroundColor="#40444B" Padding="15" CornerRadius="8">
-                <StackLayout>
-                    <Label Text="Current Active Model" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
-                           TextColor="White"/>
-                    <Label Text="{Binding CurrentModelName}" 
-                           FontSize="14" 
-                           TextColor="#B9BBBE"/>
-                    <Label Text="{Binding ModelType}" 
-                           FontSize="12" 
-                           TextColor="#43B581"/>
-                </StackLayout>
-            </Frame>
-            
-            <!-- System Prompt Section -->
-            <Label Text="System Prompt" 
-                   FontSize="18" 
-                   FontAttributes="Bold"/>
-            
-            <Frame BackgroundColor="#36393F" 
-                   Padding="10" 
-                   CornerRadius="8"
-                   HeightRequest="120">
-                <Editor Text="{Binding SystemPrompt}" 
-                        BackgroundColor="Transparent"
-                        TextColor="White"
-                        Placeholder="Enter system prompt to guide AI behavior..."
-                        PlaceholderColor="#72767D"/>
-            </Frame>
 
-            <!-- Include Memory Toggle (cloud only) -->
-            <Grid ColumnDefinitions="Auto,*">
-                <CheckBox IsChecked="{Binding IncludeMemoryInSystemPrompt}"/>
-                <Label Grid.Column="1" Text="Include user memory in system prompt (cloud models only)" VerticalTextAlignment="Center" TextColor="#B9BBBE"/>
-            </Grid>
-            
-            <!-- Local Model Settings (visible only when local model is active) -->
-            <StackLayout IsVisible="{Binding IsLocalModelActive}" Spacing="15">
-                
-                <Label Text="Local Model Parameters" 
-                       FontSize="18" 
-                       FontAttributes="Bold" 
-                       Margin="0,15,0,0"/>
-                
-                <!-- Temperature -->
-                <StackLayout>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Temperature (Creativity)" 
-                               FontSize="14" 
-                               VerticalOptions="Center"/>
-                        <Label Grid.Column="1" 
-                               Text="{Binding Temperature, StringFormat='{0:F1}'}" 
-                               FontSize="12" 
-                               TextColor="#B9BBBE" 
-                               VerticalOptions="Center"/>
-                    </Grid>
-                    <Slider Value="{Binding Temperature}" 
-                            Minimum="0.1" 
-                            Maximum="1.0" 
-                            ThumbColor="#5865F2" 
-                            MinimumTrackColor="#5865F2" 
-                            MaximumTrackColor="#40444B"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Focused" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="Start"/>
-                        <Label Grid.Column="1" 
-                               Text="Creative" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="End"/>
-                    </Grid>
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="16">
+
+            <!-- Header -->
+            <Label Text="Ustawienia Modelu AI"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                   Margin="0,0,0,12"/>
+
+            <!-- Current Model Info -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Gray400}" Offset="0,2" Radius="8" Opacity="0.1" />
+                </Border.Shadow>
+                <StackLayout Spacing="8">
+                    <Label Text="Aktywny Model"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Gray500}"/>
+                    <Label Text="{Binding CurrentModelName}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
+                    <Label Text="{Binding ModelType}"
+                           FontSize="13"
+                           TextColor="{StaticResource Secondary}"/>
                 </StackLayout>
-                
-                <!-- Max Length -->
-                <StackLayout>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Max Response Length" 
-                               FontSize="14" 
-                               VerticalOptions="Center"/>
-                        <Label Grid.Column="1" 
-                               Text="{Binding MaxLength}" 
-                               FontSize="12" 
-                               TextColor="#B9BBBE" 
-                               VerticalOptions="Center"/>
-                    </Grid>
-                    <Slider Value="{Binding MaxLength}" 
-                            Minimum="128" 
-                            Maximum="2048" 
-                            ThumbColor="#5865F2" 
-                            MinimumTrackColor="#5865F2" 
-                            MaximumTrackColor="#40444B"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Short" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="Start"/>
-                        <Label Grid.Column="1" 
-                               Text="Long" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="End"/>
-                    </Grid>
+            </Border>
+
+            <!-- Local Engine Selection -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <StackLayout Spacing="12">
+                    <Label Text="Silnik Lokalny"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+                            StrokeShape="RoundRectangle 10"
+                            StrokeThickness="0"
+                            Padding="12,0">
+                        <Picker ItemsSource="{Binding EngineOptions}"
+                                SelectedItem="{Binding SelectedEngine}"
+                                Title="Wybierz silnik"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                                TitleColor="{StaticResource Gray500}" />
+                    </Border>
                 </StackLayout>
-                
-                <!-- Repetition Penalty -->
-                <StackLayout>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Repetition Penalty" 
-                               FontSize="14" 
-                               VerticalOptions="Center"/>
-                        <Label Grid.Column="1" 
-                               Text="{Binding RepetitionPenalty, StringFormat='{0:F2}'}" 
-                               FontSize="12" 
-                               TextColor="#B9BBBE" 
-                               VerticalOptions="Center"/>
-                    </Grid>
-                    <Slider Value="{Binding RepetitionPenalty}" 
-                            Minimum="1.0" 
-                            Maximum="1.5" 
-                            ThumbColor="#5865F2" 
-                            MinimumTrackColor="#5865F2" 
-                            MaximumTrackColor="#40444B"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="More Repetition" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="Start"/>
-                        <Label Grid.Column="1" 
-                               Text="Less Repetition" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="End"/>
-                    </Grid>
+            </Border>
+
+            <!-- System Prompt Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <StackLayout Spacing="12">
+                    <Label Text="Prompt Systemowy"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+                            StrokeShape="RoundRectangle 12"
+                            StrokeThickness="0"
+                            Padding="12"
+                            HeightRequest="120">
+                        <Editor Text="{Binding SystemPrompt}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                                Placeholder="Wprowadź prompt systemowy..."
+                                PlaceholderColor="{StaticResource Gray500}"
+                                FontSize="14"/>
+                    </Border>
+
+                    <!-- Include Memory Toggle -->
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
+                            StrokeShape="RoundRectangle 10"
+                            StrokeThickness="0"
+                            Padding="12,8">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Switch Grid.Column="0"
+                                    IsToggled="{Binding IncludeMemoryInSystemPrompt}"
+                                    OnColor="{StaticResource Primary}"/>
+                            <Label Grid.Column="1"
+                                   Text="Dołącz pamięć użytkownika (tylko modele chmurowe)"
+                                   VerticalTextAlignment="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                   FontSize="13"/>
+                        </Grid>
+                    </Border>
                 </StackLayout>
-                
-                <!-- Top P -->
-                <StackLayout>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Top P (Nucleus Sampling)" 
-                               FontSize="14" 
-                               VerticalOptions="Center"/>
-                        <Label Grid.Column="1" 
-                               Text="{Binding TopP, StringFormat='{0:F2}'}" 
-                               FontSize="12" 
-                               TextColor="#B9BBBE" 
-                               VerticalOptions="Center"/>
-                    </Grid>
-                    <Slider Value="{Binding TopP}" 
-                            Minimum="0.1" 
-                            Maximum="1.0" 
-                            ThumbColor="#5865F2" 
-                            MinimumTrackColor="#5865F2" 
-                            MaximumTrackColor="#40444B"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" 
-                               Text="Conservative" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="Start"/>
-                        <Label Grid.Column="1" 
-                               Text="Diverse" 
-                               FontSize="10" 
-                               TextColor="#72767D" 
-                               HorizontalOptions="End"/>
-                    </Grid>
+            </Border>
+
+            <!-- Local Model Parameters -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20"
+                    IsVisible="{Binding IsLocalModelActive}">
+                <StackLayout Spacing="20">
+                    <Label Text="Parametry Modelu Lokalnego"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+
+                    <!-- Temperature -->
+                    <StackLayout Spacing="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0"
+                                   Text="Temperatura (Kreatywność)"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                   VerticalOptions="Center"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding Temperature, StringFormat='{0:F1}'}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource Primary}"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                        <Slider Value="{Binding Temperature}"
+                                Minimum="0.1"
+                                Maximum="1.0"
+                                ThumbColor="{StaticResource Primary}"
+                                MinimumTrackColor="{StaticResource Primary}"
+                                MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"/>
+                        <Grid>
+                            <Label Text="Skupiona" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
+                            <Label Text="Kreatywna" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End"/>
+                        </Grid>
+                    </StackLayout>
+
+                    <!-- Max Length -->
+                    <StackLayout Spacing="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0"
+                                   Text="Maksymalna Długość Odpowiedzi"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                   VerticalOptions="Center"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding MaxLength}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource Primary}"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                        <Slider Value="{Binding MaxLength}"
+                                Minimum="128"
+                                Maximum="2048"
+                                ThumbColor="{StaticResource Primary}"
+                                MinimumTrackColor="{StaticResource Primary}"
+                                MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"/>
+                        <Grid>
+                            <Label Text="Krótka" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
+                            <Label Text="Długa" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End"/>
+                        </Grid>
+                    </StackLayout>
+
+                    <!-- Repetition Penalty -->
+                    <StackLayout Spacing="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0"
+                                   Text="Kara za Powtórzenia"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                   VerticalOptions="Center"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding RepetitionPenalty, StringFormat='{0:F2}'}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource Primary}"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                        <Slider Value="{Binding RepetitionPenalty}"
+                                Minimum="1.0"
+                                Maximum="1.5"
+                                ThumbColor="{StaticResource Primary}"
+                                MinimumTrackColor="{StaticResource Primary}"
+                                MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"/>
+                        <Grid>
+                            <Label Text="Więcej powtórzeń" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
+                            <Label Text="Mniej powtórzeń" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End"/>
+                        </Grid>
+                    </StackLayout>
+
+                    <!-- Top P -->
+                    <StackLayout Spacing="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0"
+                                   Text="Top P (Nucleus Sampling)"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                   VerticalOptions="Center"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding TopP, StringFormat='{0:F2}'}"
+                                   FontSize="13"
+                                   TextColor="{StaticResource Primary}"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                        <Slider Value="{Binding TopP}"
+                                Minimum="0.1"
+                                Maximum="1.0"
+                                ThumbColor="{StaticResource Primary}"
+                                MinimumTrackColor="{StaticResource Primary}"
+                                MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"/>
+                        <Grid>
+                            <Label Text="Konserwatywna" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
+                            <Label Text="Różnorodna" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End"/>
+                        </Grid>
+                    </StackLayout>
                 </StackLayout>
-                
-            </StackLayout>
-            
+            </Border>
+
             <!-- Action Buttons -->
-            <StackLayout Orientation="Horizontal" 
-                         HorizontalOptions="Center" 
-                         Spacing="15" 
-                         Margin="0,30,0,0">
-                
-                <Button Text="Save Settings" 
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,0">
+                <Button Grid.Column="0"
+                        Text="Zapisz"
                         Command="{Binding SaveCommand}"
-                        BackgroundColor="#43B581" 
-                        TextColor="White" 
-                        CornerRadius="8" 
-                        WidthRequest="120"/>
-                
-                <Button Text="Reset to Defaults" 
+                        BackgroundColor="{StaticResource Secondary}"
+                        TextColor="White"
+                        CornerRadius="12"
+                        HeightRequest="50"
+                        FontSize="15"
+                        FontAttributes="Bold"/>
+
+                <Button Grid.Column="1"
+                        Text="Resetuj"
                         Command="{Binding ResetCommand}"
-                        BackgroundColor="#ED4245" 
-                        TextColor="White" 
-                        CornerRadius="8" 
-                        WidthRequest="120"/>
-                
-            </StackLayout>
-            
+                        BackgroundColor="{StaticResource Error}"
+                        TextColor="White"
+                        CornerRadius="12"
+                        HeightRequest="50"
+                        FontSize="15"
+                        FontAttributes="Bold"/>
+            </Grid>
+
         </StackLayout>
     </ScrollView>
-    
+
 </ContentPage>

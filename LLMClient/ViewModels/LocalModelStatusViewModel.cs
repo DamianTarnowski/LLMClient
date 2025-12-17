@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using LLMClient.Services;
+using LLMClient.Models;
+using CommunityToolkit.Mvvm.Messaging;
+using LLMClient.Messaging;
 
 namespace LLMClient.ViewModels
 {
@@ -19,6 +22,20 @@ namespace LLMClient.ViewModels
         private bool _showProgressText = false;
         private double _downloadProgress = 0.0;
         private string _progressText = "";
+        private string _warningText = "";
+        private bool _showWarning = false;
+        private string _estimatedTimeText = "";
+        private DateTime _downloadStartTime;
+        private long _lastBytesDownloaded = 0;
+        private DateTime _lastSpeedCheck = DateTime.MinValue;
+        private double _currentSpeedMBps = 0;
+        
+        // Model info
+        private MlcModelInfo? _selectedModel;
+        private string _modelName = "";
+        private string _modelSize = "";
+        private string _modelDescription = "";
+        private bool _showModelInfo = false;
 
         public LocalModelStatusViewModel(ILocalModelService localModelService, ILocalizationService localizationService)
         {
@@ -26,14 +43,41 @@ namespace LLMClient.ViewModels
             _localizationService = localizationService;
             
             ActionCommand = new Command(async () => await ExecuteActionAsync(), () => ShowActionButton);
+            SelectModelCommand = new Command(async () => await OpenModelSelectorAsync());
             
             // Subscribe to local model events
             _localModelService.StateChanged += OnLocalModelStateChanged;
             _localModelService.DownloadProgress += OnDownloadProgressChanged;
             _localModelService.ErrorOccurred += OnErrorOccurred;
             
+            // Load selected model info
+            LoadSelectedModelInfo();
+            
+            // Subscribe to model selection changes
+            WeakReferenceMessenger.Default.Register<MlcModelSelectedMessage>(this, (r, m) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Received model change: {m.Value}");
+                    RefreshModelInfo();
+                });
+            });
+            
             // Initialize status on startup
             Task.Run(async () => await UpdateStatusAsync());
+        }
+        
+        private void LoadSelectedModelInfo()
+        {
+            var selectedModelId = Preferences.Get("MlcSelectedModelId", MlcModelCatalog.GetDefaultModel().Id);
+            _selectedModel = MlcModelCatalog.GetModelById(selectedModelId) ?? MlcModelCatalog.GetDefaultModel();
+            
+            ModelName = _selectedModel?.DisplayName ?? "";
+            ModelSize = _selectedModel?.SizeDisplay ?? "";
+            ModelDescription = _selectedModel?.Description ?? "";
+            ShowModelInfo = true;
+            
+            System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Selected model: {_selectedModel?.DisplayName} ({_selectedModel?.SizeMB} MB)");
         }
 
         public bool IsVisible
@@ -137,18 +181,129 @@ namespace LLMClient.ViewModels
             }
         }
 
+        public string WarningText
+        {
+            get => _warningText;
+            set
+            {
+                _warningText = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowWarning
+        {
+            get => _showWarning;
+            set
+            {
+                _showWarning = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string EstimatedTimeText
+        {
+            get => _estimatedTimeText;
+            set
+            {
+                _estimatedTimeText = value;
+                OnPropertyChanged();
+            }
+        }
+
         public ICommand ActionCommand { get; }
+        public ICommand SelectModelCommand { get; }
+        
+        public string ModelName
+        {
+            get => _modelName;
+            set
+            {
+                _modelName = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public string ModelSize
+        {
+            get => _modelSize;
+            set
+            {
+                _modelSize = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public string ModelDescription
+        {
+            get => _modelDescription;
+            set
+            {
+                _modelDescription = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool ShowModelInfo
+        {
+            get => _showModelInfo;
+            set
+            {
+                _showModelInfo = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public string ModelSizeBytes => _selectedModel?.SizeMB.ToString() ?? "";
+        public string ModelLanguages => _selectedModel?.LanguagesDisplay ?? "";
+        public string ModelCategory => _selectedModel?.CategoryDisplay ?? "";
 
         private async void OnLocalModelStateChanged(LocalModelState state)
         {
             await UpdateStatusAsync();
         }
 
-        private async void OnDownloadProgressChanged(double progress)
+        private void OnDownloadProgressChanged(double progress)
         {
             DownloadProgress = progress;
+
+            // Calculate speed and estimated time
+            var now = DateTime.UtcNow;
+            long totalBytes = (_selectedModel?.SizeMB ?? 1000) * 1024L * 1024L; // Use actual model size
+            var downloadedBytes = (long)(totalBytes * progress / 100.0);
+
+            if (_lastSpeedCheck != DateTime.MinValue && (now - _lastSpeedCheck).TotalSeconds >= 1)
+            {
+                var bytesDelta = downloadedBytes - _lastBytesDownloaded;
+                var timeDelta = (now - _lastSpeedCheck).TotalSeconds;
+                _currentSpeedMBps = (bytesDelta / (1024.0 * 1024.0)) / timeDelta;
+
+                // Calculate remaining time
+                if (_currentSpeedMBps > 0.1)
+                {
+                    var remainingBytes = totalBytes - downloadedBytes;
+                    var remainingSeconds = remainingBytes / (_currentSpeedMBps * 1024 * 1024);
+
+                    if (remainingSeconds < 60)
+                        EstimatedTimeText = $"{_currentSpeedMBps:F1} MB/s • ~{remainingSeconds:F0}s left";
+                    else if (remainingSeconds < 3600)
+                        EstimatedTimeText = $"{_currentSpeedMBps:F1} MB/s • ~{remainingSeconds / 60:F0} min left";
+                    else
+                        EstimatedTimeText = $"{_currentSpeedMBps:F1} MB/s • ~{remainingSeconds / 3600:F1}h left";
+                }
+
+                _lastSpeedCheck = now;
+                _lastBytesDownloaded = downloadedBytes;
+            }
+            else if (_lastSpeedCheck == DateTime.MinValue)
+            {
+                _lastSpeedCheck = now;
+                _lastBytesDownloaded = downloadedBytes;
+                EstimatedTimeText = "Calculating speed...";
+            }
+
             ProgressText = GetProgressText(progress);
-            
+
             if (progress < 100 && _localModelService.State == LocalModelState.Downloading)
             {
                 ShowProgressBar = true;
@@ -156,7 +311,7 @@ namespace LLMClient.ViewModels
             }
         }
 
-        private async void OnErrorOccurred(string error)
+        private void OnErrorOccurred(string error)
         {
             StatusIcon = "❌";
             StatusText = GetLocalizedString("LocalModelError");
@@ -178,54 +333,59 @@ namespace LLMClient.ViewModels
                 {
                     case LocalModelState.NotDownloaded:
                         StatusIcon = "📥";
-                        StatusText = GetLocalizedString("LocalModelNotDownloaded");
+                        StatusText = GetModelStatusText("NotDownloaded");
                         ActionButtonText = GetLocalizedString("Download");
                         ActionButtonColor = "#43B581";
                         ShowActionButton = true;
                         ShowProgressBar = false;
                         ShowProgressText = false;
+                        ShowModelInfo = true;
                         IsVisible = true;
                         break;
                         
                     case LocalModelState.Downloading:
                         StatusIcon = "⬇️";
-                        StatusText = GetLocalizedString("LocalModelDownloading");
+                        StatusText = GetModelStatusText("Downloading");
                         ActionButtonText = GetLocalizedString("Cancel");
                         ActionButtonColor = "#ED4245";
                         ShowActionButton = true;
                         ShowProgressBar = true;
                         ShowProgressText = true;
+                        ShowModelInfo = false;
                         IsVisible = true;
                         break;
                         
                     case LocalModelState.Downloaded:
                         StatusIcon = "✅";
-                        StatusText = GetLocalizedString("LocalModelDownloaded");
+                        StatusText = GetModelStatusText("Downloaded");
                         ActionButtonText = GetLocalizedString("Load");
                         ActionButtonColor = "#5865F2";
                         ShowActionButton = true;
                         ShowProgressBar = false;
                         ShowProgressText = false;
+                        ShowModelInfo = true;
                         IsVisible = true;
                         break;
                         
                     case LocalModelState.Loading:
                         StatusIcon = "⏳";
-                        StatusText = GetLocalizedString("LocalModelLoading");
+                        StatusText = GetModelStatusText("Loading");
                         ShowActionButton = false;
                         ShowProgressBar = false;
                         ShowProgressText = false;
+                        ShowModelInfo = false;
                         IsVisible = true;
                         break;
                         
                     case LocalModelState.Loaded:
                         StatusIcon = "🚀";
-                        StatusText = GetLocalizedString("LocalModelReady");
+                        StatusText = GetModelStatusText("Ready");
                         ActionButtonText = GetLocalizedString("Unload");
                         ActionButtonColor = "#FFA500";
                         ShowActionButton = true;
                         ShowProgressBar = false;
                         ShowProgressText = false;
+                        ShowModelInfo = true;
                         IsVisible = true;
                         break;
                         
@@ -237,6 +397,7 @@ namespace LLMClient.ViewModels
                         ShowActionButton = true;
                         ShowProgressBar = false;
                         ShowProgressText = false;
+                        ShowModelInfo = true;
                         IsVisible = true;
                         break;
                         
@@ -252,11 +413,23 @@ namespace LLMClient.ViewModels
             try
             {
                 var state = _localModelService.State;
-                
+
                 switch (state)
                 {
                     case LocalModelState.NotDownloaded:
-                        await _localModelService.DownloadModelAsync(new Progress<double>(progress => 
+                        // Show confirmation dialog with model details
+                        var confirmed = await ShowDownloadConfirmationAsync();
+                        if (!confirmed) return;
+                        
+                        // Check device compatibility before download
+                        await CheckAndShowCompatibilityWarningsAsync();
+
+                        // Reset speed tracking
+                        _lastSpeedCheck = DateTime.MinValue;
+                        _lastBytesDownloaded = 0;
+                        _downloadStartTime = DateTime.UtcNow;
+
+                        await _localModelService.DownloadModelAsync(new Progress<double>(progress =>
                         {
                             DownloadProgress = progress;
                             ProgressText = GetProgressText(progress);
@@ -272,14 +445,14 @@ namespace LLMClient.ViewModels
                         if (loadSuccess)
                         {
                             // Notify MainPageViewModel that local model is now active
-                            MessagingCenter.Send(this, "LocalModelLoaded");
+                            WeakReferenceMessenger.Default.Send(new LocalModelLoadedMessage());
                         }
                         break;
                         
                     case LocalModelState.Loaded:
                         await _localModelService.UnloadModelAsync();
                         // Notify MainPageViewModel that local model is unloaded
-                        MessagingCenter.Send(this, "LocalModelUnloaded");
+                        WeakReferenceMessenger.Default.Send(new LocalModelUnloadedMessage());
                         break;
                         
                     case LocalModelState.Error:
@@ -309,6 +482,20 @@ namespace LLMClient.ViewModels
             return string.Format(GetLocalizedString("ProgressFormat"), progress.ToString("F1"));
         }
 
+        private string GetModelStatusText(string statusKey)
+        {
+            var modelName = _selectedModel?.DisplayName ?? "Model lokalny";
+            return statusKey switch
+            {
+                "NotDownloaded" => $"{modelName} - nie pobrany",
+                "Downloading" => $"Pobieranie {modelName}...",
+                "Downloaded" => $"{modelName} - gotowy do uruchomienia",
+                "Loading" => $"Ładowanie {modelName}...",
+                "Ready" => $"{modelName} - aktywny",
+                _ => modelName
+            };
+        }
+        
         private string GetLocalizedString(string key)
         {
             try
@@ -317,27 +504,87 @@ namespace LLMClient.ViewModels
             }
             catch
             {
-                // Fallback to English if localization service fails
+                // Fallback to Polish
                 return key switch
                 {
-                    "LocalModelNotDownloaded" => "Phi-4-mini model not downloaded",
-                    "LocalModelDownloading" => "Downloading Phi-4-mini model...",
-                    "LocalModelDownloaded" => "Phi-4-mini model ready to load",
-                    "LocalModelLoading" => "Loading Phi-4-mini model...",
-                    "LocalModelReady" => "Phi-4-mini model ready",
-                    "LocalModelError" => "Local model error",
-                    "Download" => "Download",
-                    "Cancel" => "Cancel",
-                    "Load" => "Load",
-                    "Unload" => "Unload", 
-                    "Retry" => "Retry",
-                    "ActionFailed" => "Action failed",
-                    "Starting" => "Starting...",
-                    "Completed" => "Completed",
-                    "ProgressFormat" => "{0}% downloaded",
+                    "LocalModelError" => "Błąd modelu lokalnego",
+                    "Download" => "Pobierz",
+                    "Cancel" => "Anuluj",
+                    "Load" => "Uruchom",
+                    "Unload" => "Wyłącz",
+                    "Retry" => "Ponów",
+                    "ActionFailed" => "Akcja nie powiodła się",
+                    "Starting" => "Rozpoczynanie...",
+                    "Completed" => "Ukończono",
+                    "ProgressFormat" => "Pobrano {0}%",
+                    "Warning" => "Ostrzeżenie",
+                    "Notice" => "Informacja",
+                    "OK" => "OK",
+                    "Yes" => "Tak",
+                    "No" => "Nie",
+                    "DownloadMayFail" => "Pobieranie może się nie powieść.",
+                    "ConfirmDownload" => "Potwierdź pobieranie",
+                    "ChangeModel" => "Zmień model",
                     _ => key
                 };
             }
+        }
+        
+        private async Task<bool> ShowDownloadConfirmationAsync()
+        {
+            try
+            {
+                var modelName = _selectedModel?.DisplayName ?? "Model";
+                var modelSize = _selectedModel?.SizeDisplay ?? "?";
+                var modelDesc = _selectedModel?.Description ?? "";
+                var languages = _selectedModel?.LanguagesDisplay ?? "";
+                var ramRequired = _selectedModel?.RecommendedRamGB ?? 4;
+                
+                var message = $"📦 Model: {modelName}\n" +
+                              $"📁 Rozmiar: {modelSize}\n" +
+                              $"💾 Wymagana pamięć RAM: {ramRequired} GB\n" +
+                              $"🌍 Języki: {languages}\n\n" +
+                              $"{modelDesc}\n\n" +
+                              $"Czy chcesz pobrać ten model?";
+                
+                var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+                if (page == null) return true;
+                
+                return await page.DisplayAlertAsync(
+                    GetLocalizedString("ConfirmDownload"),
+                    message,
+                    GetLocalizedString("Yes"),
+                    GetLocalizedString("No"));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Error showing confirmation: {ex.Message}");
+                return true; // Proceed if dialog fails
+            }
+        }
+        
+        private async Task OpenModelSelectorAsync()
+        {
+            try
+            {
+                if (Shell.Current != null)
+                {
+                    await Shell.Current.GoToAsync("MlcModelSelectorPage");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Error opening model selector: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Refresh model info (call after model selection changes)
+        /// </summary>
+        public void RefreshModelInfo()
+        {
+            LoadSelectedModelInfo();
+            Task.Run(async () => await UpdateStatusAsync());
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -345,6 +592,68 @@ namespace LLMClient.ViewModels
         protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private async Task CheckAndShowCompatibilityWarningsAsync()
+        {
+            try
+            {
+                // Try to get compatibility info from RobustLocalModelService
+                if (_localModelService is LLMClient.Services.RobustLocalModelService robustService)
+                {
+                    var (canRun, warningMessage) = await robustService.CheckDeviceCompatibilityAsync();
+
+                    if (!string.IsNullOrEmpty(warningMessage))
+                    {
+                        WarningText = warningMessage;
+                        ShowWarning = true;
+
+                        // Show alert dialog to user
+                        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+                        if (page != null)
+                        {
+                            await MainThread.InvokeOnMainThreadAsync(async () =>
+                            {
+                                if (!canRun)
+                                {
+                                    await page.DisplayAlertAsync(
+                                        GetLocalizedString("Warning"),
+                                        warningMessage + "\n\n" + GetLocalizedString("DownloadMayFail"),
+                                        GetLocalizedString("OK"));
+                                }
+                                else
+                                {
+                                    await page.DisplayAlertAsync(
+                                        GetLocalizedString("Notice"),
+                                        warningMessage,
+                                        GetLocalizedString("OK"));
+                                }
+                            });
+                        }
+
+                        if (!canRun)
+                        {
+                            // Don't proceed with download
+                            return;
+                        }
+                    }
+
+                    // Show estimated download time
+                    var estimatedTime = robustService.GetEstimatedDownloadTime();
+                    EstimatedTimeText = $"Estimated: {estimatedTime}";
+                }
+                else if (_localModelService is LLMClient.Services.SafeLocalModelWrapper wrapper)
+                {
+                    // Try to access the inner service through reflection or just show generic warning
+                    ShowWarning = false;
+                    EstimatedTimeText = "~16 min (at 5 MB/s)";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error checking compatibility: {ex.Message}");
+                // Don't block download on error
+            }
         }
     }
 }

@@ -10,6 +10,12 @@ using Microsoft.Maui.ApplicationModel; // MainThread
 
 namespace LLMClient.ViewModels
 {
+    // Helper to get the current page for displaying alerts (handles .NET 10 deprecation of MainPage)
+    internal static class PageHelper
+    {
+        public static Page? CurrentPage => Application.Current?.Windows.FirstOrDefault()?.Page;
+    }
+
     public class SemanticSearchResult : INotifyPropertyChanged
     {
         private Message _message = null!;
@@ -349,10 +355,10 @@ namespace LLMClient.ViewModels
             // Zapytaj użytkownika, czy chce pobrać duży model, jeśli nie jest jeszcze zainicjalizowany
             if (!await _embeddingService.IsModelDownloadedAsync())
             {
-                bool proceed = await Application.Current.MainPage.DisplayAlert(
+                bool proceed = await (PageHelper.CurrentPage?.DisplayAlertAsync(
                     "Pobieranie modelu",
                     "Model E5-large (~1,6 GB) zostanie pobrany. Może to potrwać kilka minut. Czy kontynuować?",
-                    "Tak", "Nie");
+                    "Tak", "Nie") ?? Task.FromResult(false));
                 if (!proceed)
                 {
                     await Shell.Current.GoToAsync("//MainPage");

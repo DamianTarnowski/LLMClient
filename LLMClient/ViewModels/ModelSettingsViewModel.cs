@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using LLMClient.Services;
+using LLMClient.Models;
 
 namespace LLMClient.ViewModels
 {
@@ -19,6 +20,7 @@ namespace LLMClient.ViewModels
         private bool _includeMemoryInSystemPrompt = true;
         private string _currentModelName = "";
         private string _modelType = "";
+        private EngineType _selectedEngine = EngineType.OnnxGenAI;
 
         public ModelSettingsViewModel(ILocalModelService localModelService, IAiService aiService, DatabaseService databaseService)
         {
@@ -31,6 +33,15 @@ namespace LLMClient.ViewModels
             
             // Subscribe to local model state changes
             _localModelService.StateChanged += OnLocalModelStateChanged;
+            // Update view when engine changes elsewhere
+            EngineSettings.EngineChanged += e =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    SelectedEngine = e;
+                    UpdateModelInfo();
+                });
+            };
             
             // Load initial settings
             Task.Run(async () => await LoadSettingsAsync());
@@ -126,6 +137,33 @@ namespace LLMClient.ViewModels
             }
         }
 
+        // Engine options vary by platform:
+        // - Windows: ONNX GenAI (CPU) + LLamaSharp (CPU/GPU)
+        // - Android: ONNX GenAI (CPU) + LLamaSharp (CPU) - MLC disabled due to Vulkan issues
+        // - iOS: ONNX GenAI (CPU) + MLC LLM (GPU via Metal)
+#if WINDOWS
+        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp };
+#elif ANDROID
+        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp };
+#elif IOS
+        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.MlcLlm };
+#else
+        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI };
+#endif
+
+        public EngineType SelectedEngine
+        {
+            get => _selectedEngine;
+            set
+            {
+                if (_selectedEngine != value)
+                {
+                    _selectedEngine = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ICommand SaveCommand { get; }
         public ICommand ResetCommand { get; }
         public ICommand GoBackCommand { get; } = new Command(async () =>
@@ -133,9 +171,14 @@ namespace LLMClient.ViewModels
             try
             {
                 if (Shell.Current != null)
-                    await Shell.Current.GoToAsync("..");
-                else if (Application.Current?.MainPage?.Navigation != null)
-                    await Application.Current.MainPage.Navigation.PopAsync();
+                {
+                    // Navigate explicitly to MainPage to simulate Back when this page is a ShellContent root
+                    await Shell.Current.GoToAsync("///MainPage");
+                }
+                else if (Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation != null)
+                {
+                    await Application.Current.Windows[0].Page!.Navigation.PopAsync();
+                }
             }
             catch { }
         });
@@ -153,8 +196,22 @@ namespace LLMClient.ViewModels
         {
             if (IsLocalModelActive)
             {
-                CurrentModelName = "Phi-4-mini (Local)";
+                // Show friendly name based on selected local engine
+                var engineName = SelectedEngine switch
+                {
+                    EngineType.LLamaSharp => "Llama (Local CPU/GPU)",
+                    EngineType.OnnxGenAI => "Qwen ONNX (Local CPU)",
+                    EngineType.MlcLlm => "MLC LLM (Local GPU)",
+                    _ => "Local Model"
+                };
+                CurrentModelName = engineName;
+#if ANDROID
+                ModelType = SelectedEngine == EngineType.MlcLlm ? "GPU Accelerated (OpenCL)" : "Local AI Model";
+#elif IOS
+                ModelType = SelectedEngine == EngineType.MlcLlm ? "GPU Accelerated (Metal)" : "Local AI Model";
+#else
                 ModelType = "Local AI Model";
+#endif
             }
             else
             {
@@ -179,6 +236,7 @@ namespace LLMClient.ViewModels
                     MaxLength = settings?.MaxLength ?? 512;
                     RepetitionPenalty = settings?.RepetitionPenalty ?? 1.15;
                     TopP = settings?.TopP ?? 0.85;
+                    SelectedEngine = EngineSettings.LoadSelectedEngine();
                     
                     IsLocalModelActive = _localModelService.IsLoaded;
                     UpdateModelInfo();
@@ -213,16 +271,36 @@ namespace LLMClient.ViewModels
                 
                 await _databaseService.SaveModelSettingsAsync(settings);
                 Preferences.Set("IncludeMemoryInSystemPrompt", IncludeMemoryInSystemPrompt);
+                EngineSettings.SaveSelectedEngine(SelectedEngine);
                 
                 // Apply settings to current model
                 await ApplySettingsToCurrentModelAsync();
                 
-                await Application.Current.MainPage.DisplayAlert("Success", "Settings saved successfully!", "OK");
+                var currentPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+                if (currentPage != null)
+                {
+                    await currentPage.DisplayAlertAsync(
+                        "Sukces",
+                        "Ustawienia zapisane.\n\nZmiana silnika lokalnego została zastosowana natychmiast. Jeśli chcesz używać nowego silnika, załaduj odpowiedni model w sekcji statusu lokalnego modelu.",
+                        "OK");
+                }
+
+                // Po zapisie – wróć automatycznie do poprzedniego ekranu
+                try
+                {
+                    if (Shell.Current != null)
+                        await Shell.Current.GoToAsync("..");
+                    else if (currentPage?.Navigation != null)
+                        await currentPage.Navigation.PopAsync();
+                }
+                catch { }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] Error saving settings: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Error", "Failed to save settings.", "OK");
+                var errorPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+                if (errorPage != null)
+                    await errorPage.DisplayAlertAsync("Error", "Failed to save settings.", "OK");
             }
         }
 
@@ -230,9 +308,10 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                var result = await Application.Current.MainPage.DisplayAlert(
-                    "Reset Settings", 
-                    "Are you sure you want to reset all settings to defaults?", 
+                var currentPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+                var result = currentPage != null && await currentPage.DisplayAlertAsync(
+                    "Reset Settings",
+                    "Are you sure you want to reset all settings to defaults?",
                     "Yes", "No");
                 
                 if (result)
@@ -270,11 +349,12 @@ namespace LLMClient.ViewModels
             }
         }
         
-        private async Task ApplySettingsToLocalModelAsync()
+        private Task ApplySettingsToLocalModelAsync()
         {
             // This would require adding a method to ILocalModelService to update parameters
             // For now, the changes will take effect on next model reload
             System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] Local model settings will apply on next reload");
+            return Task.CompletedTask;
         }
 
         private string GetDefaultSystemPrompt()
