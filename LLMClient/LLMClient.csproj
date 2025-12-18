@@ -148,13 +148,12 @@
 
     <!-- LLamaSharp native libs now come from LLamaSharp.Backend.Cpu.Android NuGet package -->
     
-    <!-- MLC LLM TVM runtime (disabled on Android, kept for iOS) -->
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm4j_runtime_packed.so" Abi="arm64-v8a" />
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm_ffi.so" Abi="arm64-v8a" />
-    <!-- Phi-2 model library compiled for OpenCL -->
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libphi2_q4f16_1_.so" Abi="arm64-v8a" />
-    <!-- RTLD_GLOBAL native helper for loading TVM runtime with global symbol visibility -->
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\librtld_global_loader.so" Abi="arm64-v8a" />
+    <!-- MLC LLM native libs are intentionally not bundled by default.
+        To experiment locally, drop the .so files into Platforms/Android/libs/arm64-v8a and the build will pick them up. -->
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm4j_runtime_packed.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\libtvm4j_runtime_packed.so')" />
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm_ffi.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\libtvm_ffi.so')" />
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libphi2_q4f16_1_.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\libphi2_q4f16_1_.so')" />
+    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\librtld_global_loader.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\librtld_global_loader.so')" />
 
     <!-- Java source files for MLC LLM / TVM integration -->
     <!-- Apache TVM Java bindings (org.apache.tvm package) -->
