@@ -88,3 +88,18 @@ screenshoty/
 # Android: do not commit custom llama.cpp builds (we use LLamaSharp.Backend.Cpu.Android)
 LLMClient/Platforms/Android/libs/**/libllama.so
 LLMClient/Platforms/Android/libs/**/libggml*.so
+LLMClient/Platforms/Android/libs/**/libtvm4j_runtime_packed.so
+LLMClient/Platforms/Android/libs/**/libtvm_ffi.so
+LLMClient/Platforms/Android/libs/**/librtld_global_loader.so
+LLMClient/Platforms/Android/libs/**/libphi*.so
+LLMClient/Platforms/Android/libs/**/libc++_shared.so
+
+# Local assistant settings (machine-specific)
+.claude/settings.local.json
+
+# Large/generated artifacts
+Phi35_model_backup.tar
+mlc-chat-extracted/
+mlc-chat-official-extracted/
+*.backup
+nul
