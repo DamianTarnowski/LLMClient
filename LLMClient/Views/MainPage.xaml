@@ -41,10 +41,20 @@
                 </VisualState>
                 <VisualState Name="Tablet">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="600" />
+                        <AdaptiveTrigger MinWindowWidth="700" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter TargetName="SidebarColumn" Property="ColumnDefinition.Width" Value="280" />
+                        <Setter TargetName="Sidebar" Property="IsVisible" Value="True" />
+                        <Setter TargetName="MobileHeader" Property="IsVisible" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState Name="PhoneLandscape">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="500" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="SidebarColumn" Property="ColumnDefinition.Width" Value="220" />
                         <Setter TargetName="Sidebar" Property="IsVisible" Value="True" />
                         <Setter TargetName="MobileHeader" Property="IsVisible" Value="False" />
                     </VisualState.Setters>
@@ -278,7 +288,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- Quick Actions Row 1 -->
+                    <!-- Quick Actions - uproszczone -->
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -286,24 +296,6 @@
                         </Grid.ColumnDefinitions>
 
                         <Button Grid.Column="0"
-                                ToolTipProperties.Text="Pamięć AI"
-                                Command="{Binding GoToMemoryCommand}"
-                                Text="Pamięć"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                CornerRadius="10"
-                                HeightRequest="40"
-                                FontSize="12"
-                                Padding="8,0">
-                            <Button.ImageSource>
-                                <FontImageSource FontFamily="MaterialSymbols"
-                                               Glyph="&#xe322;"
-                                               Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                               Size="18" />
-                            </Button.ImageSource>
-                        </Button>
-
-                        <Button Grid.Column="1"
                                 ToolTipProperties.Text="Wyszukaj wiadomości"
                                 Command="{Binding GoToSearchCommand}"
                                 Text="Szukaj"
@@ -320,37 +312,12 @@
                                                Size="18" />
                             </Button.ImageSource>
                         </Button>
-                    </Grid>
-
-                    <!-- Quick Actions Row 2 -->
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Button Grid.Column="0"
-                                ToolTipProperties.Text="Ustawienia modeli"
-                                Command="{Binding ModelSettingsCommand}"
-                                Text="Modele"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                CornerRadius="10"
-                                HeightRequest="40"
-                                FontSize="12"
-                                Padding="8,0">
-                            <Button.ImageSource>
-                                <FontImageSource FontFamily="MaterialSymbols"
-                                               Glyph="&#xe8ae;"
-                                               Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                               Size="18" />
-                            </Button.ImageSource>
-                        </Button>
 
                         <Button Grid.Column="1"
-                                ToolTipProperties.Text="Konfiguracja API"
-                                Command="{Binding SettingsCommand}"
-                                Text="API"
+                                x:Name="MoreOptionsButton"
+                                ToolTipProperties.Text="Więcej opcji"
+                                Text="Więcej"
+                                Clicked="MoreOptionsButton_Clicked"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                 TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
                                 CornerRadius="10"
@@ -359,51 +326,7 @@
                                 Padding="8,0">
                             <Button.ImageSource>
                                 <FontImageSource FontFamily="MaterialSymbols"
-                                               Glyph="&#xe8b8;"
-                                               Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                               Size="18" />
-                            </Button.ImageSource>
-                        </Button>
-                    </Grid>
-
-                    <!-- Quick Actions Row 3 - RAG & Diagnostyka -->
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Button Grid.Column="0"
-                                ToolTipProperties.Text="Dokumenty RAG"
-                                Command="{Binding GoToRagCommand}"
-                                Text="RAG"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                CornerRadius="10"
-                                HeightRequest="40"
-                                FontSize="12"
-                                Padding="8,0">
-                            <Button.ImageSource>
-                                <FontImageSource FontFamily="MaterialSymbols"
-                                               Glyph="&#xe873;"
-                                               Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                               Size="18" />
-                            </Button.ImageSource>
-                        </Button>
-
-                        <Button Grid.Column="1"
-                                ToolTipProperties.Text="Diagnostyka i testy"
-                                Command="{Binding GoToDiagnosticsCommand}"
-                                Text="Testy"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                                CornerRadius="10"
-                                HeightRequest="40"
-                                FontSize="12"
-                                Padding="8,0">
-                            <Button.ImageSource>
-                                <FontImageSource FontFamily="MaterialSymbols"
-                                               Glyph="&#xf1e2;"
+                                               Glyph="&#xe5d4;"
                                                Color="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
                                                Size="18" />
                             </Button.ImageSource>

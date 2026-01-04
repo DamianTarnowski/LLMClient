@@ -64,6 +64,52 @@ public partial class MainPage : ContentPage
         }
 
         ScrollToBottom();
+        
+        // Check for onboarding
+        _ = CheckOnboardingAsync();
+    }
+    
+    private async Task CheckOnboardingAsync()
+    {
+        // Check if this is first run or no models configured
+        var isFirstRun = !Preferences.ContainsKey("OnboardingCompleted");
+        
+        if (BindingContext is MainPageViewModel viewModel)
+        {
+            // Wait for models to load
+            await Task.Delay(500);
+            
+            var hasNoModels = viewModel.AiConfiguration?.Models == null || 
+                              viewModel.AiConfiguration.Models.Count == 0;
+            var hasNoSelectedModel = viewModel.AiConfiguration?.SelectedModel == null;
+            
+            if (isFirstRun || (hasNoModels && hasNoSelectedModel))
+            {
+                var result = await DisplayAlert(
+                    "👋 Witaj w LLMClient!",
+                    "Aby rozpocząć rozmowę z AI, musisz skonfigurować model.\n\n" +
+                    "Możesz:\n" +
+                    "• Użyć modelu lokalnego (Phi-4) - działa offline\n" +
+                    "• Skonfigurować API (OpenAI, Gemini, itp.)\n\n" +
+                    "Co chcesz zrobić?",
+                    "Skonfiguruj API",
+                    "Użyj modelu lokalnego");
+                
+                if (result)
+                {
+                    // Go to API configuration
+                    viewModel.SettingsCommand.Execute(null);
+                }
+                else
+                {
+                    // Enable local model
+                    viewModel.EnableLocalModelCommand.Execute(null);
+                }
+                
+                // Mark onboarding as completed
+                Preferences.Set("OnboardingCompleted", true);
+            }
+        }
     }
 
     protected override void OnDisappearing()
@@ -173,6 +219,41 @@ public partial class MainPage : ContentPage
     private void SetupLanguageMenu()
     {
         // Language menu is now handled by LanguageToolbarItem_Clicked
+    }
+
+    private async void MoreOptionsButton_Clicked(object sender, EventArgs e)
+    {
+        if (BindingContext is MainPageViewModel viewModel)
+        {
+            var result = await DisplayActionSheet(
+                "Więcej opcji",
+                "Anuluj",
+                null,
+                " Pamięć AI",
+                " Ustawienia modeli",
+                " Konfiguracja API",
+                " Dokumenty RAG",
+                " Diagnostyka i testy");
+
+            switch (result)
+            {
+                case " Pamięć AI":
+                    viewModel.GoToMemoryCommand.Execute(null);
+                    break;
+                case " Ustawienia modeli":
+                    viewModel.ModelSettingsCommand.Execute(null);
+                    break;
+                case " Konfiguracja API":
+                    viewModel.SettingsCommand.Execute(null);
+                    break;
+                case " Dokumenty RAG":
+                    viewModel.GoToRagCommand.Execute(null);
+                    break;
+                case " Diagnostyka i testy":
+                    viewModel.GoToDiagnosticsCommand.Execute(null);
+                    break;
+            }
+        }
     }
 
     private async void LanguageToolbarItem_Clicked(object sender, EventArgs e)
