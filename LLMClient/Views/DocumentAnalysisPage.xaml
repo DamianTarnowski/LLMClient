@@ -8,114 +8,190 @@
              Title="Analiza dokumentu"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="16">
         
-        <!-- Input section -->
-        <Grid Grid.Row="0" RowDefinitions="Auto,150,Auto" Margin="0,0,0,16">
-            <Label Text="Tekst do analizy"
-                   FontSize="14"
-                   FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
-                   Margin="0,0,0,8"/>
-            
-            <Frame Grid.Row="1" 
-                   Padding="8"
-                   CornerRadius="8"
-                   BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
-                   BorderColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray700}}">
-                <Editor Text="{Binding InputText}"
-                        Placeholder="Wklej tekst dokumentu, transkryptu lub rozmowy do analizy..."
-                        PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
-                        TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
-                        FontSize="14"/>
-            </Frame>
-            
-            <HorizontalStackLayout Grid.Row="2" Spacing="12" Margin="0,12,0,0">
-                <Button Text="Analizuj"
-                        Command="{Binding AnalyzeCommand}"
-                        IsEnabled="{Binding CanAnalyze}"
-                        BackgroundColor="{StaticResource Primary}"
-                        TextColor="White"
-                        CornerRadius="8"
-                        Padding="20,10"/>
-                
-                <Button Text="Streaming"
-                        Command="{Binding AnalyzeStreamingCommand}"
-                        IsEnabled="{Binding CanAnalyze}"
-                        BackgroundColor="{StaticResource Secondary}"
-                        TextColor="White"
-                        CornerRadius="8"
-                        Padding="20,10"/>
-                
-                <Button Text="Wklej"
-                        Command="{Binding PasteFromClipboardCommand}"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
-                        TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
-                        CornerRadius="8"
-                        Padding="16,10"/>
-                
-                <Button Text="Wyczyść"
-                        Command="{Binding ClearCommand}"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
-                        TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
-                        CornerRadius="8"
-                        Padding="16,10"/>
-                
-                <Button Text="Anuluj"
-                        Command="{Binding CancelCommand}"
-                        IsVisible="{Binding IsAnalyzing}"
-                        BackgroundColor="{StaticResource Danger}"
-                        TextColor="White"
-                        CornerRadius="8"
-                        Padding="16,10"/>
-                
-                <ActivityIndicator IsRunning="{Binding IsAnalyzing}"
-                                   IsVisible="{Binding IsAnalyzing}"
-                                   Color="{StaticResource Primary}"
-                                   HeightRequest="24"
-                                   WidthRequest="24"
-                                   VerticalOptions="Center"/>
-            </HorizontalStackLayout>
-        </Grid>
+            <!-- Header with gradient -->
+            <Border StrokeThickness="0" 
+                    StrokeShape="RoundRectangle 20"
+                    Padding="24,20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource Tertiary}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="12" Opacity="0.3" />
+                </Border.Shadow>
+                <StackLayout Spacing="4">
+                    <Label Text="🔍 Analiza Dokumentu"
+                           FontSize="26"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Wyciągaj kluczowe informacje z tekstu"
+                           FontSize="14"
+                           TextColor="#E0E7FF"
+                           HorizontalTextAlignment="Center"/>
+                </StackLayout>
+            </Border>
 
-        <!-- Results section -->
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Spacing="16">
-                
-                <!-- Streaming output -->
-                <Frame IsVisible="{Binding StreamingOutput, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                       Padding="12"
-                       CornerRadius="8"
-                       BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
-                    <VerticalStackLayout>
-                        <Label Text="Wynik (streaming)"
-                               FontSize="14"
+            <!-- Input section -->
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackLayout Spacing="12">
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <Label Text="📝" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="Tekst do analizy"
+                               FontSize="17"
                                FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
-                               Margin="0,0,0,8"/>
-                        <Label Text="{Binding StreamingOutput}"
-                               FontSize="13"
-                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
-                    </VerticalStackLayout>
-                </Frame>
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center"/>
+                    </StackLayout>
+                    
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+                            StrokeShape="RoundRectangle 12"
+                            StrokeThickness="0"
+                            Padding="12"
+                            HeightRequest="150">
+                        <Editor Text="{Binding InputText}"
+                                BackgroundColor="Transparent"
+                                Placeholder="Wklej tekst dokumentu, transkryptu lub rozmowy do analizy..."
+                                PlaceholderColor="{StaticResource Gray500}"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                                FontSize="14"/>
+                    </Border>
+                    
+                    <!-- Action buttons -->
+                    <Grid ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+                        <Button Grid.Column="0"
+                                Text="🚀 Analizuj"
+                                Command="{Binding AnalyzeCommand}"
+                                IsEnabled="{Binding CanAnalyze}"
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="44"
+                                FontAttributes="Bold">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                                    <GradientStop Color="#7C3AED" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Button.Background>
+                        </Button>
+                        
+                        <Button Grid.Column="1"
+                                Text="⚡ Streaming"
+                                Command="{Binding AnalyzeStreamingCommand}"
+                                IsEnabled="{Binding CanAnalyze}"
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="44"
+                                FontAttributes="Bold">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="{StaticResource Secondary}" Offset="0.0" />
+                                    <GradientStop Color="#059669" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Button.Background>
+                        </Button>
+                        
+                        <Button Grid.Column="2"
+                                Text="📋"
+                                Command="{Binding PasteFromClipboardCommand}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                CornerRadius="12"
+                                WidthRequest="44"
+                                HeightRequest="44"/>
+                        
+                        <Button Grid.Column="3"
+                                Text="🗑️"
+                                Command="{Binding ClearCommand}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                CornerRadius="12"
+                                WidthRequest="44"
+                                HeightRequest="44"/>
+                        
+                        <Button Grid.Column="4"
+                                Text="❌"
+                                Command="{Binding CancelCommand}"
+                                IsVisible="{Binding IsAnalyzing}"
+                                CornerRadius="12"
+                                WidthRequest="44"
+                                HeightRequest="44">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="{StaticResource Error}" Offset="0.0" />
+                                    <GradientStop Color="#DC2626" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Button.Background>
+                        </Button>
+                    </Grid>
+                    
+                    <ActivityIndicator IsRunning="{Binding IsAnalyzing}"
+                                       IsVisible="{Binding IsAnalyzing}"
+                                       Color="{StaticResource Primary}"
+                                       HeightRequest="24"
+                                       HorizontalOptions="Center"/>
+                </StackLayout>
+            </Border>
 
-                <!-- Summary -->
-                <Frame IsVisible="{Binding HasResult}"
-                       Padding="12"
-                       CornerRadius="8"
-                       BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
-                       BorderColor="{StaticResource Primary}">
-                    <VerticalStackLayout>
-                        <Label Text="📋 Podsumowanie"
-                               FontSize="16"
-                               FontAttributes="Bold"
-                               TextColor="{StaticResource Primary}"
-                               Margin="0,0,0,8"/>
-                        <Label Text="{Binding AnalysisResult.Summary}"
-                               FontSize="14"
-                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
-                    </VerticalStackLayout>
-                </Frame>
+            <!-- Streaming output -->
+            <Border IsVisible="{Binding StreamingOutput, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                    StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackLayout Spacing="8">
+                    <Label Text="⏳ Wynik (streaming)"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
+                    <Label Text="{Binding StreamingOutput}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"/>
+                </StackLayout>
+            </Border>
+
+            <!-- Summary -->
+            <Border IsVisible="{Binding HasResult}"
+                    StrokeShape="RoundRectangle 16"
+                    Stroke="{StaticResource Primary}"
+                    StrokeThickness="2"
+                    Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackLayout Spacing="8">
+                    <Label Text="📋 Podsumowanie"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Primary}"/>
+                    <Label Text="{Binding AnalysisResult.Summary}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"/>
+                </StackLayout>
+            </Border>
 
                 <!-- Key Points -->
                 <Frame IsVisible="{Binding KeyPoints.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
@@ -277,34 +353,38 @@
                     </VerticalStackLayout>
                 </Frame>
 
-            </VerticalStackLayout>
-        </ScrollView>
+            <!-- Status bar -->
+            <Border StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="16,12">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                           VerticalOptions="Center"/>
+                    <Label Grid.Column="1"
+                           Text="{Binding AnalysisResult.Metrics.WordCount, StringFormat='{0} słów'}"
+                           FontSize="11"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                           IsVisible="{Binding HasResult}"
+                           VerticalOptions="Center"
+                           Margin="16,0"/>
+                    <Label Grid.Column="2"
+                           Text="{Binding AnalysisResult.Metrics.SentenceCount, StringFormat='{0} zdań'}"
+                           FontSize="11"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                           IsVisible="{Binding HasResult}"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Border>
 
-        <!-- Status bar -->
-        <Frame Grid.Row="2"
-               Padding="12,8"
-               CornerRadius="8"
-               Margin="0,16,0,0"
-               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
-            <Grid ColumnDefinitions="*,Auto,Auto">
-                <Label Text="{Binding StatusMessage}"
-                       FontSize="13"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                       VerticalOptions="Center"/>
-                <Label Grid.Column="1"
-                       Text="{Binding AnalysisResult.Metrics.WordCount, StringFormat='{0} słów'}"
-                       FontSize="11"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
-                       IsVisible="{Binding HasResult}"
-                       VerticalOptions="Center"
-                       Margin="16,0"/>
-                <Label Grid.Column="2"
-                       Text="{Binding AnalysisResult.Metrics.SentenceCount, StringFormat='{0} zdań'}"
-                       FontSize="11"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
-                       IsVisible="{Binding HasResult}"
-                       VerticalOptions="Center"/>
-            </Grid>
-        </Frame>
-    </Grid>
+        </StackLayout>
+    </ScrollView>
 </ContentPage>

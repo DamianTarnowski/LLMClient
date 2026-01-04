@@ -8,49 +8,118 @@
              Title="Dokumenty RAG"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="16">
+    <ScrollView>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" Padding="20" RowSpacing="16">
         
-        <!-- Header with actions -->
-        <HorizontalStackLayout Grid.Row="0" Spacing="12" Margin="0,0,0,16">
-            <Button Text="Dodaj dokumenty"
-                    Command="{Binding AddDocumentCommand}"
-                    BackgroundColor="{StaticResource Primary}"
-                    TextColor="White"
-                    CornerRadius="8"
-                    Padding="16,8"/>
-            
-            <Button Text="Generuj embeddingi"
-                    Command="{Binding GenerateEmbeddingsCommand}"
-                    IsEnabled="{Binding CanProcess}"
-                    BackgroundColor="{StaticResource Secondary}"
-                    TextColor="White"
-                    CornerRadius="8"
-                    Padding="16,8"/>
-            
-            <Button Text="Odśwież"
-                    Command="{Binding LoadDocumentsCommand}"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
-                    CornerRadius="8"
-                    Padding="16,8"/>
-        </HorizontalStackLayout>
+            <!-- Header with gradient -->
+            <Border Grid.Row="0" StrokeThickness="0" 
+                    StrokeShape="RoundRectangle 20"
+                    Padding="24,20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource Tertiary}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="12" Opacity="0.3" />
+                </Border.Shadow>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackLayout Spacing="4">
+                        <Label Text="📚 Dokumenty RAG"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="White"/>
+                        <Label Text="Zarządzaj bazą wiedzy dla AI"
+                               FontSize="14"
+                               TextColor="#E0E7FF"/>
+                    </StackLayout>
+                    <!-- Pending badge -->
+                    <Border Grid.Column="1"
+                            IsVisible="{Binding HasPendingEmbeddings}"
+                            BackgroundColor="#FBBF24"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="12,6"
+                            VerticalOptions="Center">
+                        <Label Text="{Binding PendingEmbeddings, StringFormat='{0} oczekuje'}"
+                               TextColor="White"
+                               FontSize="12"
+                               FontAttributes="Bold"/>
+                    </Border>
+                </Grid>
+            </Border>
 
-        <!-- Pending embeddings indicator -->
-        <Frame Grid.Row="0" 
-               HorizontalOptions="End"
-               BackgroundColor="{StaticResource Warning}"
-               CornerRadius="12"
-               Padding="12,6"
-               IsVisible="{Binding HasPendingEmbeddings}">
-            <Label Text="{Binding PendingEmbeddings, StringFormat='{0} oczekujących'}"
-                   TextColor="White"
-                   FontSize="12"/>
-        </Frame>
+            <!-- Action buttons -->
+            <Border Grid.Row="1" 
+                    StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="16">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="12">
+                    <Button Grid.Column="0"
+                            Text="➕ Dodaj dokumenty"
+                            Command="{Binding AddDocumentCommand}"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="48"
+                            FontAttributes="Bold">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                                <GradientStop Color="#7C3AED" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                    </Button>
+                    
+                    <Button Grid.Column="1"
+                            Text="⚡ Generuj embeddingi"
+                            Command="{Binding GenerateEmbeddingsCommand}"
+                            IsEnabled="{Binding CanProcess}"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="48"
+                            FontAttributes="Bold">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="{StaticResource Secondary}" Offset="0.0" />
+                                <GradientStop Color="#059669" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                    </Button>
+                    
+                    <Button Grid.Column="2"
+                            Text="🔄"
+                            Command="{Binding LoadDocumentsCommand}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                            CornerRadius="12"
+                            WidthRequest="48"
+                            HeightRequest="48"/>
+                </Grid>
+            </Border>
 
-        <!-- Documents list -->
-        <CollectionView Grid.Row="1"
-                        ItemsSource="{Binding Documents}"
-                        SelectionMode="None">
+            <!-- Documents list -->
+            <Border Grid.Row="2" 
+                    StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="8"
+                    MinHeightRequest="200">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+            <CollectionView ItemsSource="{Binding Documents}"
+                            SelectionMode="None">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12">
                     <Label Text="📄" FontSize="48" HorizontalOptions="Center"/>
@@ -113,32 +182,40 @@
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
-        </CollectionView>
+            </CollectionView>
+            </Border>
 
-        <!-- Progress bar -->
-        <ProgressBar Grid.Row="2"
-                     Progress="{Binding IngestionProgress}"
-                     IsVisible="{Binding IsProcessing}"
-                     ProgressColor="{StaticResource Primary}"
-                     Margin="0,8"/>
+            <!-- Progress bar -->
+            <ProgressBar Grid.Row="3"
+                         Progress="{Binding IngestionProgress}"
+                         IsVisible="{Binding IsProcessing}"
+                         ProgressColor="{StaticResource Primary}"/>
 
-        <!-- Status bar -->
-        <Frame Grid.Row="3"
-               Padding="12,8"
-               CornerRadius="8"
-               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="{Binding StatusMessage}"
-                       FontSize="13"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                       VerticalOptions="Center"/>
-                <ActivityIndicator Grid.Column="1"
-                                   IsRunning="{Binding IsLoading}"
-                                   IsVisible="{Binding IsLoading}"
-                                   Color="{StaticResource Primary}"
-                                   HeightRequest="20"
-                                   WidthRequest="20"/>
-            </Grid>
-        </Frame>
-    </Grid>
+            <!-- Status bar -->
+            <Border Grid.Row="4"
+                    StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="16,12">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                           VerticalOptions="Center"/>
+                    <ActivityIndicator Grid.Column="1"
+                                       IsRunning="{Binding IsLoading}"
+                                       IsVisible="{Binding IsLoading}"
+                                       Color="{StaticResource Primary}"
+                                       HeightRequest="20"
+                                       WidthRequest="20"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollView>
 </ContentPage>
