@@ -259,10 +259,11 @@
                     </Border>
 
                     <!-- API Model Picker (visible when API mode) -->
-                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+                            Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"
                             StrokeShape="RoundRectangle 12"
-                            StrokeThickness="0"
-                            Padding="12,4"
+                            StrokeThickness="1"
+                            Padding="12,8"
                             IsVisible="{Binding UseLocalModel, Converter={StaticResource InverseBoolConverter}}">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -274,7 +275,7 @@
                                    Text="&#xea3b;"
                                    FontFamily="MaterialSymbols"
                                    FontSize="20"
-                                   TextColor="{StaticResource Gray500}"
+                                   TextColor="{StaticResource Primary}"
                                    VerticalOptions="Center" />
 
                             <Picker Grid.Column="1"
@@ -282,8 +283,9 @@
                                     SelectedItem="{Binding AiConfiguration.SelectedModel}"
                                     ItemDisplayBinding="{Binding Name}"
                                     Title="Wybierz model"
-                                    FontSize="13"
-                                    HeightRequest="40"
+                                    TitleColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}"
+                                    FontSize="14"
+                                    HeightRequest="44"
                                     TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
                         </Grid>
                     </Border>
