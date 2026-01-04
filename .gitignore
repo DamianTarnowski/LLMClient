@@ -83,7 +83,9 @@ LLMClient.Tests/TestResults/
 
 # Secrets files that should never be committed
 secrets.json
+**/secrets.json
 appsettings.Development.json
+*.local.json
 
 # Screenshots folder (development only)
 screenshoty/
