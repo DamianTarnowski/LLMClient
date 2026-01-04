@@ -334,7 +334,7 @@
                     </Grid>
 
                     <!-- Language & Theme Row -->
-                    <Grid ColumnSpacing="8">
+                    <Grid ColumnSpacing="8" Margin="0,0,4,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />

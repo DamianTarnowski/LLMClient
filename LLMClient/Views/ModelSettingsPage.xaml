@@ -476,7 +476,7 @@
                                HorizontalOptions="EndAndExpand"/>
                     </StackLayout>
                     
-                    <Slider Minimum="0.8"
+                    <Slider Minimum="0.6"
                             Maximum="1.4"
                             Value="{Binding FontScale}"
                             MinimumTrackColor="{StaticResource Primary}"
@@ -484,7 +484,7 @@
                             ThumbColor="{StaticResource Primary}"/>
                     
                     <Grid ColumnDefinitions="*,*,*">
-                        <Label Grid.Column="0" Text="80%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
+                        <Label Grid.Column="0" Text="60%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
                         <Label Grid.Column="1" Text="100%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Center"/>
                         <Label Grid.Column="2" Text="140%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End"/>
                     </Grid>

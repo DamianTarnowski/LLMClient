@@ -33,13 +33,25 @@ namespace LLMClient.Services
             _databaseService = databaseService;
         }
 
-        public bool IsConfigured => (_kernel != null && _chatService != null && _currentModel != null) || 
-                                    (_currentModel?.IsLocalModel == true && _localModelService?.IsLoaded == true);
+        public bool IsConfigured
+        {
+            get
+            {
+                var cloudConfigured = _kernel != null && _chatService != null && _currentModel != null;
+                var localConfigured = _currentModel?.IsLocalModel == true && _localModelService?.IsLoaded == true;
+                var result = cloudConfigured || localConfigured;
+                
+                System.Diagnostics.Debug.WriteLine($"[AiService] IsConfigured check: cloud={cloudConfigured} (kernel={_kernel != null}, chat={_chatService != null}, model={_currentModel?.Name}), local={localConfigured} (isLocal={_currentModel?.IsLocalModel}, loaded={_localModelService?.IsLoaded}) => {result}");
+                
+                return result;
+            }
+        }
         
         public bool IsUsingLocalModel => _currentModel?.IsLocalModel == true && _localModelService?.IsLoaded == true;
 
         public async Task UpdateConfiguration(AiModel model)
         {
+            System.Diagnostics.Debug.WriteLine($"[AiService] UpdateConfiguration called for model: {model.Name}, Provider: {model.Provider}, IsLocalModel: {model.IsLocalModel}");
             _currentModel = model;
 
             var builder = Kernel.CreateBuilder();
