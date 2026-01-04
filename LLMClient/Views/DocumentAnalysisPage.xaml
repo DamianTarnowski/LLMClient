@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
+             xmlns:models="clr-namespace:LLMClient.Models"
+             x:Class="LLMClient.Views.DocumentAnalysisPage"
+             x:DataType="viewmodels:DocumentAnalysisViewModel"
+             Title="Analiza dokumentu"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+        
+        <!-- Input section -->
+        <Grid Grid.Row="0" RowDefinitions="Auto,150,Auto" Margin="0,0,0,16">
+            <Label Text="Tekst do analizy"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                   Margin="0,0,0,8"/>
+            
+            <Frame Grid.Row="1" 
+                   Padding="8"
+                   CornerRadius="8"
+                   BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                   BorderColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray700}}">
+                <Editor Text="{Binding InputText}"
+                        Placeholder="Wklej tekst dokumentu, transkryptu lub rozmowy do analizy..."
+                        PlaceholderColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                        TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
+                        FontSize="14"/>
+            </Frame>
+            
+            <HorizontalStackLayout Grid.Row="2" Spacing="12" Margin="0,12,0,0">
+                <Button Text="Analizuj"
+                        Command="{Binding AnalyzeCommand}"
+                        IsEnabled="{Binding CanAnalyze}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="20,10"/>
+                
+                <Button Text="Streaming"
+                        Command="{Binding AnalyzeStreamingCommand}"
+                        IsEnabled="{Binding CanAnalyze}"
+                        BackgroundColor="{StaticResource Secondary}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="20,10"/>
+                
+                <Button Text="Wklej"
+                        Command="{Binding PasteFromClipboardCommand}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                        TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
+                        CornerRadius="8"
+                        Padding="16,10"/>
+                
+                <Button Text="Wyczyść"
+                        Command="{Binding ClearCommand}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                        TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
+                        CornerRadius="8"
+                        Padding="16,10"/>
+                
+                <Button Text="Anuluj"
+                        Command="{Binding CancelCommand}"
+                        IsVisible="{Binding IsAnalyzing}"
+                        BackgroundColor="{StaticResource Danger}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="16,10"/>
+                
+                <ActivityIndicator IsRunning="{Binding IsAnalyzing}"
+                                   IsVisible="{Binding IsAnalyzing}"
+                                   Color="{StaticResource Primary}"
+                                   HeightRequest="24"
+                                   WidthRequest="24"
+                                   VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- Results section -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16">
+                
+                <!-- Streaming output -->
+                <Frame IsVisible="{Binding StreamingOutput, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+                    <VerticalStackLayout>
+                        <Label Text="Wynik (streaming)"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                               Margin="0,0,0,8"/>
+                        <Label Text="{Binding StreamingOutput}"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Summary -->
+                <Frame IsVisible="{Binding HasResult}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       BorderColor="{StaticResource Primary}">
+                    <VerticalStackLayout>
+                        <Label Text="📋 Podsumowanie"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               Margin="0,0,0,8"/>
+                        <Label Text="{Binding AnalysisResult.Summary}"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Key Points -->
+                <Frame IsVisible="{Binding KeyPoints.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+                    <VerticalStackLayout>
+                        <Label Text="🎯 Kluczowe punkty"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
+                               Margin="0,0,0,8"/>
+                        <CollectionView ItemsSource="{Binding KeyPoints}" SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Label Text="{Binding ., StringFormat='• {0}'}"
+                                           FontSize="13"
+                                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                                           Margin="8,2"/>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Detected Intents -->
+                <Frame IsVisible="{Binding Intents.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+                    <VerticalStackLayout>
+                        <Label Text="🔍 Wykryte intencje"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
+                               Margin="0,0,0,8"/>
+                        <CollectionView ItemsSource="{Binding Intents}" SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:DetectedIntent">
+                                    <Frame Margin="0,4" Padding="10" CornerRadius="6"
+                                           BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <VerticalStackLayout>
+                                                <Label Text="{Binding Intent}"
+                                                       FontSize="14"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
+                                                <Label Text="{Binding Evidence, StringFormat='&quot;{0}&quot;'}"
+                                                       FontSize="12"
+                                                       FontAttributes="Italic"
+                                                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}"/>
+                                            </VerticalStackLayout>
+                                            <Label Grid.Column="1"
+                                                   Text="{Binding Confidence, StringFormat='{0:P0}'}"
+                                                   FontSize="12"
+                                                   VerticalOptions="Center"
+                                                   TextColor="{StaticResource Primary}"/>
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Red Flags -->
+                <Frame IsVisible="{Binding RedFlags.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light=#FEF2F2, Dark=#450A0A}"
+                       BorderColor="{StaticResource Danger}">
+                    <VerticalStackLayout>
+                        <Label Text="⚠️ Czerwone flagi"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Danger}"
+                               Margin="0,0,0,8"/>
+                        <CollectionView ItemsSource="{Binding RedFlags}" SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:RedFlag">
+                                    <Frame Margin="0,4" Padding="10" CornerRadius="6"
+                                           BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+                                        <VerticalStackLayout Spacing="4">
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="{Binding Severity}"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource Danger}"/>
+                                                <Label Text="{Binding Description}"
+                                                       FontSize="13"
+                                                       TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding Quote, StringFormat='&quot;{0}&quot;'}"
+                                                   FontSize="12"
+                                                   FontAttributes="Italic"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}"
+                                                   IsVisible="{Binding Quote, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+                                            <Label Text="{Binding Recommendation, StringFormat='💡 {0}'}"
+                                                   FontSize="12"
+                                                   TextColor="{StaticResource Primary}"
+                                                   IsVisible="{Binding Recommendation, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Compliance Checklist -->
+                <Frame IsVisible="{Binding ComplianceItems.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+                    <VerticalStackLayout>
+                        <Label Text="✅ Lista kontrolna"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
+                               Margin="0,0,0,8"/>
+                        <CollectionView ItemsSource="{Binding ComplianceItems}" SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:ComplianceItem">
+                                    <HorizontalStackLayout Spacing="8" Margin="0,4">
+                                        <Label Text="{Binding IsMet, Converter={StaticResource BoolToCheckmarkConverter}}"
+                                               FontSize="14"
+                                               WidthRequest="24"/>
+                                        <VerticalStackLayout>
+                                            <Label Text="{Binding Requirement}"
+                                                   FontSize="13"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
+                                            <Label Text="{Binding Details}"
+                                                   FontSize="11"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                                                   IsVisible="{Binding Details, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+                                        </VerticalStackLayout>
+                                    </HorizontalStackLayout>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Suggested Response -->
+                <Frame IsVisible="{Binding AnalysisResult.SuggestedResponse, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                       Padding="12"
+                       CornerRadius="8"
+                       BackgroundColor="{AppThemeBinding Light=#F0FDF4, Dark=#052E16}"
+                       BorderColor="{StaticResource Success}">
+                    <VerticalStackLayout>
+                        <Label Text="💬 Sugerowana odpowiedź"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Success}"
+                               Margin="0,0,0,8"/>
+                        <Label Text="{Binding AnalysisResult.SuggestedResponse}"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Status bar -->
+        <Frame Grid.Row="2"
+               Padding="12,8"
+               CornerRadius="8"
+               Margin="0,16,0,0"
+               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <Label Text="{Binding StatusMessage}"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                       VerticalOptions="Center"/>
+                <Label Grid.Column="1"
+                       Text="{Binding AnalysisResult.Metrics.WordCount, StringFormat='{0} słów'}"
+                       FontSize="11"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                       IsVisible="{Binding HasResult}"
+                       VerticalOptions="Center"
+                       Margin="16,0"/>
+                <Label Grid.Column="2"
+                       Text="{Binding AnalysisResult.Metrics.SentenceCount, StringFormat='{0} zdań'}"
+                       FontSize="11"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                       IsVisible="{Binding HasResult}"
+                       VerticalOptions="Center"/>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

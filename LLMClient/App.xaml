@@ -20,6 +20,8 @@
             <converters:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter" />
             <converters:BoolToThemeIconConverter x:Key="BoolToThemeIconConverter" />
             <converters:BoolToEmbeddingStatusConverter x:Key="BoolToEmbeddingStatusConverter" />
+            <converters:BoolToCheckmarkConverter x:Key="BoolToCheckmarkConverter" />
+            <converters:ZeroToInverseBoolConverter x:Key="ZeroToInverseBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

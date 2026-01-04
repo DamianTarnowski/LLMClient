@@ -244,6 +244,13 @@ namespace LLMClient
                 var embeddingService = provider.GetService<IEmbeddingService>();
                 return new RagViewModel(ragService, ingestionService, embeddingService);
             });
+            
+            // Rejestracja DocumentAnalysisViewModel
+            builder.Services.AddTransient<DocumentAnalysisViewModel>(provider =>
+            {
+                var analysisService = provider.GetRequiredService<IDocumentAnalysisService>();
+                return new DocumentAnalysisViewModel(analysisService);
+            });
 
             // Rejestracja Pages
             builder.Services.AddTransient<MainPage>();
@@ -252,6 +259,7 @@ namespace LLMClient
             builder.Services.AddTransient<MemoryPage>();
             builder.Services.AddTransient<ModelSettingsPage>();
             builder.Services.AddTransient<RagDocumentsPage>();
+            builder.Services.AddTransient<DocumentAnalysisPage>();
 
             // GGUF Model Manager Page (Windows/Android - LLamaSharp)
 #if WINDOWS || ANDROID
