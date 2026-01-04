@@ -16,6 +16,7 @@ public interface IRagService
     Task<List<RagDocument>> GetDocumentsAsync();
     Task DeleteDocumentAsync(int documentId);
     Task<string> GetRelevantContextAsync(string query, int topK = 3, float minSimilarity = 0.5f, RetrievalMode mode = RetrievalMode.Hybrid);
+    Task<RetrievalResult> GetRelevantContextWithTraceAsync(string query, int topK = 3, float minSimilarity = 0.5f, RetrievalMode mode = RetrievalMode.Hybrid);
     Task GenerateEmbeddingsAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default);
     Task<int> GetPendingChunksCountAsync();
 }

@@ -178,6 +178,125 @@ public class RagService : IRagService
         return string.Join("\n\n---\n\n", topChunks);
     }
 
+    public async Task<RetrievalResult> GetRelevantContextWithTraceAsync(string query, int topK = 3, float minSimilarity = 0.5f, RetrievalMode mode = RetrievalMode.Hybrid)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var trace = new RagTrace
+        {
+            Query = query,
+            RetrievalMode = mode
+        };
+
+        if (_embeddingService == null || !_embeddingService.IsInitialized)
+        {
+            mode = RetrievalMode.Keyword;
+            trace.RetrievalMode = mode;
+        }
+
+        var allChunks = await _databaseService.GetAllRagChunksAsync();
+        var documents = await _databaseService.GetRagDocumentsAsync();
+        var docLookup = documents.ToDictionary(d => d.Id, d => d.FileName);
+
+        if (allChunks.Count == 0)
+        {
+            return new RetrievalResult { Trace = trace };
+        }
+
+        var scored = new List<(RagChunk Chunk, float VectorScore, float KeywordScore, float FinalScore)>();
+
+        // Vector search
+        var vectorSw = System.Diagnostics.Stopwatch.StartNew();
+        if (mode == RetrievalMode.Vector || mode == RetrievalMode.Hybrid)
+        {
+            var queryEmbedding = await _embeddingService!.GenerateEmbeddingAsync(query, isQuery: true);
+            if (queryEmbedding != null)
+            {
+                foreach (var chunk in allChunks.Where(c => c.Embedding != null))
+                {
+                    var chunkEmbedding = BytesToFloatArray(chunk.Embedding!);
+                    var similarity = CosineSimilarity(queryEmbedding, chunkEmbedding);
+                    scored.Add((chunk, similarity, 0f, similarity));
+                }
+            }
+        }
+        trace.Timings.Add(new RagTiming("VectorSearch", vectorSw.ElapsedMilliseconds));
+
+        // Keyword search
+        var keywordSw = System.Diagnostics.Stopwatch.StartNew();
+        if (mode == RetrievalMode.Keyword || mode == RetrievalMode.Hybrid)
+        {
+            var queryTerms = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var chunk in allChunks)
+            {
+                var contentLower = chunk.Content.ToLowerInvariant();
+                var matchCount = queryTerms.Count(t => contentLower.Contains(t));
+                if (matchCount > 0)
+                {
+                    var keywordScore = (float)matchCount / queryTerms.Length;
+                    var existing = scored.FirstOrDefault(s => s.Chunk.Id == chunk.Id);
+                    if (existing.Chunk != null)
+                    {
+                        var hybridScore = (existing.VectorScore * 0.7f) + (keywordScore * 0.3f);
+                        scored.Remove(existing);
+                        scored.Add((chunk, existing.VectorScore, keywordScore, hybridScore));
+                    }
+                    else
+                    {
+                        scored.Add((chunk, 0f, keywordScore, keywordScore * 0.5f));
+                    }
+                }
+            }
+        }
+        trace.Timings.Add(new RagTiming("KeywordSearch", keywordSw.ElapsedMilliseconds));
+
+        // Filter and rank
+        var filtered = scored.Where(s => s.FinalScore >= minSimilarity).OrderByDescending(s => s.FinalScore).ToList();
+        var topResults = filtered.Take(topK).ToList();
+
+        // Build candidates for trace
+        int rank = 1;
+        foreach (var item in filtered)
+        {
+            var docName = docLookup.TryGetValue(item.Chunk.DocumentId, out var name) ? name : "Unknown";
+            var candidate = new RagChunkCandidate(
+                item.Chunk.Id,
+                docName,
+                item.Chunk.Section,
+                item.Chunk.ChunkIndex,
+                item.VectorScore,
+                item.KeywordScore,
+                item.FinalScore,
+                item.Chunk.Content.Length / 4, // Approximate token count
+                topResults.Any(t => t.Chunk.Id == item.Chunk.Id),
+                item.Chunk.Content.Length > 100 ? item.Chunk.Content[..100] + "..." : item.Chunk.Content
+            ) { Rank = rank++ };
+            trace.Candidates.Add(candidate);
+        }
+
+        // Build result
+        var retrievedChunks = topResults.Select(t => new RetrievedChunk
+        {
+            ChunkId = t.Chunk.Id,
+            DocumentId = t.Chunk.DocumentId,
+            DocumentName = docLookup.TryGetValue(t.Chunk.DocumentId, out var n) ? n : "Unknown",
+            Content = t.Chunk.Content,
+            Score = t.FinalScore,
+            ChunkIndex = t.Chunk.ChunkIndex
+        }).ToList();
+
+        sw.Stop();
+        trace.Timings.Add(new RagTiming("Total", sw.ElapsedMilliseconds));
+
+        return new RetrievalResult
+        {
+            Context = string.Join("\n\n---\n\n", topResults.Select(t => t.Chunk.Content)),
+            Chunks = retrievedChunks,
+            Trace = trace,
+            TotalChunksEvaluated = allChunks.Count,
+            RetrievalTimeMs = sw.ElapsedMilliseconds
+        };
+    }
+
     public async Task GenerateEmbeddingsAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
     {
         if (_embeddingService == null || !_embeddingService.IsInitialized)
