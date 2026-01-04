@@ -1,5 +1,6 @@
 ﻿using SQLite;
 using System.ComponentModel;
+using System.Collections.Generic;
 
 namespace LLMClient.Models
 {
@@ -8,7 +9,57 @@ namespace LLMClient.Models
         OpenAI,
         Gemini,
         OpenAICompatible,
-        LocalModel
+        LocalModel,
+        Anthropic,
+        Mistral,
+        Groq,
+        Together,
+        Fireworks,
+        DeepSeek,
+        xAI,
+        SambaNova,
+        Perplexity,
+        Cohere,
+        OpenRouter
+    }
+
+    public record ApiProviderInfo(string Name, string Endpoint, string Description, string KeyUrl);
+
+    public static class ApiProviders
+    {
+        public static readonly Dictionary<AiProvider, ApiProviderInfo> ProviderInfo = new()
+        {
+            [AiProvider.OpenAI] = new("OpenAI", "https://api.openai.com/v1", "GPT-4o, GPT-4, o1, o3", "https://platform.openai.com/api-keys"),
+            [AiProvider.Anthropic] = new("Anthropic", "https://api.anthropic.com/v1", "Claude 3.5/4 Sonnet, Opus, Haiku", "https://console.anthropic.com/"),
+            [AiProvider.Gemini] = new("Google AI", "https://generativelanguage.googleapis.com/v1beta", "Gemini 2.0/1.5 Pro, Flash", "https://aistudio.google.com/apikey"),
+            [AiProvider.Mistral] = new("Mistral", "https://api.mistral.ai/v1", "Mistral Large, Medium, Small", "https://console.mistral.ai/api-keys"),
+            [AiProvider.Groq] = new("Groq", "https://api.groq.com/openai/v1", "Llama 3, Mixtral (ultra-szybkie)", "https://console.groq.com/keys"),
+            [AiProvider.Together] = new("Together AI", "https://api.together.xyz/v1", "Llama, Qwen, DeepSeek", "https://api.together.ai/settings/api-keys"),
+            [AiProvider.Fireworks] = new("Fireworks AI", "https://api.fireworks.ai/inference/v1", "Llama, Mixtral, DeepSeek", "https://fireworks.ai/account/api-keys"),
+            [AiProvider.DeepSeek] = new("DeepSeek", "https://api.deepseek.com/v1", "DeepSeek V3, R1 Reasoner", "https://platform.deepseek.com/api_keys"),
+            [AiProvider.xAI] = new("xAI (Grok)", "https://api.x.ai/v1", "Grok 2, Grok 3", "https://console.x.ai/"),
+            [AiProvider.SambaNova] = new("SambaNova", "https://api.sambanova.ai/v1", "Llama (ultra-szybkie)", "https://cloud.sambanova.ai/apis"),
+            [AiProvider.Perplexity] = new("Perplexity", "https://api.perplexity.ai", "Sonar (z dostępem do internetu)", "https://www.perplexity.ai/settings/api"),
+            [AiProvider.Cohere] = new("Cohere", "https://api.cohere.ai/v1", "Command R+", "https://dashboard.cohere.com/api-keys"),
+            [AiProvider.OpenRouter] = new("OpenRouter", "https://openrouter.ai/api/v1", "Agregator 200+ modeli", "https://openrouter.ai/keys"),
+        };
+
+        public static string GetEndpoint(AiProvider provider)
+        {
+            return ProviderInfo.TryGetValue(provider, out var info) ? info.Endpoint : "";
+        }
+
+        public static string GetKeyUrl(AiProvider provider)
+        {
+            return ProviderInfo.TryGetValue(provider, out var info) ? info.KeyUrl : "";
+        }
+
+        public static string GetDescription(AiProvider provider)
+        {
+            return ProviderInfo.TryGetValue(provider, out var info) ? info.Description : "";
+        }
+
+        public static List<AiProvider> GetCloudProviders() => ProviderInfo.Keys.ToList();
     }
 
     public class AiModel : INotifyPropertyChanged

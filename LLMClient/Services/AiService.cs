@@ -67,6 +67,28 @@ namespace LLMClient.Services
                             endpoint: new Uri(model.Endpoint));
                         break;
 
+                    case AiProvider.Anthropic:
+                    case AiProvider.Mistral:
+                    case AiProvider.Groq:
+                    case AiProvider.Together:
+                    case AiProvider.Fireworks:
+                    case AiProvider.DeepSeek:
+                    case AiProvider.xAI:
+                    case AiProvider.SambaNova:
+                    case AiProvider.Perplexity:
+                    case AiProvider.Cohere:
+                    case AiProvider.OpenRouter:
+                        var endpoint = ApiProviders.GetEndpoint(model.Provider);
+                        if (string.IsNullOrEmpty(endpoint))
+                        {
+                            throw new InvalidOperationException($"Brak endpointu dla providera {model.Provider}");
+                        }
+                        builder.AddOpenAIChatCompletion(
+                            modelId: model.ModelId,
+                            apiKey: model.ApiKey,
+                            endpoint: new Uri(endpoint));
+                        break;
+
                     case AiProvider.LocalModel:
                         // For local models, we don't use Semantic Kernel
                         // Just validate that the local model service is available
@@ -305,7 +327,11 @@ namespace LLMClient.Services
         {
             var settings = _currentModel?.Provider switch
             {
-                AiProvider.OpenAI or AiProvider.OpenAICompatible => new OpenAIPromptExecutionSettings
+                AiProvider.OpenAI or AiProvider.OpenAICompatible 
+                    or AiProvider.Anthropic or AiProvider.Mistral or AiProvider.Groq
+                    or AiProvider.Together or AiProvider.Fireworks or AiProvider.DeepSeek
+                    or AiProvider.xAI or AiProvider.SambaNova or AiProvider.Perplexity
+                    or AiProvider.Cohere or AiProvider.OpenRouter => new OpenAIPromptExecutionSettings
                 {
                     //MaxTokens = 2000,
                     //Temperature = 0.7,
