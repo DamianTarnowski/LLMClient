@@ -194,6 +194,11 @@ namespace LLMClient
                 var aiService = provider.GetRequiredService<IAiService>();
                 return new DocumentAnalysisService(aiService);
             });
+            builder.Services.AddSingleton<IIngestionService>(provider =>
+            {
+                var ragService = provider.GetRequiredService<IRagService>();
+                return new IngestionService(ragService);
+            });
 
             // Rejestracja ViewModels
             builder.Services.AddTransient<MainPageViewModel>(provider =>
