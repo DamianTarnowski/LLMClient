@@ -27,6 +27,7 @@ namespace LLMClient.ViewModels
         private EmbeddingModelInfo? _selectedEmbeddingModel;
         private string _initialEmbeddingModelId = "";
         private bool _embeddingModelChanged;
+        private double _fontScale = 1.0;
 
         public ModelSettingsViewModel(
             ILocalModelService localModelService, 
@@ -156,6 +157,22 @@ namespace LLMClient.ViewModels
             }
         }
 
+        public double FontScale
+        {
+            get => _fontScale;
+            set
+            {
+                _fontScale = Math.Round(value, 1);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FontScalePercent));
+                // Save immediately
+                Preferences.Set("FontScale", _fontScale);
+                // Font scale is applied via binding
+            }
+        }
+        
+        public string FontScalePercent => $"{(int)(_fontScale * 100)}%";
+
         public string DeviceRAMInfo
         {
             get
@@ -278,6 +295,9 @@ namespace LLMClient.ViewModels
                     RepetitionPenalty = settings?.RepetitionPenalty ?? 1.15;
                     TopP = settings?.TopP ?? 0.85;
                     SelectedEngine = EngineSettings.LoadSelectedEngine();
+                    _fontScale = Preferences.Get("FontScale", 1.0);
+                    OnPropertyChanged(nameof(FontScale));
+                    OnPropertyChanged(nameof(FontScalePercent));
                     
                     IsLocalModelActive = _localModelService.IsLoaded;
                     UpdateModelInfo();

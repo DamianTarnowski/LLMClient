@@ -65,50 +65,62 @@ public partial class MainPage : ContentPage
 
         ScrollToBottom();
         
-        // Check for onboarding
-        _ = CheckOnboardingAsync();
+        // Check for onboarding - run on dispatcher to avoid blocking
+        Dispatcher.DispatchAsync(async () => await CheckOnboardingAsync());
     }
+    
+    private bool _onboardingChecked = false;
     
     private async Task CheckOnboardingAsync()
     {
-        // Check if this is first run or no models configured
-        var isFirstRun = !Preferences.ContainsKey("OnboardingCompleted");
+        // Prevent multiple checks
+        if (_onboardingChecked) return;
+        _onboardingChecked = true;
         
-        if (BindingContext is MainPageViewModel viewModel)
+        try
         {
-            // Wait for models to load
-            await Task.Delay(500);
+            // Check if this is first run
+            var isFirstRun = !Preferences.ContainsKey("OnboardingCompleted");
+            if (!isFirstRun) return; // Skip if already completed
             
-            var hasNoModels = viewModel.AiConfiguration?.Models == null || 
-                              viewModel.AiConfiguration.Models.Count == 0;
-            var hasNoSelectedModel = viewModel.AiConfiguration?.SelectedModel == null;
-            
-            if (isFirstRun || (hasNoModels && hasNoSelectedModel))
+            if (BindingContext is MainPageViewModel viewModel)
             {
-                var result = await DisplayAlert(
-                    "👋 Witaj w LLMClient!",
-                    "Aby rozpocząć rozmowę z AI, musisz skonfigurować model.\n\n" +
-                    "Możesz:\n" +
-                    "• Użyć modelu lokalnego (Phi-4) - działa offline\n" +
-                    "• Skonfigurować API (OpenAI, Gemini, itp.)\n\n" +
-                    "Co chcesz zrobić?",
-                    "Skonfiguruj API",
-                    "Użyj modelu lokalnego");
+                // Wait for UI and models to be ready
+                await Task.Delay(1500);
                 
-                if (result)
+                var hasNoModels = viewModel.AiConfiguration?.Models == null || 
+                                  viewModel.AiConfiguration.Models.Count == 0;
+                var hasNoSelectedModel = viewModel.AiConfiguration?.SelectedModel == null;
+                
+                // Only show onboarding if truly needed
+                if (hasNoModels && hasNoSelectedModel)
                 {
-                    // Go to API configuration
-                    viewModel.SettingsCommand.Execute(null);
-                }
-                else
-                {
-                    // Enable local model
-                    viewModel.EnableLocalModelCommand.Execute(null);
+                    var result = await DisplayAlert(
+                        "Witaj w LLMClient!",
+                        "Aby rozpocząć rozmowę z AI, musisz skonfigurować model.\n\n" +
+                        "Możesz użyć modelu lokalnego (Phi-4) który działa offline, " +
+                        "lub skonfigurować API (OpenAI, Gemini, itp.).\n\n" +
+                        "Co chcesz zrobić?",
+                        "Skonfiguruj API",
+                        "Użyj modelu lokalnego");
+                    
+                    if (result)
+                    {
+                        viewModel.SettingsCommand.Execute(null);
+                    }
+                    else
+                    {
+                        viewModel.EnableLocalModelCommand.Execute(null);
+                    }
                 }
                 
                 // Mark onboarding as completed
                 Preferences.Set("OnboardingCompleted", true);
             }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainPage] Onboarding error: {ex.Message}");
         }
     }
 

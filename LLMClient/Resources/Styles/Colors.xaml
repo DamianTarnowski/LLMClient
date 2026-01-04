@@ -7,7 +7,7 @@
     <!-- Modern Color Palette - Inspired by ChatGPT/Claude -->
 
     <!-- Primary Brand Colors -->
-    <Color x:Key="Primary">#6366F1</Color>
+    <Color x:Key="Primary">#4F46E5</Color>
     <Color x:Key="PrimaryDark">#818CF8</Color>
     <Color x:Key="PrimaryDarkText">#FFFFFF</Color>
     <Color x:Key="PrimaryLight">#E0E7FF</Color>
@@ -59,8 +59,8 @@
     <Color x:Key="Gray950">#030712</Color>
 
     <!-- Chat Bubble Colors -->
-    <Color x:Key="UserBubbleLight">#6366F1</Color>
-    <Color x:Key="UserBubbleDark">#6366F1</Color>
+    <Color x:Key="UserBubbleLight">#4F46E5</Color>
+    <Color x:Key="UserBubbleDark">#5B52E8</Color>
     <Color x:Key="BotBubbleLight">#F3F4F6</Color>
     <Color x:Key="BotBubbleDark">#374151</Color>
 

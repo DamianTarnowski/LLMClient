@@ -188,14 +188,14 @@
 
                                         <Label Grid.Row="0" Grid.Column="0"
                                                Text="{Binding Title}"
-                                               FontSize="14"
+                                               FontSize="13"
                                                FontAttributes="Bold"
                                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                                                LineBreakMode="TailTruncation" />
 
                                         <Label Grid.Row="0" Grid.Column="1"
                                                Text="{Binding LastMessageTime, StringFormat='{0:HH:mm}'}"
-                                               FontSize="11"
+                                               FontSize="10"
                                                TextColor="{StaticResource Gray500}" />
 
                                         <Label Grid.Row="1" Grid.ColumnSpan="2"
@@ -363,9 +363,9 @@
                                 BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                 StrokeShape="RoundRectangle 10"
                                 StrokeThickness="0"
-                                Padding="8,0"
+                                Padding="10,0"
                                 HeightRequest="40"
-                                WidthRequest="70">
+                                WidthRequest="80">
                             <Grid ColumnSpacing="4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -614,8 +614,8 @@
 
                                             <Label Text="{Binding Content}"
                                                    TextColor="White"
-                                                   FontSize="15"
-                                                   LineHeight="1.4" />
+                                                   FontSize="13"
+                                                   LineHeight="1.35" />
                                         </StackLayout>
                                     </Border>
 
@@ -649,8 +649,8 @@
 
                                             <Label Text="{Binding Content}"
                                                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
-                                                   FontSize="15"
-                                                   LineHeight="1.4" />
+                                                   FontSize="13"
+                                                   LineHeight="1.35" />
                                         </StackLayout>
                                     </Border>
                                 </Grid>

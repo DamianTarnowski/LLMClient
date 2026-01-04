@@ -449,6 +449,48 @@
                 </StackLayout>
             </Border>
 
+            <!-- Font Size Settings -->
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackLayout Spacing="12">
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <Label Text="🔤" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="Rozmiar czcionki"
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center"/>
+                        <Label Text="{Binding FontScalePercent}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="EndAndExpand"/>
+                    </StackLayout>
+                    
+                    <Slider Minimum="0.8"
+                            Maximum="1.4"
+                            Value="{Binding FontScale}"
+                            MinimumTrackColor="{StaticResource Primary}"
+                            MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"
+                            ThumbColor="{StaticResource Primary}"/>
+                    
+                    <Grid ColumnDefinitions="*,*,*">
+                        <Label Grid.Column="0" Text="80%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Start"/>
+                        <Label Grid.Column="1" Text="100%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="Center"/>
+                        <Label Grid.Column="2" Text="140%" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End"/>
+                    </Grid>
+                </StackLayout>
+            </Border>
+
             <!-- Action Buttons -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="16" Margin="0,20,0,0">
                 <Button Grid.Column="0"
