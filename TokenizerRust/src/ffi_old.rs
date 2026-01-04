@@ -91,7 +91,7 @@ pub extern "C" fn tokenizer_cleanup() {
 // ============== MULTI-TOKENIZER API ==============
 
 /// Inicjalizuje tokenizer pod podaną nazwą (np. "e5", "gemma")
-/// Najpierw próbuje HuggingFace tokenizers, potem Kitoken
+/// Najpierw próbuje HuggingFace tokenizers, potem SentencePiece
 #[no_mangle]
 pub extern "C" fn tokenizer_init_named(name: *const c_char, path: *const c_char) -> i32 {
     let name_str = match unsafe { CStr::from_ptr(name) }.to_str() {
@@ -118,27 +118,26 @@ pub extern "C" fn tokenizer_init_named(name: *const c_char, path: *const c_char)
         }
     }
     
-    // Fallback: próbuj Kitoken z plikiem .model
-    let model_path = if path_str.ends_with(".json") {
+    // Fallback: próbuj SentencePiece (.model file)
+    let sp_path = if path_str.ends_with(".json") {
         path_str.replace("tokenizer.json", "tokenizer.model")
     } else {
         path_str.to_string()
     };
     
-    println!("[tokenizer_rust] Trying Kitoken: {}", model_path);
-    match Kitoken::from_sentencepiece_file(&model_path) {
-        Ok(kt) => {
-            println!("[tokenizer_rust] OK: loaded {} as Kitoken/SentencePiece", name_str);
+    println!("[tokenizer_rust] Trying SentencePiece: {}", sp_path);
+    match SentencePieceProcessor::open(&sp_path) {
+        Ok(sp) => {
+            println!("[tokenizer_rust] OK: loaded {} as SentencePiece", name_str);
             let mut guard = TOKENIZERS.write().unwrap();
-            guard.insert(name_str, TokenizerType::Kitoken(kt));
-            return 0;
+            guard.insert(name_str, TokenizerType::SentencePiece(sp));
+            0
         }
         Err(e) => {
-            println!("[tokenizer_rust] Kitoken failed: {:?}", e);
+            println!("[tokenizer_rust] ERROR: SentencePiece failed for {}: {:?}", name_str, e);
+            -2
         }
     }
-    
-    -2
 }
 
 /// Koduje tekst używając tokenizera o podanej nazwie
@@ -177,11 +176,11 @@ pub extern "C" fn tokenizer_encode_named(
                 }
             }
         }
-        TokenizerType::Kitoken(kt) => {
-            match kt.encode(text_str, true) {
-                Ok(tokens) => tokens.iter().map(|&id| id as i32).collect(),
+        TokenizerType::SentencePiece(sp) => {
+            match sp.encode(text_str) {
+                Ok(pieces) => pieces.iter().map(|p| p.id as i32).collect(),
                 Err(e) => {
-                    println!("[tokenizer_rust] ERROR encoding Kitoken: {:?}", e);
+                    println!("[tokenizer_rust] ERROR encoding SP: {:?}", e);
                     return -3;
                 }
             }
@@ -223,10 +222,10 @@ pub extern "C" fn tokenizer_decode_named(
                 Err(_) => return ptr::null_mut(),
             }
         }
-        TokenizerType::Kitoken(kt) => {
-            let tokens: Vec<u32> = ids_slice.iter().map(|&id| id as u32).collect();
-            match kt.decode(&tokens, true) {
-                Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+        TokenizerType::SentencePiece(sp) => {
+            let pieces: Vec<u32> = ids_slice.iter().map(|&id| id as u32).collect();
+            match sp.decode_piece_ids(&pieces) {
+                Ok(t) => t,
                 Err(_) => return ptr::null_mut(),
             }
         }

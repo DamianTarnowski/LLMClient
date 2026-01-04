@@ -294,6 +294,8 @@ namespace LLMClient.ViewModels
         public ICommand SetPassphraseCommand { get; }
         public ICommand LoadMoreMessagesCommand { get; }
         public ICommand ModelSettingsCommand { get; }
+        public ICommand GoToRagCommand { get; }
+        public ICommand GoToDiagnosticsCommand { get; }
 
         public bool IsConversationsEmpty => Conversations.Count == 0;
 
@@ -363,6 +365,8 @@ namespace LLMClient.ViewModels
             SetPassphraseCommand = new Command(async () => await SetDatabasePassphraseAsync());
             LoadMoreMessagesCommand = new Command(async () => await LoadMoreMessagesAsync());
             ModelSettingsCommand = new Command(async () => await GoToModelSettingsAsync());
+            GoToRagCommand = new Command(async () => await GoToRagAsync());
+            GoToDiagnosticsCommand = new Command(async () => await GoToDiagnosticsAsync());
 
             // Segment toggle commands
             EnableLocalModelCommand = new Command(async () => await SetUseLocalModelAsync(true));
@@ -755,15 +759,27 @@ namespace LLMClient.ViewModels
             {
                 try
                 {
-                    await Task.Run(() => _aiService.UpdateConfiguration(AiConfiguration.SelectedModel));
+                    var model = AiConfiguration.SelectedModel;
+                    
+                    // Walidacja - nie konfiguruj modelu bez wymaganych danych
+                    if (model.Provider != AiProvider.LocalModel)
+                    {
+                        if (string.IsNullOrEmpty(model.ApiKey) || string.IsNullOrEmpty(model.ModelId))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Model {model.Name} nie ma wymaganych danych - pomijam");
+                            return;
+                        }
+                    }
+                    
+                    await Task.Run(() => _aiService.UpdateConfiguration(model));
                     // Save the ID of the selected model
-                    Preferences.Set("LastSelectedModelId", AiConfiguration.SelectedModel.Id);
+                    Preferences.Set("LastSelectedModelId", model.Id);
                     // Powiadom o zmianie obsługi obrazków
                     OnPropertyChanged(nameof(SupportsImages));
                 }
                 catch (Exception ex)
                 {
-                    await DisplayAlertAsync("Błąd konfiguracji AI", $"Nie udało się skonfigurować wybranego modelu AI: {ex.Message}", "OK");
+                    System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Błąd konfiguracji: {ex.Message}");
                 }
             }
         }
@@ -1545,6 +1561,16 @@ namespace LLMClient.ViewModels
         private async Task GoToMemoryAsync()
         {
             await Shell.Current.GoToAsync("///MemoryPage");
+        }
+
+        private async Task GoToRagAsync()
+        {
+            await Shell.Current.GoToAsync("///RagDocumentsPage");
+        }
+
+        private async Task GoToDiagnosticsAsync()
+        {
+            await Shell.Current.GoToAsync("DebugPage");
         }
 
         private async Task GoToModelSettingsAsync()

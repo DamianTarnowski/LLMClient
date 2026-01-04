@@ -14,6 +14,7 @@
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
             <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
             <converters:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <converters:IntToProgressConverter x:Key="IntToProgressConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:InverseBoolConverter x:Key="InvertedBoolConverter" />
             <converters:CollectionEmptyConverter x:Key="CollectionEmptyConverter" />

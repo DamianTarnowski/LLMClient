@@ -36,7 +36,8 @@ namespace LLMClient
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
             builder.Services.AddSingleton<IStreamingBatchService, StreamingBatchService>();
             builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
-            builder.Services.AddSingleton<IEmbeddingService, EmbeddingService>();
+            builder.Services.AddSingleton<MultiModelEmbeddingService>();
+            builder.Services.AddSingleton<IEmbeddingService>(p => p.GetRequiredService<MultiModelEmbeddingService>());
             builder.Services.AddSingleton<IEmbeddingPipelineService, EmbeddingPipelineService>();
             // Concrete local model engines as singletons
             builder.Services.AddSingleton<RobustLocalModelService>(provider =>
@@ -264,6 +265,10 @@ namespace LLMClient
             builder.Services.AddTransient<ModelSettingsPage>();
             builder.Services.AddTransient<RagDocumentsPage>();
             builder.Services.AddTransient<DocumentAnalysisPage>();
+
+            // Debug & Diagnostics Page (dostępna dla użytkowników)
+            builder.Services.AddTransient<DebugViewModel>();
+            builder.Services.AddTransient<DebugPage>();
 
             // GGUF Model Manager Page (Windows/Android - LLamaSharp)
 #if WINDOWS || ANDROID

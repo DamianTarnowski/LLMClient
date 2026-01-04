@@ -11,6 +11,9 @@ namespace LLMClient
             
             // MLC disabled - using only ONNX and LLamaSharp (GGUF)
             Routing.RegisterRoute(nameof(GgufModelManagerPage), typeof(GgufModelManagerPage));
+            
+            // Diagnostyka i Testy - dostępna dla użytkowników
+            Routing.RegisterRoute(nameof(DebugPage), typeof(DebugPage));
         }
     }
 }

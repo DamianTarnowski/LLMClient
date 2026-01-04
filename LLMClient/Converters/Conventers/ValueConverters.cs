@@ -32,6 +32,38 @@ namespace LLMClient.Converters
         }
     }
 
+    public class IsNotNullOrEmptyConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is string str)
+            {
+                return !string.IsNullOrEmpty(str);
+            }
+            return value != null;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class IntToProgressConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is int intVal)
+                return intVal / 100.0;
+            return 0.0;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class HighlightTextConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
@@ -106,23 +138,6 @@ namespace LLMClient.Converters
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class IsNotNullOrEmptyConverter : IValueConverter
-    {
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is string str)
-            {
-                return !string.IsNullOrEmpty(str);
-            }
-            return value != null;
-        }
-
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 using LLMClient.Services;
 using LLMClient.Models;
 
@@ -10,6 +11,8 @@ namespace LLMClient.ViewModels
         private readonly ILocalModelService _localModelService;
         private readonly IAiService _aiService;
         private readonly DatabaseService _databaseService;
+        private readonly MultiModelEmbeddingService? _embeddingService;
+        private readonly IRagService? _ragService;
         
         private string _systemPrompt = "";
         private double _temperature = 0.3;
@@ -21,15 +24,31 @@ namespace LLMClient.ViewModels
         private string _currentModelName = "";
         private string _modelType = "";
         private EngineType _selectedEngine = EngineType.OnnxGenAI;
+        private EmbeddingModelInfo? _selectedEmbeddingModel;
+        private string _initialEmbeddingModelId = "";
+        private bool _embeddingModelChanged;
 
-        public ModelSettingsViewModel(ILocalModelService localModelService, IAiService aiService, DatabaseService databaseService)
+        public ModelSettingsViewModel(
+            ILocalModelService localModelService, 
+            IAiService aiService, 
+            DatabaseService databaseService,
+            MultiModelEmbeddingService? embeddingService = null,
+            IRagService? ragService = null)
         {
             _localModelService = localModelService;
             _aiService = aiService;
             _databaseService = databaseService;
+            _embeddingService = embeddingService;
+            _ragService = ragService;
             
             SaveCommand = new Command(async () => await SaveSettingsAsync());
             ResetCommand = new Command(async () => await ResetToDefaultsAsync());
+            RegenerateEmbeddingsCommand = new Command(async () => await RegenerateEmbeddingsAsync());
+            
+            // Initialize embedding models
+            AvailableEmbeddingModels = new ObservableCollection<EmbeddingModelInfo>(Models.EmbeddingModels.All);
+            _selectedEmbeddingModel = _embeddingService?.CurrentModel ?? Models.EmbeddingModels.GetDefault();
+            _initialEmbeddingModelId = _selectedEmbeddingModel.Id;
             
             // Subscribe to local model state changes
             _localModelService.StateChanged += OnLocalModelStateChanged;
@@ -137,6 +156,16 @@ namespace LLMClient.ViewModels
             }
         }
 
+        public string DeviceRAMInfo
+        {
+            get
+            {
+                var ramGB = MultiModelEmbeddingService.GetDeviceRAMInGB();
+                var recommended = MultiModelEmbeddingService.GetRecommendedModelForDevice();
+                return $" Twoje urządzenie: {ramGB}GB RAM → Rekomendowany: {recommended.DisplayName}";
+            }
+        }
+
         // Engine options: ONNX GenAI (CPU) + LLamaSharp (llama.cpp) + MediaPipe GenAI (Gemma)
 #if ANDROID || IOS
         public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp, EngineType.MediaPipeGenAI };
@@ -159,6 +188,31 @@ namespace LLMClient.ViewModels
 
         public ICommand SaveCommand { get; }
         public ICommand ResetCommand { get; }
+        public ICommand RegenerateEmbeddingsCommand { get; }
+        
+        // Embedding model selection
+        public ObservableCollection<EmbeddingModelInfo> AvailableEmbeddingModels { get; }
+        
+        public EmbeddingModelInfo? SelectedEmbeddingModel
+        {
+            get => _selectedEmbeddingModel;
+            set
+            {
+                if (_selectedEmbeddingModel != value && value != null)
+                {
+                    _selectedEmbeddingModel = value;
+                    OnPropertyChanged();
+                    EmbeddingModelChanged = _selectedEmbeddingModel.Id != _initialEmbeddingModelId;
+                }
+            }
+        }
+        
+        public bool EmbeddingModelChanged
+        {
+            get => _embeddingModelChanged;
+            set { _embeddingModelChanged = value; OnPropertyChanged(); }
+        }
+        
         public ICommand GoBackCommand { get; } = new Command(async () =>
         {
             try
@@ -338,10 +392,39 @@ namespace LLMClient.ViewModels
         
         private Task ApplySettingsToLocalModelAsync()
         {
-            // This would require adding a method to ILocalModelService to update parameters
-            // For now, the changes will take effect on next model reload
             System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] Local model settings will apply on next reload");
             return Task.CompletedTask;
+        }
+        
+        private async Task RegenerateEmbeddingsAsync()
+        {
+            if (_embeddingService == null || _selectedEmbeddingModel == null) return;
+            
+            try
+            {
+                var currentPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+                var confirm = currentPage != null && await currentPage.DisplayAlertAsync(
+                    "Regeneruj embeddingi",
+                    $"Zmiana modelu na '{_selectedEmbeddingModel.DisplayName}' wymaga regeneracji wszystkich embeddingów.\n\nCzy kontynuować?",
+                    "Tak", "Anuluj");
+                
+                if (!confirm) return;
+                
+                await _embeddingService.SelectModelAsync(_selectedEmbeddingModel.Id);
+                
+                if (_ragService != null)
+                    await _ragService.ClearAllEmbeddingsAsync();
+                
+                _initialEmbeddingModelId = _selectedEmbeddingModel.Id;
+                EmbeddingModelChanged = false;
+                
+                if (currentPage != null)
+                    await currentPage.DisplayAlertAsync("Sukces", "Model embeddingowy zmieniony. Wygeneruj embeddingi ponownie w sekcji RAG.", "OK");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] RegenerateEmbeddings error: {ex.Message}");
+            }
         }
 
         private string GetDefaultSystemPrompt()

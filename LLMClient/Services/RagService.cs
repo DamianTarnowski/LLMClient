@@ -432,4 +432,11 @@ public class RagService : IRagService
         Buffer.BlockCopy(bytes, 0, floats, 0, bytes.Length);
         return floats;
     }
+
+    public Task ClearAllEmbeddingsAsync()
+    {
+        // TODO: Implement clearing embeddings when model changes
+        // For now, users need to manually re-generate embeddings in RAG section
+        return Task.CompletedTask;
+    }
 }

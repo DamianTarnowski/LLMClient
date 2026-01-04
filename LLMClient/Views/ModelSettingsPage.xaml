@@ -152,54 +152,92 @@
                            FontSize="13"
                            TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"/>
                     
-                    <!-- Toggle: Local vs API -->
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <Border Grid.Column="0"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                                StrokeShape="RoundRectangle 12"
-                                StrokeThickness="0"
-                                Padding="16,12">
-                            <StackLayout Spacing="4">
-                                <Label Text="🏠 Lokalnie"
-                                       FontSize="14"
-                                       FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="multilingual-e5-large"
-                                       FontSize="11"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="Offline • Prywatne"
-                                       FontSize="10"
-                                       TextColor="{StaticResource Secondary}"
-                                       HorizontalOptions="Center"/>
-                            </StackLayout>
-                        </Border>
-                        
-                        <Border Grid.Column="1"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                                StrokeShape="RoundRectangle 12"
-                                StrokeThickness="0"
-                                Padding="16,12">
-                            <StackLayout Spacing="4">
-                                <Label Text="☁️ API"
-                                       FontSize="14"
-                                       FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="OpenAI, Cohere, Voyage"
-                                       FontSize="11"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="Szybkie • Wielojęzyczne"
-                                       FontSize="10"
-                                       TextColor="{StaticResource Primary}"
-                                       HorizontalOptions="Center"/>
-                            </StackLayout>
-                        </Border>
-                    </Grid>
+                    <!-- Wybór modelu embeddingowego -->
+                    <Label Text="Model lokalny:"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           Margin="0,4,0,0"/>
                     
-                    <Label Text="💡 Domyślnie używane są lokalne embeddingi (wymagają pobrania modelu ~1.2GB)"
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+                            StrokeShape="RoundRectangle 12"
+                            StrokeThickness="0"
+                            Padding="14,4">
+                        <Picker ItemsSource="{Binding AvailableEmbeddingModels}"
+                                ItemDisplayBinding="{Binding DisplayName}"
+                                SelectedItem="{Binding SelectedEmbeddingModel}"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                                TitleColor="{StaticResource Gray500}"
+                                FontSize="15"/>
+                    </Border>
+                    
+                    <!-- Info o wybranym modelu -->
+                    <Border BackgroundColor="{AppThemeBinding Light=#F0FDF4, Dark=#14532D}"
+                            StrokeShape="RoundRectangle 10"
+                            StrokeThickness="0"
+                            Padding="12,10"
+                            IsVisible="{Binding SelectedEmbeddingModel, Converter={StaticResource IsNotNullConverter}}">
+                        <StackLayout Spacing="6">
+                            <Label Text="{Binding SelectedEmbeddingModel.Description}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray200}}"/>
+                            
+                            <!-- Wskaźniki jakości i szybkości -->
+                            <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="8" RowSpacing="4">
+                                <Label Grid.Column="0" Text="Jakość:" FontSize="11" TextColor="{StaticResource Gray500}" VerticalOptions="Center"/>
+                                <ProgressBar Grid.Column="1" Progress="{Binding SelectedEmbeddingModel.QualityScore, Converter={StaticResource IntToProgressConverter}}" 
+                                             ProgressColor="{StaticResource Primary}" HeightRequest="6" VerticalOptions="Center"/>
+                                <Label Grid.Column="2" Text="Szybkość:" FontSize="11" TextColor="{StaticResource Gray500}" VerticalOptions="Center"/>
+                                <ProgressBar Grid.Column="3" Progress="{Binding SelectedEmbeddingModel.SpeedScore, Converter={StaticResource IntToProgressConverter}}" 
+                                             ProgressColor="{StaticResource Secondary}" HeightRequest="6" VerticalOptions="Center"/>
+                            </Grid>
+                            
+                            <HorizontalStackLayout Spacing="16">
+                                <Label Text="{Binding SelectedEmbeddingModel.Dimensions, StringFormat='{0} wymiarów'}"
+                                       FontSize="11"
+                                       TextColor="{StaticResource Secondary}"/>
+                                <Label Text="{Binding SelectedEmbeddingModel.SizeInMB, StringFormat='~{0} MB'}"
+                                       FontSize="11"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"/>
+                                <Label Text="{Binding SelectedEmbeddingModel.MinRAMGB, StringFormat='Min {0}GB RAM'}"
+                                       FontSize="11"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"/>
+                            </HorizontalStackLayout>
+                        </StackLayout>
+                    </Border>
+                    
+                    <!-- Info o RAM urządzenia -->
+                    <Label Text="{Binding DeviceRAMInfo}"
+                           FontSize="11"
+                           TextColor="{StaticResource Gray500}"
+                           IsVisible="{Binding DeviceRAMInfo, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+                    
+                    <!-- Ostrzeżenie o zmianie modelu -->
+                    <Border BackgroundColor="{AppThemeBinding Light=#FEF3C7, Dark=#78350F}"
+                            StrokeShape="RoundRectangle 10"
+                            StrokeThickness="0"
+                            Padding="12,10"
+                            IsVisible="{Binding EmbeddingModelChanged}">
+                        <StackLayout Spacing="4">
+                            <Label Text="⚠️ Zmiana modelu wymaga ponownego wygenerowania embeddingów"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#92400E, Dark=#FCD34D}"/>
+                            <Label Text="Istniejące embeddingi dokumentów RAG staną się niekompatybilne."
+                                   FontSize="11"
+                                   TextColor="{AppThemeBinding Light=#B45309, Dark=#FDE68A}"/>
+                            <Button Text="🔄 Regeneruj embeddingi"
+                                    Command="{Binding RegenerateEmbeddingsCommand}"
+                                    BackgroundColor="{StaticResource Primary}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    HeightRequest="36"
+                                    FontSize="12"
+                                    Margin="0,8,0,0"/>
+                        </StackLayout>
+                    </Border>
+                    
+                    <Label Text="💡 EmbeddingGemma jest szybszy i lżejszy (idealny dla mobile). E5-Large jest dokładniejszy."
                            FontSize="11"
                            TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
                            HorizontalTextAlignment="Center"/>
