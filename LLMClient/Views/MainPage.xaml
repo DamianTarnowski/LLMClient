@@ -461,9 +461,9 @@
                         <Picker ItemsSource="{Binding AiConfiguration.Models}"
                                 SelectedItem="{Binding AiConfiguration.SelectedModel}"
                                 ItemDisplayBinding="{Binding Name}"
-                                FontSize="12"
-                                WidthRequest="100"
-                                HeightRequest="36" />
+                                FontSize="14"
+                                WidthRequest="180"
+                                HeightRequest="40" />
                     </Border>
 
                     <!-- Settings -->
@@ -585,7 +585,7 @@
 
                                 <Grid Padding="0,4">
                                     <!-- User Message -->
-                                    <Border BackgroundColor="{StaticResource Primary}"
+                                    <Border BackgroundColor="{AppThemeBinding Light=#5B4FCF, Dark=#6C5FE0}"
                                             StrokeShape="RoundRectangle 20,20,4,20"
                                             StrokeThickness="0"
                                             Padding="16,12"
