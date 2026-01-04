@@ -66,6 +66,7 @@
 
 	<ItemGroup>
 		<!-- Override transitive Newtonsoft.Json 9.0.1 with secure version -->
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Indiko.Maui.Controls.Markdown" Version="1.3.9" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.0" />
@@ -87,6 +88,7 @@
 		<!-- LLamaSharp for llama.cpp backend (Windows + Android) -->
 		<!-- v0.25.0 has official Android ARM64 support with libllama.so -->
 		<PackageReference Include="LLamaSharp" Version="0.25.0" Condition="$(TargetFramework.Contains('windows')) OR $(TargetFramework.Contains('android'))" />
+		<PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
 		
 		<!-- MediaPipe GenAI for Google AI Edge LLM inference (Gemma-3n, multimodal) -->
 		<PackageReference Include="Xamarin.Google.MediaPipe.Tasks.GenAI" Version="0.10.29" Condition="$(TargetFramework.Contains('android'))" />

@@ -183,6 +183,12 @@ namespace LLMClient
                 return new SearchService(database, embedding!);
             });
             builder.Services.AddSingleton<IExportService, ExportService>();
+            builder.Services.AddSingleton<IRagService>(provider =>
+            {
+                var database = provider.GetRequiredService<DatabaseService>();
+                var embedding = provider.GetService<IEmbeddingService>();
+                return new RagService(database, embedding);
+            });
 
             // Rejestracja ViewModels
             builder.Services.AddTransient<MainPageViewModel>(provider =>

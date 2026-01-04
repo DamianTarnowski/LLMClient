@@ -66,6 +66,12 @@ namespace LLMClient.Services
                 await _database.CreateTableAsync<LLMClient.ViewModels.ModelSettings>();
                 System.Diagnostics.Debug.WriteLine("DatabaseService: ModelSettings table created/verified");
                 
+                await _database.CreateTableAsync<LLMClient.Models.RagDocument>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: RagDocument table created/verified");
+                
+                await _database.CreateTableAsync<LLMClient.Models.RagChunk>();
+                System.Diagnostics.Debug.WriteLine("DatabaseService: RagChunk table created/verified");
+                
                 _migrationCompleted = true;
                 System.Diagnostics.Debug.WriteLine("DatabaseService: Initialization completed successfully");
             }
@@ -1041,6 +1047,61 @@ namespace LLMClient.Services
                 System.Diagnostics.Debug.WriteLine($"[DatabaseService] Error saving model settings: {ex.Message}");
                 return false;
             }
+        }
+
+        // ==================== RAG Document Methods ====================
+
+        public async Task SaveRagDocumentAsync(RagDocument document)
+        {
+            await EnsureDatabaseInitializedAsync();
+            await _database!.InsertAsync(document);
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Saved RAG document: {document.FileName}, Id={document.Id}");
+        }
+
+        public async Task<List<RagDocument>> GetRagDocumentsAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database!.Table<RagDocument>().ToListAsync();
+        }
+
+        public async Task DeleteRagDocumentAsync(int documentId)
+        {
+            await EnsureDatabaseInitializedAsync();
+            await _database!.Table<RagChunk>().DeleteAsync(c => c.DocumentId == documentId);
+            await _database!.DeleteAsync<RagDocument>(documentId);
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Deleted RAG document and chunks: DocumentId={documentId}");
+        }
+
+        public async Task SaveRagChunksAsync(int documentId, List<string> chunks)
+        {
+            await EnsureDatabaseInitializedAsync();
+            var ragChunks = chunks.Select((content, index) => new RagChunk
+            {
+                DocumentId = documentId,
+                ChunkIndex = index,
+                Content = content
+            }).ToList();
+
+            await _database!.InsertAllAsync(ragChunks);
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] Saved {ragChunks.Count} RAG chunks for DocumentId={documentId}");
+        }
+
+        public async Task<List<RagChunk>> GetAllRagChunksAsync()
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database!.Table<RagChunk>().ToListAsync();
+        }
+
+        public async Task<List<RagChunk>> GetRagChunksByDocumentAsync(int documentId)
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database!.Table<RagChunk>().Where(c => c.DocumentId == documentId).ToListAsync();
+        }
+
+        public async Task UpdateRagChunkEmbeddingAsync(RagChunk chunk)
+        {
+            await EnsureDatabaseInitializedAsync();
+            await _database!.UpdateAsync(chunk);
         }
     }
 }
