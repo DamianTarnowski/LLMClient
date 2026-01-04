@@ -19,6 +19,7 @@
             <converters:CollectionEmptyConverter x:Key="CollectionEmptyConverter" />
             <converters:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter" />
             <converters:BoolToThemeIconConverter x:Key="BoolToThemeIconConverter" />
+            <converters:BoolToEmbeddingStatusConverter x:Key="BoolToEmbeddingStatusConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

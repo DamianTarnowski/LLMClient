@@ -284,6 +284,23 @@ namespace LLMClient.Converters
         }
     }
 
+    public class BoolToEmbeddingStatusConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is bool hasEmbeddings)
+            {
+                return hasEmbeddings ? "✓ Embeddingi" : "⏳ Oczekuje";
+            }
+            return "⏳ Oczekuje";
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class CategoryToColorConverter : IValueConverter
     {
         private static readonly Dictionary<string, string> CategoryColors = new()

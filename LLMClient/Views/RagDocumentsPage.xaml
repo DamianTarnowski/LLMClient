@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
+             xmlns:models="clr-namespace:LLMClient.Models"
+             x:Class="LLMClient.Views.RagDocumentsPage"
+             x:DataType="viewmodels:RagViewModel"
+             Title="Dokumenty RAG"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="16">
+        
+        <!-- Header with actions -->
+        <HorizontalStackLayout Grid.Row="0" Spacing="12" Margin="0,0,0,16">
+            <Button Text="Dodaj dokumenty"
+                    Command="{Binding AddDocumentCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Padding="16,8"/>
+            
+            <Button Text="Generuj embeddingi"
+                    Command="{Binding GenerateEmbeddingsCommand}"
+                    IsEnabled="{Binding CanProcess}"
+                    BackgroundColor="{StaticResource Secondary}"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Padding="16,8"/>
+            
+            <Button Text="Odśwież"
+                    Command="{Binding LoadDocumentsCommand}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
+                    CornerRadius="8"
+                    Padding="16,8"/>
+        </HorizontalStackLayout>
+
+        <!-- Pending embeddings indicator -->
+        <Frame Grid.Row="0" 
+               HorizontalOptions="End"
+               BackgroundColor="{StaticResource Warning}"
+               CornerRadius="12"
+               Padding="12,6"
+               IsVisible="{Binding HasPendingEmbeddings}">
+            <Label Text="{Binding PendingEmbeddings, StringFormat='{0} oczekujących'}"
+                   TextColor="White"
+                   FontSize="12"/>
+        </Frame>
+
+        <!-- Documents list -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Documents}"
+                        SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12">
+                    <Label Text="📄" FontSize="48" HorizontalOptions="Center"/>
+                    <Label Text="Brak dokumentów"
+                           FontSize="18"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Dodaj dokumenty PDF, DOCX lub TXT"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:RagDocument">
+                    <Frame Margin="0,4" 
+                           Padding="12"
+                           CornerRadius="8"
+                           BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                           BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}">
+                        <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto">
+                            
+                            <!-- File name -->
+                            <Label Grid.Column="0" Grid.Row="0"
+                                   Text="{Binding FileName}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"/>
+                            
+                            <!-- Metadata -->
+                            <HorizontalStackLayout Grid.Column="0" Grid.Row="1" Spacing="16">
+                                <Label Text="{Binding ChunkCount, StringFormat='{0} chunków'}"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"/>
+                                <Label Text="{Binding CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"/>
+                            </HorizontalStackLayout>
+                            
+                            <!-- Embedding status -->
+                            <Frame Grid.Column="1" Grid.RowSpan="2"
+                                   VerticalOptions="Center"
+                                   Padding="8,4"
+                                   CornerRadius="4"
+                                   BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+                                <Label Text="{Binding HasEmbeddings, Converter={StaticResource BoolToEmbeddingStatusConverter}}"
+                                       FontSize="11"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"/>
+                            </Frame>
+                            
+                            <!-- Delete button -->
+                            <Button Grid.Column="2" Grid.RowSpan="2"
+                                    Text="🗑️"
+                                    VerticalOptions="Center"
+                                    BackgroundColor="Transparent"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:RagViewModel}}, Path=DeleteDocumentCommand}"
+                                    CommandParameter="{Binding .}"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Progress bar -->
+        <ProgressBar Grid.Row="2"
+                     Progress="{Binding IngestionProgress}"
+                     IsVisible="{Binding IsProcessing}"
+                     ProgressColor="{StaticResource Primary}"
+                     Margin="0,8"/>
+
+        <!-- Status bar -->
+        <Frame Grid.Row="3"
+               Padding="12,8"
+               CornerRadius="8"
+               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="{Binding StatusMessage}"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                       VerticalOptions="Center"/>
+                <ActivityIndicator Grid.Column="1"
+                                   IsRunning="{Binding IsLoading}"
+                                   IsVisible="{Binding IsLoading}"
+                                   Color="{StaticResource Primary}"
+                                   HeightRequest="20"
+                                   WidthRequest="20"/>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>

@@ -27,6 +27,11 @@
         ContentTemplate="{DataTemplate views:ModelSettingsPage}"
         Route="ModelSettingsPage" />
 
+    <ShellContent
+        Title="RAG Documents"
+        ContentTemplate="{DataTemplate views:RagDocumentsPage}"
+        Route="RagDocumentsPage" />
+
     <!-- GGUF Model Manager - LLamaSharp (Gemma 3, Qwen3, Phi-3) -->
     <ShellContent
         Title="GGUF Models"
