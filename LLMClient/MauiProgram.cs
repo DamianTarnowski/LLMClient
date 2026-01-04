@@ -189,6 +189,11 @@ namespace LLMClient
                 var embedding = provider.GetService<IEmbeddingService>();
                 return new RagService(database, embedding);
             });
+            builder.Services.AddSingleton<IDocumentAnalysisService>(provider =>
+            {
+                var aiService = provider.GetRequiredService<IAiService>();
+                return new DocumentAnalysisService(aiService);
+            });
 
             // Rejestracja ViewModels
             builder.Services.AddTransient<MainPageViewModel>(provider =>
