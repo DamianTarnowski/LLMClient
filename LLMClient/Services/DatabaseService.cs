@@ -739,6 +739,65 @@ namespace LLMClient.Services
         }
 
         /// <summary>
+        /// Wyszukiwanie tekstowe we wszystkich konwersacjach (case-insensitive LIKE)
+        /// </summary>
+        public async Task<List<(Message message, float matchScore, string conversationTitle)>> TextSearchAcrossConversationsAsync(
+            string searchQuery,
+            int maxResults = 20)
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            if (string.IsNullOrWhiteSpace(searchQuery))
+                return new List<(Message, float, string)>();
+
+            var escapedQuery = searchQuery.Replace("'", "''");
+            
+            var query = $@"
+                SELECT m.Id, m.Content, m.IsUser, m.Timestamp, m.ConversationId, m.Embedding, m.EmbeddingVersion, m.ImagePath, m.ImageBase64, c.Title as ConversationTitle 
+                FROM Message m 
+                INNER JOIN Conversation c ON m.ConversationId = c.Id 
+                WHERE m.Content LIKE '%{escapedQuery}%' COLLATE NOCASE
+                ORDER BY m.Timestamp DESC
+                LIMIT {maxResults * 2}
+            ";
+            
+            var messagesWithConversations = await _database.QueryAsync<MessageWithConversationTitle>(query);
+            var results = new List<(Message message, float matchScore, string conversationTitle)>();
+
+            foreach (var row in messagesWithConversations)
+            {
+                var message = (Message)row;
+                var conversationTitle = row.ConversationTitle ?? "Bez tytułu";
+                
+                var content = message.Content?.ToLowerInvariant() ?? "";
+                var queryLower = searchQuery.ToLowerInvariant();
+                
+                int occurrences = 0;
+                int index = 0;
+                while ((index = content.IndexOf(queryLower, index, StringComparison.Ordinal)) != -1)
+                {
+                    occurrences++;
+                    index += queryLower.Length;
+                }
+                
+                float matchScore = Math.Min(1f, occurrences * 0.3f + 0.4f);
+                
+                if (content.Contains($" {queryLower} ") || content.StartsWith($"{queryLower} ") || content.EndsWith($" {queryLower}"))
+                    matchScore = Math.Min(1f, matchScore + 0.2f);
+                
+                results.Add((message, matchScore, conversationTitle));
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[DatabaseService] TextSearch query='{searchQuery}', found={results.Count}");
+
+            return results
+                .OrderByDescending(r => r.matchScore)
+                .ThenByDescending(r => r.message.Timestamp)
+                .Take(maxResults)
+                .ToList();
+        }
+
+        /// <summary>
         /// Zlicza wiadomości z embeddingami
         /// </summary>
         public async Task<(int withEmbeddings, int total)> GetEmbeddingStatsAsync()

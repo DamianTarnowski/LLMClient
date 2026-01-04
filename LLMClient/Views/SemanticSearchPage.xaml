@@ -5,7 +5,7 @@
              xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
              xmlns:converters="clr-namespace:LLMClient.Converters"
              x:DataType="viewmodels:SemanticSearchViewModel"
-             Title="Wyszukiwanie Semantyczne"
+             Title="Wyszukiwanie"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ContentPage.Resources>
@@ -39,7 +39,7 @@
                 <Shadow Brush="{StaticResource Gray400}" Offset="0,2" Radius="8" Opacity="0.1" />
             </Border.Shadow>
 
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
 
                 <!-- Search Input -->
                 <Border Grid.Row="0" Grid.ColumnSpan="2"
@@ -56,8 +56,37 @@
                            FontSize="15"/>
                 </Border>
 
+                <!-- Search Mode Selector -->
+                <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*" Margin="0,0,0,12" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Text="Tekstowe"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SetTextModeCommand}"
+                            Clicked="OnTextModeClicked"
+                            BackgroundColor="{Binding IsTextMode, Converter={StaticResource BoolToColorConverter}}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="36"
+                            FontSize="12"/>
+                    <Button Grid.Column="1"
+                            Text="Hybrydowe"
+                            Clicked="OnHybridModeClicked"
+                            BackgroundColor="{Binding IsHybridMode, Converter={StaticResource BoolToColorConverter}}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="36"
+                            FontSize="12"/>
+                    <Button Grid.Column="2"
+                            Text="Wektorowe"
+                            Clicked="OnVectorModeClicked"
+                            BackgroundColor="{Binding IsVectorMode, Converter={StaticResource BoolToColorConverter}}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="36"
+                            FontSize="12"/>
+                </Grid>
+
                 <!-- Search Controls -->
-                <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,12" ColumnSpacing="8">
+                <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,12" ColumnSpacing="8">
                     <Button Grid.Column="0"
                             Text="Szukaj"
                             Command="{Binding SearchCommand}"
@@ -71,6 +100,11 @@
                             <FontImageSource FontFamily="MaterialSymbols" Glyph="&#xe8b6;" Color="White" Size="18" />
                         </Button.ImageSource>
                     </Button>
+                    <Label Grid.Column="1"
+                           Text="{Binding SearchModeText, StringFormat='Tryb: {0}'}"
+                           TextColor="{StaticResource Gray500}"
+                           VerticalOptions="Center"
+                           FontSize="12"/>
                     <Button Grid.Column="2"
                             Text="Pobierz model"
                             Command="{Binding DownloadModelCommand}"
@@ -91,31 +125,52 @@
                 </Grid>
 
                 <!-- Settings -->
-                <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,8" ColumnSpacing="12">
-                    <Label Grid.Column="0" Text="Podobieństwo:"
+                <Grid Grid.Row="3" Grid.ColumnSpan="2" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,8" ColumnSpacing="12" RowSpacing="8">
+                    <Label Grid.Row="0" Grid.Column="0" Text="Podobieństwo:"
                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
-                           VerticalOptions="Center" FontSize="13"/>
-                    <Slider Grid.Column="1"
+                           VerticalOptions="Center" FontSize="13"
+                           IsVisible="{Binding ShowVectorSettings}"/>
+                    <Slider Grid.Row="0" Grid.Column="1"
                             Value="{Binding MinSimilarity}"
                             Minimum="0.1"
                             Maximum="0.9"
                             ThumbColor="{StaticResource Primary}"
                             MinimumTrackColor="{StaticResource Primary}"
-                            VerticalOptions="Center"/>
-
-                    <Label Grid.Column="2" Text="Max:"
+                            VerticalOptions="Center"
+                            IsVisible="{Binding ShowVectorSettings}"/>
+                    <Label Grid.Row="0" Grid.Column="2" Text="Max:"
                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                            VerticalOptions="Center" FontSize="13"/>
-                    <Stepper Grid.Column="3"
+                    <Stepper Grid.Row="0" Grid.Column="3"
                              Value="{Binding MaxResults}"
                              Minimum="5"
                              Maximum="50"
                              Increment="5"
                              VerticalOptions="Center"/>
+
+                    <!-- Hybrid Weight Settings -->
+                    <Label Grid.Row="1" Grid.Column="0" 
+                           Text="{Binding TextWeightPercentage, StringFormat='Tekst: {0}'}"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           VerticalOptions="Center" FontSize="12"
+                           IsVisible="{Binding IsHybridMode}"/>
+                    <Slider Grid.Row="1" Grid.Column="1"
+                            Value="{Binding VectorWeight}"
+                            Minimum="0.1"
+                            Maximum="0.9"
+                            ThumbColor="{StaticResource Secondary}"
+                            MinimumTrackColor="{StaticResource Secondary}"
+                            VerticalOptions="Center"
+                            IsVisible="{Binding IsHybridMode}"/>
+                    <Label Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2"
+                           Text="{Binding VectorWeightPercentage, StringFormat='Wektor: {0}'}"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           VerticalOptions="Center" FontSize="12"
+                           IsVisible="{Binding IsHybridMode}"/>
                 </Grid>
 
                 <!-- Status -->
-                <Label Grid.Row="3" Grid.ColumnSpan="2"
+                <Label Grid.Row="4" Grid.ColumnSpan="2"
                        Text="{Binding StatusMessage}"
                        FontSize="12"
                        TextColor="{StaticResource Gray500}"/>

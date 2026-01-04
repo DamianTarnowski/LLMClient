@@ -88,6 +88,8 @@ namespace LLMClient.ViewModels
         private string _statusMessage = "Gotowy do wyszukiwania";
         private float _minSimilarity = 0.3f;
         private int _maxResults = 20;
+        private SearchMode _searchMode = SearchMode.Hybrid;
+        private float _vectorWeight = 0.7f;
         private bool _isGeneratingEmbeddings;
         private string _embeddingProgress = string.Empty;
         private int _totalMessages;
@@ -167,7 +169,54 @@ namespace LLMClient.ViewModels
         }
 
         public string MinSimilarityPercentage => $"{MinSimilarity * 100:F0}%";
-        public bool CanSearch => IsEmbeddingInitialized && !IsSearching;
+
+        public SearchMode SelectedSearchMode
+        {
+            get => _searchMode;
+            set
+            {
+                if (_searchMode != value)
+                {
+                    _searchMode = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SearchModeText));
+                    OnPropertyChanged(nameof(IsVectorMode));
+                    OnPropertyChanged(nameof(IsTextMode));
+                    OnPropertyChanged(nameof(IsHybridMode));
+                    OnPropertyChanged(nameof(ShowVectorSettings));
+                    OnPropertyChanged(nameof(CanSearch));
+                }
+            }
+        }
+
+        public float VectorWeight
+        {
+            get => _vectorWeight;
+            set
+            {
+                _vectorWeight = Math.Clamp(value, 0f, 1f);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(VectorWeightPercentage));
+                OnPropertyChanged(nameof(TextWeightPercentage));
+            }
+        }
+
+        public string SearchModeText => SelectedSearchMode switch
+        {
+            SearchMode.Vector => "Wektorowe",
+            SearchMode.Text => "Tekstowe",
+            SearchMode.Hybrid => "Hybrydowe",
+            _ => "Hybrydowe"
+        };
+
+        public bool IsVectorMode => SelectedSearchMode == SearchMode.Vector;
+        public bool IsTextMode => SelectedSearchMode == SearchMode.Text;
+        public bool IsHybridMode => SelectedSearchMode == SearchMode.Hybrid;
+        public bool ShowVectorSettings => SelectedSearchMode != SearchMode.Text;
+        public string VectorWeightPercentage => $"{VectorWeight * 100:F0}%";
+        public string TextWeightPercentage => $"{(1f - VectorWeight) * 100:F0}%";
+
+        public bool CanSearch => (SelectedSearchMode == SearchMode.Text || IsEmbeddingInitialized) && !IsSearching;
 
         public bool IsGeneratingEmbeddings
         {
@@ -314,11 +363,6 @@ namespace LLMClient.ViewModels
             }
         }
 
-        private bool CanPerformSearch()
-        {
-            return IsEmbeddingInitialized && !IsSearching && !string.IsNullOrWhiteSpace(SearchQuery);
-        }
-
         private void CheckEmbeddingServiceStatus()
         {
             if (_embeddingService != null)
@@ -352,7 +396,6 @@ namespace LLMClient.ViewModels
 
             _isInitializing = true;
 
-            // Zapytaj użytkownika, czy chce pobrać duży model, jeśli nie jest jeszcze zainicjalizowany
             if (!await _embeddingService.IsModelDownloadedAsync())
             {
                 bool proceed = await (PageHelper.CurrentPage?.DisplayAlertAsync(
@@ -378,11 +421,9 @@ namespace LLMClient.ViewModels
                 if (IsEmbeddingInitialized)
                 {
                     StatusMessage = "✅ Model embeddingów zainicjalizowany";
-                    // Check embedding statistics
                     var (withEmbeddings, total) = await _databaseService.GetEmbeddingStatsAsync();
                     StatusMessage += $" | Wiadomości z embeddingami: {withEmbeddings}/{total}";
 
-                    // Automatycznie generuj embeddingi jeśli są braki
                     if (withEmbeddings < total)
                     {
                         StatusMessage += " | Generowanie embeddingów dla brakujących wiadomości...";
@@ -405,58 +446,144 @@ namespace LLMClient.ViewModels
             }
         }
 
+        private bool CanPerformSearch()
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery) || IsSearching)
+                return false;
+            
+            // Tryb tekstowy nie wymaga embeddingów
+            if (SelectedSearchMode == SearchMode.Text)
+                return true;
+            
+            return IsEmbeddingInitialized;
+        }
+
         private async Task SearchAsync()
         {
-            _logger?.LogInformation("Search button clicked | query='{Query}'", SearchQuery);
+            _logger?.LogInformation("Search button clicked | query='{Query}' | mode={Mode}", SearchQuery, SelectedSearchMode);
             if (!CanPerformSearch()) return;
 
             IsSearching = true;
-            StatusMessage = "🔍 Wyszukiwanie...";
+            var modeLabel = SearchModeText;
+            StatusMessage = $"🔍 Wyszukiwanie ({modeLabel})...";
             SearchResults.Clear();
 
             try
             {
-                // Generate embedding for search query
-                var queryEmbedding = await _embeddingService!.GenerateEmbeddingAsync(SearchQuery, true);
-                if (queryEmbedding == null)
+                List<(Message message, float score, string conversationTitle)> results;
+
+                switch (SelectedSearchMode)
                 {
-                    _logger?.LogWarning("Failed to generate embedding for query");
-                    StatusMessage = "❌ Nie udało się wygenerować embeddingu dla zapytania";
-                    return;
+                    case SearchMode.Text:
+                        var textResults = await _databaseService.TextSearchAcrossConversationsAsync(SearchQuery, MaxResults);
+                        results = textResults.Select(r => (r.message, r.matchScore, r.conversationTitle)).ToList();
+                        break;
+
+                    case SearchMode.Hybrid:
+                        var hybridResults = await PerformHybridSearchAsync();
+                        results = hybridResults;
+                        break;
+
+                    case SearchMode.Vector:
+                    default:
+                        var queryEmbedding = await _embeddingService!.GenerateEmbeddingAsync(SearchQuery, true);
+                        if (queryEmbedding == null)
+                        {
+                            _logger?.LogWarning("Failed to generate embedding for query");
+                            StatusMessage = "❌ Nie udało się wygenerować embeddingu dla zapytania";
+                            return;
+                        }
+                        var vectorResults = await _databaseService.SemanticSearchAcrossConversationsAsync(
+                            queryEmbedding, MinSimilarity, MaxResults);
+                        results = vectorResults.Select(r => (r.message, r.similarity, r.conversationTitle)).ToList();
+                        break;
                 }
 
-                // Perform semantic search
-                var results = await _databaseService.SemanticSearchAcrossConversationsAsync(
-                    queryEmbedding, MinSimilarity, MaxResults);
+                _logger?.LogInformation("{Mode} search returned {Count} results", SelectedSearchMode, results.Count);
 
-                _logger?.LogInformation("Semantic search returned {Count} raw results", results.Count);
-
-                // Convert to ViewModel results
-                foreach (var (message, similarity, conversationTitle) in results)
+                foreach (var (message, score, conversationTitle) in results)
                 {
                     SearchResults.Add(new SemanticSearchResult
                     {
                         Message = message,
-                        SimilarityScore = similarity,
+                        SimilarityScore = score,
                         ConversationTitle = conversationTitle,
                         MessageTimestamp = message.Timestamp
                     });
                 }
 
                 StatusMessage = SearchResults.Count > 0 
-                    ? $"✅ Znaleziono {SearchResults.Count} wyników"
-                    : "ℹ️ Nie znaleziono pasujących wiadomości";
-                _logger?.LogInformation("Filtered results count (after similarity threshold): {Count}", SearchResults.Count);
+                    ? $"✅ Znaleziono {SearchResults.Count} wyników ({modeLabel})"
+                    : $"ℹ️ Nie znaleziono pasujących wiadomości ({modeLabel})";
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error during semantic search");
-                StatusMessage = $"❌ Błąd wyszukiwania: {_errorHandlingService.GetUserFriendlyErrorMessage(ex, "semantic search")}";
+                _logger?.LogError(ex, "Error during {Mode} search", SelectedSearchMode);
+                StatusMessage = $"❌ Błąd wyszukiwania: {_errorHandlingService.GetUserFriendlyErrorMessage(ex, "search")}";
             }
             finally
             {
                 IsSearching = false;
             }
+        }
+
+        private async Task<List<(Message message, float score, string conversationTitle)>> PerformHybridSearchAsync()
+        {
+            var textWeight = 1f - VectorWeight;
+            
+            // Pobierz wyniki tekstowe
+            var textResults = await _databaseService.TextSearchAcrossConversationsAsync(SearchQuery, MaxResults * 2);
+            
+            // Pobierz wyniki wektorowe (jeśli embedding service jest dostępny)
+            List<(Message message, float similarity, string conversationTitle)> vectorResults = new();
+            if (_embeddingService != null && _embeddingService.IsInitialized)
+            {
+                var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(SearchQuery, true);
+                if (queryEmbedding != null)
+                {
+                    vectorResults = await _databaseService.SemanticSearchAcrossConversationsAsync(
+                        queryEmbedding, MinSimilarity, MaxResults * 2);
+                }
+            }
+
+            // Połącz wyniki - grupuj po MessageId
+            var combinedScores = new Dictionary<int, (Message message, string title, float textScore, float vectorScore)>();
+
+            foreach (var r in textResults)
+            {
+                var msgId = r.message.Id;
+                if (!combinedScores.ContainsKey(msgId))
+                    combinedScores[msgId] = (r.message, r.conversationTitle, r.matchScore, 0f);
+                else
+                {
+                    var existing = combinedScores[msgId];
+                    combinedScores[msgId] = (existing.message, existing.title, r.matchScore, existing.vectorScore);
+                }
+            }
+
+            foreach (var r in vectorResults)
+            {
+                var msgId = r.message.Id;
+                if (!combinedScores.ContainsKey(msgId))
+                    combinedScores[msgId] = (r.message, r.conversationTitle, 0f, r.similarity);
+                else
+                {
+                    var existing = combinedScores[msgId];
+                    combinedScores[msgId] = (existing.message, existing.title, existing.textScore, r.similarity);
+                }
+            }
+
+            // Oblicz końcowy score hybrydowy
+            return combinedScores.Values
+                .Select(x =>
+                {
+                    var hybridScore = (x.textScore * textWeight) + (x.vectorScore * VectorWeight);
+                    return (x.message, hybridScore, x.title);
+                })
+                .Where(r => r.hybridScore >= MinSimilarity * 0.5f)
+                .OrderByDescending(r => r.hybridScore)
+                .Take(MaxResults)
+                .ToList();
         }
 
         private void ClearResults()
