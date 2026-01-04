@@ -9,14 +9,14 @@ namespace LLMClient.Services;
 
 public class RagService : IRagService
 {
-    private readonly DatabaseService _databaseService;
+    private readonly IDatabaseService _databaseService;
     private readonly IEmbeddingService? _embeddingService;
 
     private const int MaxChunkChars = 1500;
     private const int ChunkOverlapChars = 200;
     private const int MinChunkChars = 100;
 
-    public RagService(DatabaseService databaseService, IEmbeddingService? embeddingService = null)
+    public RagService(IDatabaseService databaseService, IEmbeddingService? embeddingService = null)
     {
         _databaseService = databaseService;
         _embeddingService = embeddingService;

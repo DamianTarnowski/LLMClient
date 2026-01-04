@@ -9,7 +9,7 @@ using System.Text;
 
 namespace LLMClient.Services
 {
-    public class DatabaseService
+    public class DatabaseService : IDatabaseService
     {
         private SQLiteAsyncConnection? _database;
         private readonly ISecureApiKeyService _secureApiKeyService;

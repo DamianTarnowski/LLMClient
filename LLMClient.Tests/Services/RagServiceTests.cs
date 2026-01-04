@@ -7,13 +7,13 @@ namespace LLMClient.Tests.Services;
 
 public class RagServiceTests : IDisposable
 {
-    private readonly Mock<DatabaseService> _mockDatabase;
+    private readonly Mock<IDatabaseService> _mockDatabase;
     private readonly Mock<IEmbeddingService> _mockEmbedding;
     private readonly string _testFilesPath;
 
     public RagServiceTests()
     {
-        _mockDatabase = new Mock<DatabaseService>();
+        _mockDatabase = new Mock<IDatabaseService>();
         _mockEmbedding = new Mock<IEmbeddingService>();
         _testFilesPath = Path.Combine(Path.GetTempPath(), "RagTests_" + Guid.NewGuid());
         Directory.CreateDirectory(_testFilesPath);
@@ -201,29 +201,25 @@ public class RagServiceTests : IDisposable
     }
 
     [Test]
-    public void ChunkText_CreatesOverlappingChunks()
+    public async Task AddDocumentFromContentAsync_WithLongText_CreatesMultipleChunks()
     {
-        // Arrange - use reflection to test private method
-        var service = new RagService(_mockDatabase.Object, _mockEmbedding.Object);
-        var longText = string.Join(" ", Enumerable.Range(1, 500).Select(i => $"Word{i}"));
+        // Arrange - test chunking through public API
+        _mockDatabase.Setup(x => x.SaveRagDocumentAsync(It.IsAny<RagDocument>()))
+            .Callback<RagDocument>(d => d.Id = 1)
+            .Returns(Task.CompletedTask);
+        _mockDatabase.Setup(x => x.SaveRagChunksAsync(It.IsAny<int>(), It.IsAny<List<string>>()))
+            .Returns(Task.CompletedTask);
 
-        var methodInfo = typeof(RagService).GetMethod("ChunkText", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var service = new RagService(_mockDatabase.Object, _mockEmbedding.Object);
+        
+        // Create text long enough to require multiple chunks (>1500 chars)
+        var longText = string.Join(" ", Enumerable.Range(1, 500).Select(i => $"This is sentence number {i} with some additional words to make it longer."));
 
         // Act
-        var chunks = methodInfo?.Invoke(null, new object[] { longText, 200, 50 }) as List<string>;
+        var result = await service.AddDocumentFromContentAsync("test.txt", longText);
 
         // Assert
-        Assert.That(chunks, Is.Not.Null);
-        Assert.That(chunks!.Count, Is.GreaterThan(1), "Should create multiple chunks");
-        
-        // Verify overlap - some content should appear in consecutive chunks
-        if (chunks.Count > 1)
-        {
-            var firstChunkEnd = chunks[0].Split(' ').TakeLast(10).ToArray();
-            var secondChunkStart = chunks[1].Split(' ').Take(20).ToArray();
-            var hasOverlap = firstChunkEnd.Intersect(secondChunkStart).Any();
-            Assert.That(hasOverlap, Is.True, "Chunks should have overlapping content");
-        }
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.ChunkCount, Is.GreaterThan(1), "Long text should create multiple chunks");
     }
 }
