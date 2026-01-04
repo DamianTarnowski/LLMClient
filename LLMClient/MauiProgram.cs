@@ -30,6 +30,7 @@ namespace LLMClient
 
             // Rejestracja serwisów dla Dependency Injection
             builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddSingleton<IDatabaseService>(provider => provider.GetRequiredService<DatabaseService>());
 
             builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
@@ -176,6 +177,9 @@ namespace LLMClient
                 var aiService = provider.GetRequiredService<IAiService>();
                 return new MemoryExtractionService(memoryService, aiService);
             });
+            // Rejestracja ApiEmbeddingService jako alternatywa dla lokalnych embeddingów
+            builder.Services.AddSingleton<ApiEmbeddingService>();
+            
             builder.Services.AddSingleton<ISearchService>(provider =>
             {
                 var database = provider.GetRequiredService<DatabaseService>();
@@ -185,7 +189,7 @@ namespace LLMClient
             builder.Services.AddSingleton<IExportService, ExportService>();
             builder.Services.AddSingleton<IRagService>(provider =>
             {
-                var database = provider.GetRequiredService<DatabaseService>();
+                var database = provider.GetRequiredService<IDatabaseService>();
                 var embedding = provider.GetService<IEmbeddingService>();
                 return new RagService(database, embedding);
             });
