@@ -18,11 +18,21 @@ namespace LLMClient.Services
         public string? ErrorMessage { get; set; }
     }
 
+    public class ImportResult
+    {
+        public bool Success { get; set; }
+        public Conversation? Conversation { get; set; }
+        public List<Message>? Messages { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
+
     public interface IExportService
     {
         Task<ExportResult> ExportConversationAsync(Conversation conversation, ExportFormat format);
         string GenerateFileName(Conversation conversation, ExportFormat format);
         Task<string> GetExportContentAsync(Conversation conversation, ExportFormat format);
+        Task<ImportResult> ImportConversationAsync(string json);
+        Task<ImportResult> ImportConversationFromFileAsync(string filePath);
     }
 
     public class ExportService : IExportService
@@ -199,5 +209,114 @@ namespace LLMClient.Services
 
             return sb.ToString();
         }
+
+        public async Task<ImportResult> ImportConversationFromFileAsync(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return new ImportResult
+                    {
+                        Success = false,
+                        ErrorMessage = "Plik nie istnieje."
+                    };
+                }
+
+                var json = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
+                return await ImportConversationAsync(json);
+            }
+            catch (Exception ex)
+            {
+                return new ImportResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Błąd importu: {ex.Message}"
+                };
+            }
+        }
+
+        public async Task<ImportResult> ImportConversationAsync(string json)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var exportData = JsonSerializer.Deserialize<ConversationExportData>(json, options);
+                
+                if (exportData == null)
+                {
+                    return new ImportResult
+                    {
+                        Success = false,
+                        ErrorMessage = "Nieprawidłowy format pliku eksportu."
+                    };
+                }
+
+                var conversation = new Conversation
+                {
+                    Title = exportData.Title ?? "Zaimportowana konwersacja",
+                    CreatedAt = exportData.CreatedAt != default ? exportData.CreatedAt : DateTime.Now
+                };
+
+                var messages = new List<Message>();
+                if (exportData.Messages != null)
+                {
+                    foreach (var msgData in exportData.Messages)
+                    {
+                        messages.Add(new Message
+                        {
+                            Content = msgData.Content ?? "",
+                            IsUser = msgData.IsUser,
+                            Timestamp = msgData.Timestamp != default ? msgData.Timestamp : DateTime.Now
+                        });
+                    }
+                }
+
+                return await Task.FromResult(new ImportResult
+                {
+                    Success = true,
+                    Conversation = conversation,
+                    Messages = messages
+                });
+            }
+            catch (JsonException ex)
+            {
+                return new ImportResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Błąd parsowania JSON: {ex.Message}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ImportResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Błąd importu: {ex.Message}"
+                };
+            }
+        }
     }
-} 
+
+    public class ConversationExportData
+    {
+        public string? Title { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime ExportedAt { get; set; }
+        public int MessageCount { get; set; }
+        public List<MessageExportData>? Messages { get; set; }
+    }
+
+    public class MessageExportData
+    {
+        public int Id { get; set; }
+        public string? Content { get; set; }
+        public bool IsUser { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string? Sender { get; set; }
+    }
+}

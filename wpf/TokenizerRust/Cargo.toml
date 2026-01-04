@@ -1,0 +1,16 @@
+[package]
+name = "tokenizer_rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "hf_tokenizer"
+crate-type = ["cdylib"]
+
+[dependencies]
+tokenizers = "0.21"
+once_cell = "1.19"
+
+[profile.release]
+opt-level = 3
+lto = true

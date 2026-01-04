@@ -1,0 +1,357 @@
+<UserControl x:Class="WPFLLM.Views.DocumentAnalysisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="300"/>
+            <ColumnDefinition Width="2*" MinWidth="400"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Input Panel -->
+        <Border Background="{StaticResource SurfaceBrush}" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource DA_Title}" 
+                               FontSize="20" 
+                               FontWeight="Bold"
+                               Foreground="{StaticResource TextBrush}"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="{DynamicResource DA_Description}"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,16"/>
+                </StackPanel>
+
+                <TextBox Grid.Row="1"
+                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         VerticalContentAlignment="Top"
+                         Padding="12"/>
+
+                <!-- Warning Message -->
+                <Border Grid.Row="2" 
+                        Background="#FEF3C7"
+                        CornerRadius="6"
+                        Padding="12"
+                        Margin="0,8,0,0"
+                        Visibility="{Binding HasWarning, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding WarningMessage}" 
+                               Foreground="#92400E"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"/>
+                </Border>
+
+                <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Content="{DynamicResource DA_ImportFile}"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ImportFileCommand}"
+                                Padding="12,8"/>
+
+                        <Button Grid.Column="1"
+                                Content="{DynamicResource DA_Clear}"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ClearCommand}"
+                                Padding="12,8"
+                                Margin="8,0"/>
+
+                        <Button Grid.Column="2"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding AnalyzeCommand}"
+                                IsEnabled="{Binding IsAnalyzing, Converter={StaticResource InverseBoolConverter}}"
+                                Padding="16,8"
+                                Visibility="{Binding IsAnalyzing, Converter={StaticResource InverseBoolToVisConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔍 "/>
+                                <TextBlock Text="{DynamicResource DA_Analyze}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="2"
+                                Content="⏹ Stop"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding StopAnalysisCommand}"
+                                Padding="16,8"
+                                Visibility="{Binding IsAnalyzing, Converter={StaticResource BoolToVis}}"/>
+                    </Grid>
+
+                    <TextBlock Text="{Binding StatusText}"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Margin="0,12,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Results Panel -->
+        <ScrollViewer Grid.Column="1" 
+                      VerticalScrollBarVisibility="Auto"
+                      Background="{StaticResource BackgroundBrush}">
+            <StackPanel Margin="24">
+                
+                <!-- Summary -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        Visibility="{Binding Summary, Converter={StaticResource StringToVis}}">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8">
+                            <Run Text="📝 "/>
+                            <Run Text="{DynamicResource DA_Summary}"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Summary}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextBrush}"
+                                   LineHeight="22"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Key Points -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        Visibility="{Binding KeyPoints.Count, Converter={StaticResource CountToVis}}">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12">
+                            <Run Text="📌 "/>
+                            <Run Text="{DynamicResource DA_KeyPoints}"/>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding KeyPoints}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="•" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding}" 
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{StaticResource TextBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Detected Intents -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        Visibility="{Binding DetectedIntents.Count, Converter={StaticResource CountToVis}}">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12">
+                            <Run Text="🎯 "/>
+                            <Run Text="{DynamicResource DA_DetectedIntents}"/>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding DetectedIntents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceLightBrush}" 
+                                            CornerRadius="6" 
+                                            Padding="12"
+                                            Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" 
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextBrush}"/>
+                                                <TextBlock Text="{Binding Evidence}" 
+                                                           FontStyle="Italic"
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           FontSize="12"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="1" 
+                                                    Background="{StaticResource PrimaryBrush}" 
+                                                    CornerRadius="4" 
+                                                    Padding="8,4"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding ConfidenceText}" 
+                                                           Foreground="White" 
+                                                           FontSize="11"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Red Flags -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        Visibility="{Binding RedFlags.Count, Converter={StaticResource CountToVis}}">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12">
+                            <Run Text="⚠️ "/>
+                            <Run Text="{DynamicResource DA_RedFlags}"/>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding RedFlags}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceLightBrush}" 
+                                            CornerRadius="6" 
+                                            Padding="12"
+                                            Margin="0,0,0,8"
+                                            BorderThickness="2,0,0,0"
+                                            BorderBrush="#EF4444">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                <TextBlock Text="{Binding SeverityIcon}" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{Binding Severity}" 
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextBrush}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Description}" 
+                                                       Foreground="{StaticResource TextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Quote}" 
+                                                       FontStyle="Italic"
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,4,0,0"
+                                                       Visibility="{Binding Quote, Converter={StaticResource StringToVis}}"/>
+                                            <TextBlock Foreground="{StaticResource PrimaryBrush}"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,4,0,0"
+                                                       Visibility="{Binding Recommendation, Converter={StaticResource StringToVis}}">
+                                                <Run Text="💡 "/>
+                                                <Run Text="{Binding Recommendation, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Compliance Checklist -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        Visibility="{Binding ComplianceItems.Count, Converter={StaticResource CountToVis}}">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12">
+                            <Run Text="✅ "/>
+                            <Run Text="{DynamicResource DA_ComplianceCheck}"/>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding ComplianceItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding StatusIcon}" 
+                                                   FontSize="16"
+                                                   Margin="0,0,8,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMet}" Value="True">
+                                                            <Setter Property="Foreground" Value="#22C55E"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Requirement}" 
+                                                       Foreground="{StaticResource TextBrush}"/>
+                                            <TextBlock Text="{Binding Details}" 
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       FontSize="12"
+                                                       Visibility="{Binding Details, Converter={StaticResource StringToVis}}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Suggested Response -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Visibility="{Binding SuggestedResponse, Converter={StaticResource StringToVis}}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}">
+                                <Run Text="💬 "/>
+                                <Run Text="{DynamicResource DA_SuggestedResponse}"/>
+                            </TextBlock>
+                            <Button HorizontalAlignment="Right"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding CopyResponseCommand}"
+                                    Padding="8,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📋 "/>
+                                    <TextBlock Text="{DynamicResource DA_CopyResponse}"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <Border Background="{StaticResource SurfaceLightBrush}" 
+                                CornerRadius="6" 
+                                Padding="12">
+                            <TextBlock Text="{Binding SuggestedResponse}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource TextBrush}"
+                                       LineHeight="22"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Streaming Response (while analyzing) -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Visibility="{Binding IsAnalyzing, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource DA_InProgress}" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   Margin="0,0,0,12"/>
+                        <TextBlock Text="{Binding StreamingResponse}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontFamily="Consolas"
+                                   FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

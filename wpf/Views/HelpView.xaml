@@ -1,0 +1,230 @@
+<UserControl x:Class="WPFLLM.Views.HelpView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BackgroundBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="800">
+            
+            <!-- Header -->
+            <TextBlock Text="{DynamicResource Help_Title}" 
+                       FontSize="28" FontWeight="Bold" 
+                       Foreground="{StaticResource TextBrush}"
+                       Margin="0,0,0,24"/>
+
+            <!-- About Section -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_About}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="🤖" FontSize="48" Margin="0,0,16,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Help_AppName}" 
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Text="{DynamicResource Help_Version}" 
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <TextBlock Text="{DynamicResource Help_Description}" 
+                               Foreground="{StaticResource TextBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,16,0,16"/>
+                    
+                    <Border Background="{StaticResource SurfaceLightBrush}" 
+                            CornerRadius="8" Padding="16" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Help_Author}" 
+                                       FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Text="{DynamicResource Help_Contact}" 
+                                       Foreground="{StaticResource PrimaryBrush}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Getting Started -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_GettingStarted}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    <TextBlock Text="{DynamicResource Help_GettingStarted_Text}" 
+                               Foreground="{StaticResource TextBrush}"
+                               TextWrapping="Wrap"
+                               LineHeight="24"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Features -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_Features}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="💬" FontSize="20"/>
+                        <TextBlock Text="{DynamicResource Help_Feature_Chat}" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="📚" FontSize="20"/>
+                        <TextBlock Text="{DynamicResource Help_Feature_KB}" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="📄" FontSize="20"/>
+                        <TextBlock Text="{DynamicResource Help_Feature_DocAnalysis}" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="🧠" FontSize="20"/>
+                        <TextBlock Text="{DynamicResource Help_Feature_Embeddings}" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel>
+                        <TextBlock Text="🔍" FontSize="20"/>
+                        <TextBlock Text="{DynamicResource Help_Feature_RAG}" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- RAG System -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_RAG}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    <TextBlock Text="{DynamicResource Help_RAG_Text}" 
+                               Foreground="{StaticResource TextBrush}"
+                               TextWrapping="Wrap"
+                               LineHeight="24"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Local Embeddings -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_Embeddings}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    <TextBlock Text="{DynamicResource Help_Embeddings_Text}" 
+                               Foreground="{StaticResource TextBrush}"
+                               TextWrapping="Wrap"
+                               LineHeight="24"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Report Bug / Contact -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_ReportBug}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    
+                    <TextBlock Text="{DynamicResource Help_ReportBug_Text}" 
+                               Foreground="{StaticResource TextBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,16"/>
+                    
+                    <Button Style="{StaticResource PrimaryButton}"
+                            Padding="16,10"
+                            HorizontalAlignment="Left"
+                            Click="ReportBug_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📧" FontSize="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="{DynamicResource Help_ReportBug_Button}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Keyboard Shortcuts -->
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Help_Shortcuts}" 
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               Margin="0,0,0,16"/>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border Grid.Row="0" Grid.Column="0" 
+                                Background="{StaticResource SurfaceLightBrush}"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,16,8">
+                            <TextBlock Text="Enter" FontFamily="Consolas" 
+                                       Foreground="{StaticResource TextBrush}"/>
+                        </Border>
+                        <TextBlock Grid.Row="0" Grid.Column="1" 
+                                   Text="{DynamicResource Help_Shortcut_Send}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   VerticalAlignment="Center"/>
+                        
+                        <Border Grid.Row="1" Grid.Column="0" 
+                                Background="{StaticResource SurfaceLightBrush}"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,16,8">
+                            <TextBlock Text="Shift+Enter" FontFamily="Consolas" 
+                                       Foreground="{StaticResource TextBrush}"/>
+                        </Border>
+                        <TextBlock Grid.Row="1" Grid.Column="1" 
+                                   Text="{DynamicResource Help_Shortcut_NewLine}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   VerticalAlignment="Center"/>
+                        
+                        <Border Grid.Row="2" Grid.Column="0" 
+                                Background="{StaticResource SurfaceLightBrush}"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,16,0">
+                            <TextBlock Text="Escape" FontFamily="Consolas" 
+                                       Foreground="{StaticResource TextBrush}"/>
+                        </Border>
+                        <TextBlock Grid.Row="2" Grid.Column="1" 
+                                   Text="{DynamicResource Help_Shortcut_Stop}"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,25 @@
+# Assets Directory
+
+This directory contains screenshots and images for documentation.
+
+## Required Screenshots
+
+Add the following screenshots to complete the documentation:
+
+- `screenshot-chat.png` - Main chat interface with RAG debug panel
+- `screenshot-rag.png` - Knowledge base view with documents
+- `screenshot-embeddings.png` - Embeddings view with model download
+- `screenshot-settings.png` - Settings configuration view
+- `screenshot-analysis.png` - Document analysis results
+
+## Recommended Size
+
+- Width: 800-1200px
+- Format: PNG with transparency or JPG
+- Quality: High quality, but optimized for web
+
+## How to Capture
+
+1. Run the application: `dotnet run`
+2. Use Windows Snipping Tool (Win+Shift+S)
+3. Save to this directory with the names above

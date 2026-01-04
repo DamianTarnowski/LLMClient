@@ -1,0 +1,269 @@
+<UserControl x:Class="WPFLLM.Views.RagView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header with RAG Toggle -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{DynamicResource KB_Title}" 
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,0,0,8"/>
+                <TextBlock Text="{DynamicResource KB_Description}"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+            
+            <!-- RAG Toggle -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                <CheckBox IsChecked="{Binding UseRag}"
+                          Content="📚 Włącz RAG"
+                          Foreground="{StaticResource TextBrush}"
+                          FontWeight="SemiBold"
+                          VerticalAlignment="Center"
+                          ToolTip="Włącz/wyłącz wyszukiwanie w bazie wiedzy"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- RAG Settings Panel -->
+        <Border Grid.Row="1" 
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="8"
+                Padding="16"
+                Margin="0,16,0,16"
+                Visibility="{Binding UseRag, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- TopK Setting -->
+                    <StackPanel Margin="0,0,16,0">
+                        <TextBlock Text="Liczba chunków (TopK)" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Slider Value="{Binding RagTopK}" 
+                                    Minimum="1" Maximum="10" 
+                                    Width="150"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"/>
+                            <TextBlock Text="{Binding RagTopK}" 
+                                       Foreground="{StaticResource PrimaryBrush}"
+                                       FontWeight="Bold"
+                                       Margin="12,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Ile fragmentów dokumentów dodać do kontekstu"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="11"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                    
+                    <!-- Min Similarity Setting -->
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Min. podobieństwo" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Slider Value="{Binding RagMinSimilarity}" 
+                                    Minimum="0.3" Maximum="0.9" 
+                                    Width="150"
+                                    TickFrequency="0.05"
+                                    IsSnapToTickEnabled="True"/>
+                            <TextBlock Text="{Binding RagMinSimilarity, StringFormat=P0}" 
+                                       Foreground="{StaticResource PrimaryBrush}"
+                                       FontWeight="Bold"
+                                       Margin="12,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Próg podobieństwa (niższy = więcej wyników)"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="11"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
+                
+                <!-- Retrieval Mode -->
+                <StackPanel Margin="0,16,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="🔍 Tryb wyszukiwania" 
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text=" ℹ️" 
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Cursor="Help"
+                                   ToolTip="Vector: Wyszukiwanie semantyczne przez embeddingi - rozumie znaczenie i synonimy.&#x0a;Keyword: Wyszukiwanie tekstowe BM25 - dokładne dopasowanie słów kluczowych.&#x0a;Hybrid: Łączy oba podejścia używając RRF (Reciprocal Rank Fusion) - najlepsze wyniki."/>
+                    </StackPanel>
+                    <ComboBox ItemsSource="{Binding RetrievalModes}"
+                              SelectedItem="{Binding RagRetrievalMode}"
+                              Width="200"
+                              HorizontalAlignment="Left"/>
+                </StackPanel>
+                
+                <!-- Hybrid Balance (only visible in Hybrid mode) -->
+                <StackPanel Margin="0,16,0,0" 
+                            Visibility="{Binding IsHybridMode, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Balance Slider -->
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="⚖️ Balans Vector/Keyword" 
+                                           Foreground="{StaticResource TextBrush}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text=" ℹ️" 
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Cursor="Help"
+                                           ToolTip="Przesuń w lewo dla większej wagi tekstowego wyszukiwania (exact match, nazwy własne).&#x0a;Przesuń w prawo dla większej wagi semantycznego wyszukiwania (synonimy, kontekst).&#x0a;Środek = równowaga obu metod."/>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="🔤" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
+                                           ToolTip="Keyword (BM25) - dokładne dopasowanie tekstu"/>
+                                <Slider Grid.Column="1" 
+                                        Value="{Binding HybridBalance}" 
+                                        Minimum="0" Maximum="1" 
+                                        TickFrequency="0.1"
+                                        IsSnapToTickEnabled="True"/>
+                                <TextBlock Grid.Column="2" Text="🎯" FontSize="16" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           ToolTip="Vector (embeddingi) - wyszukiwanie semantyczne"/>
+                            </Grid>
+                            <TextBlock Text="{Binding HybridBalance, StringFormat='Vector: {0:P0}'}"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="11"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                        
+                        <!-- RRF K (advanced) -->
+                        <StackPanel Grid.Column="1" Margin="24,0,0,0" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="⚙️ RRF K" 
+                                           Foreground="{StaticResource TextBrush}"
+                                           FontWeight="SemiBold"
+                                           FontSize="11"/>
+                                <TextBlock Text=" ℹ️" 
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           FontSize="10"
+                                           Cursor="Help"
+                                           ToolTip="Stała RRF (Reciprocal Rank Fusion).&#x0a;Niższe wartości (10-30): większy wpływ pozycji w rankingu.&#x0a;Wyższe wartości (60-100): bardziej równomierne traktowanie wyników.&#x0a;Domyślnie: 60"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Slider Value="{Binding RrfK}" 
+                                        Minimum="10" Maximum="100" 
+                                        Width="80"
+                                        TickFrequency="10"
+                                        IsSnapToTickEnabled="True"/>
+                                <TextBlock Text="{Binding RrfK, StringFormat=F0}" 
+                                           Foreground="{StaticResource PrimaryBrush}"
+                                           FontWeight="Bold"
+                                           FontSize="11"
+                                           Margin="6,0,0,0"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Welcome Message when empty -->
+        <Border Grid.Row="2" 
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="8"
+                Padding="24"
+                Visibility="{Binding HasDocuments, Converter={StaticResource InverseBoolToVisConverter}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="📚" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <TextBlock Text="{Binding WelcomeMessage}" 
+                           Foreground="{StaticResource TextMutedBrush}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           FontSize="14"
+                           LineHeight="22"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Documents List -->
+        <Border Grid.Row="2" 
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="8"
+                Padding="4"
+                Visibility="{Binding HasDocuments, Converter={StaticResource BoolToVis}}">
+            <ListBox ItemsSource="{Binding Documents}"
+                     SelectedItem="{Binding SelectedDocument}"
+                     Style="{StaticResource ModernListBox}"
+                     ItemContainerStyle="{StaticResource ConversationListItem}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding FileName}" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="12">
+                                <Run Text="Added: "/>
+                                <Run Text="{Binding CreatedAt, StringFormat=g}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Actions -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Content="{DynamicResource Btn_AddDocuments}"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding AddDocumentCommand}"
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBoolConverter}}"
+                    Margin="0,0,8,0"/>
+            
+            <Button Content="{DynamicResource Btn_DeleteSelected}"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding DeleteDocumentCommand}"
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBoolConverter}}"/>
+
+            <Button Content="{DynamicResource Btn_Cancel}"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding CancelEmbeddingsCommand}"
+                    Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVis}}"
+                    Margin="8,0,0,0"/>
+        </StackPanel>
+
+        <!-- Status -->
+        <Border Grid.Row="4" 
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="6"
+                Padding="12"
+                Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{StaticResource TextMutedBrush}"/>
+        </Border>
+    </Grid>
+</UserControl>

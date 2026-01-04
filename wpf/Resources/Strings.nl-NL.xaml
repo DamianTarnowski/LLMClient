@@ -1,0 +1,243 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+
+    <!-- App Title -->
+    <system:String x:Key="AppTitle">WPFLLM - AI-Assistent</system:String>
+    
+    <!-- Main Navigation -->
+    <system:String x:Key="Nav_Chat">Chat</system:String>
+    <system:String x:Key="Nav_KnowledgeBase">Kennisbank</system:String>
+    <system:String x:Key="Nav_DocumentAnalysis">Documentanalyse</system:String>
+    <system:String x:Key="Nav_Embeddings">Embeddings</system:String>
+    <system:String x:Key="Nav_Settings">Instellingen</system:String>
+    
+    <!-- Chat View -->
+    <system:String x:Key="Chat_NewConversation">Nieuw gesprek</system:String>
+    <system:String x:Key="Chat_DeleteConversation">Verwijderen</system:String>
+    <system:String x:Key="Chat_Conversations">Gesprekken</system:String>
+    <system:String x:Key="Chat_TypeMessage">Typ uw bericht...</system:String>
+    <system:String x:Key="Chat_Send">Versturen</system:String>
+    <system:String x:Key="Chat_Stop">Stoppen</system:String>
+    <system:String x:Key="Chat_Thinking">Denken...</system:String>
+    <system:String x:Key="Chat_Sources">Bronnen</system:String>
+    <system:String x:Key="Chat_NoSources">Geen bronnen gebruikt</system:String>
+    <system:String x:Key="Chat_RagEnabled">RAG ingeschakeld</system:String>
+    <system:String x:Key="Chat_RagDisabled">RAG uitgeschakeld</system:String>
+    
+    <!-- Knowledge Base -->
+    <system:String x:Key="KB_Title">Kennisbank</system:String>
+    <system:String x:Key="KB_Description">Voeg documenten toe om RAG in te schakelen. Het systeem zal relevante inhoud uit deze documenten gebruiken om uw vragen te beantwoorden.</system:String>
+    <system:String x:Key="KB_AddDocument">Document toevoegen</system:String>
+    <system:String x:Key="KB_DeleteDocument">Verwijderen</system:String>
+    <system:String x:Key="KB_GenerateEmbeddings">Embeddings genereren</system:String>
+    <system:String x:Key="KB_Documents">Documenten</system:String>
+    <system:String x:Key="KB_Chunks">fragmenten</system:String>
+    <system:String x:Key="KB_NoDocuments">Geen documenten toegevoegd</system:String>
+    <system:String x:Key="KB_DragDrop">Sleep bestanden of klik</system:String>
+    <system:String x:Key="KB_SupportedFormats">Formaten: PDF, DOCX, TXT, MD, JSON, CSV</system:String>
+    <system:String x:Key="KB_Indexing">Indexeren...</system:String>
+    <system:String x:Key="KB_Indexed">Geïndexeerd</system:String>
+    <system:String x:Key="KB_Pending">In behandeling</system:String>
+    
+    <!-- Document Analysis -->
+    <system:String x:Key="DA_Title">Documentanalyse</system:String>
+    <system:String x:Key="DA_PasteText">Plak tekst om te analyseren...</system:String>
+    <system:String x:Key="DA_ImportFile">Bestand importeren</system:String>
+    <system:String x:Key="DA_Analyze">Analyseren</system:String>
+    <system:String x:Key="DA_Clear">Wissen</system:String>
+    <system:String x:Key="DA_Summary">Samenvatting</system:String>
+    <system:String x:Key="DA_KeyPoints">Kernpunten</system:String>
+    <system:String x:Key="DA_DetectedIntents">Gedetecteerde intenties</system:String>
+    <system:String x:Key="DA_RedFlags">Waarschuwingen</system:String>
+    <system:String x:Key="DA_ComplianceCheck">Nalevingscontrole</system:String>
+    <system:String x:Key="DA_SuggestedResponse">Voorgesteld antwoord</system:String>
+    <system:String x:Key="DA_Analyzing">Document analyseren...</system:String>
+    <system:String x:Key="DA_NoIssues">Geen problemen gedetecteerd</system:String>
+    <system:String x:Key="DA_CopyResponse">Antwoord kopiëren</system:String>
+    <system:String x:Key="DA_RegenerateResponse">Opnieuw genereren</system:String>
+    
+    <!-- RAG Debug Panel -->
+    <system:String x:Key="Debug_Title">RAG Debug</system:String>
+    <system:String x:Key="Debug_Sources">Bronnen</system:String>
+    <system:String x:Key="Debug_Metrics">Statistieken</system:String>
+    <system:String x:Key="Debug_TopK">Top K</system:String>
+    <system:String x:Key="Debug_Similarity">Gelijkenis</system:String>
+    <system:String x:Key="Debug_RetrievalMode">Ophaalmodus</system:String>
+    <system:String x:Key="Debug_Vector">Vector</system:String>
+    <system:String x:Key="Debug_Keyword">Trefwoord (FTS)</system:String>
+    <system:String x:Key="Debug_Hybrid">Hybride</system:String>
+    <system:String x:Key="Debug_Latency">Latentie</system:String>
+    <system:String x:Key="Debug_RetrievalTime">Ophalen</system:String>
+    <system:String x:Key="Debug_GenerationTime">Generatie</system:String>
+    <system:String x:Key="Debug_TotalTime">Totaal</system:String>
+    <system:String x:Key="Debug_Score">Score</system:String>
+    <system:String x:Key="Debug_Document">Document</system:String>
+    <system:String x:Key="Debug_Chunk">Fragment</system:String>
+    
+    <!-- Embeddings -->
+    <system:String x:Key="Emb_Title">Lokale embeddings</system:String>
+    <system:String x:Key="Emb_Description">Genereer embeddings lokaal zonder API - sneller, goedkoper, privater</system:String>
+    <system:String x:Key="Emb_Mode">Embedding modus</system:String>
+    <system:String x:Key="Emb_API">API</system:String>
+    <system:String x:Key="Emb_Local">Lokaal</system:String>
+    <system:String x:Key="Emb_Downloaded">Gedownload:</system:String>
+    <system:String x:Key="Emb_AvailableModels">Beschikbare modellen</system:String>
+    <system:String x:Key="Emb_Download">Downloaden</system:String>
+    <system:String x:Key="Emb_Load">Laden</system:String>
+    <system:String x:Key="Emb_Unload">Uitladen</system:String>
+    <system:String x:Key="Emb_Delete">Verwijderen</system:String>
+    <system:String x:Key="Emb_Loaded">Geladen</system:String>
+    <system:String x:Key="Emb_NotLoaded">Niet geladen</system:String>
+    <system:String x:Key="Emb_Downloading">Downloaden...</system:String>
+    <system:String x:Key="Emb_TestSimilarity">Gelijkenis testen</system:String>
+    <system:String x:Key="Emb_TestDesc">Controleer embedding kwaliteit met voorbeeldwoorden</system:String>
+    
+    <!-- Settings -->
+    <system:String x:Key="Settings_Title">Instellingen</system:String>
+    <system:String x:Key="Settings_Language">Taal</system:String>
+    <system:String x:Key="Settings_APIConfiguration">API-configuratie</system:String>
+    <system:String x:Key="Settings_APIKey">API-sleutel</system:String>
+    <system:String x:Key="Settings_Endpoint">Eindpunt</system:String>
+    <system:String x:Key="Settings_EndpointAuto">(auto)</system:String>
+    <system:String x:Key="Settings_Model">Model</system:String>
+    <system:String x:Key="Settings_RAGSettings">RAG-instellingen</system:String>
+    <system:String x:Key="Settings_EnableRAG">RAG inschakelen (Retrieval Augmented Generation)</system:String>
+    <system:String x:Key="Settings_TopK">Top K resultaten</system:String>
+    <system:String x:Key="Settings_MinSimilarity">Minimale gelijkenis</system:String>
+    <system:String x:Key="Settings_RetrievalMode">Ophaal modus</system:String>
+    <system:String x:Key="Settings_Security">Beveiliging</system:String>
+    <system:String x:Key="Settings_EncryptData">Gegevens versleutelen</system:String>
+    <system:String x:Key="Settings_Save">Opslaan</system:String>
+    <system:String x:Key="Settings_Reset">Herstellen</system:String>
+    <system:String x:Key="Settings_Saved">Instellingen opgeslagen</system:String>
+    <system:String x:Key="Settings_OpenRouter">OpenRouter</system:String>
+    <system:String x:Key="Settings_OpenRouterDesc">Eén sleutel voor 400+ modellen</system:String>
+    <system:String x:Key="Settings_Native">Natief</system:String>
+    <system:String x:Key="Settings_NativeDesc">Directe provider API</system:String>
+    <system:String x:Key="Settings_SelectProvider">Selecteer provider:</system:String>
+    <system:String x:Key="Settings_ModelBrowser">Model browser</system:String>
+    <system:String x:Key="Settings_ModelBrowserDesc">Blader door 400+ modellen van OpenRouter. Selecteer een model om details te bekijken en te gebruiken.</system:String>
+    <system:String x:Key="Settings_CurrentModel">Huidig model</system:String>
+    <system:String x:Key="Settings_ManualModelId">Of voer model ID handmatig in:</system:String>
+    <system:String x:Key="Settings_GenerationSettings">Generatie-instellingen</system:String>
+    <system:String x:Key="Settings_Temperature">Temperatuur:</system:String>
+    <system:String x:Key="Settings_MaxTokens">Max tokens:</system:String>
+    <system:String x:Key="Settings_SystemPrompt">Systeemprompt</system:String>
+    <system:String x:Key="Settings_ContextChunks">Aantal context fragmenten:</system:String>
+    <system:String x:Key="Settings_SimilarityHint">💡 De drempel filtert fragmenten met lage gelijkenis. 60% = meer resultaten (minder precies), 95% = minder resultaten (zeer precies). Aanbevolen: 70-80% voor algemeen gebruik.</system:String>
+    <system:String x:Key="Settings_LocalLLM">🤖 Lokaal LLM-model</system:String>
+    <system:String x:Key="Settings_LocalLLMModel">Model: Phi-3 Mini 4K Instruct</system:String>
+    <system:String x:Key="Settings_LocalLLMSpecs">3.8B parameters, 4-6 GB RAM, ~15-30 tok/s</system:String>
+    <system:String x:Key="Settings_Status">Status:</system:String>
+    <system:String x:Key="Settings_NotDownloaded">Niet gedownload</system:String>
+    <system:String x:Key="Settings_Ready">✓ Klaar</system:String>
+    <system:String x:Key="Settings_EncryptionInfo">🛡️ Gegevens worden versleuteld met AES-256-GCM, sleutels beschermd door Windows DPAPI. Uw gegevens verlaten dit apparaat nooit en blijven versleuteld.</system:String>
+    
+    <!-- Status Bar -->
+    <system:String x:Key="Status_Offline">Offline modus</system:String>
+    <system:String x:Key="Status_Online">Online</system:String>
+    <system:String x:Key="Status_Encrypted">Versleuteld</system:String>
+    <system:String x:Key="Status_NotEncrypted">Niet versleuteld</system:String>
+    <system:String x:Key="Status_NetworkCalls">Netwerkoproepen</system:String>
+    <system:String x:Key="Status_Ready">Gereed</system:String>
+    <system:String x:Key="Status_Processing">Verwerken...</system:String>
+    
+    <!-- Workspaces -->
+    <system:String x:Key="WS_Title">Werkruimtes</system:String>
+    <system:String x:Key="WS_Create">Werkruimte maken</system:String>
+    <system:String x:Key="WS_Delete">Verwijderen</system:String>
+    <system:String x:Key="WS_Rename">Hernoemen</system:String>
+    <system:String x:Key="WS_Documents">documenten</system:String>
+    <system:String x:Key="WS_LastUpdated">Laatst bijgewerkt</system:String>
+    <system:String x:Key="WS_Default">Standaard werkruimte</system:String>
+    
+    <!-- Common -->
+    <system:String x:Key="Common_Yes">Ja</system:String>
+    <system:String x:Key="Common_No">Nee</system:String>
+    <system:String x:Key="Common_OK">OK</system:String>
+    <system:String x:Key="Common_Cancel">Annuleren</system:String>
+    <system:String x:Key="Common_Close">Sluiten</system:String>
+    <system:String x:Key="Common_Error">Fout</system:String>
+    <system:String x:Key="Common_Warning">Waarschuwing</system:String>
+    <system:String x:Key="Common_Info">Informatie</system:String>
+    <system:String x:Key="Common_Confirm">Bevestigen</system:String>
+    <system:String x:Key="Common_Loading">Laden...</system:String>
+    <system:String x:Key="Common_Copy">Kopiëren</system:String>
+    <system:String x:Key="Common_Copied">Gekopieerd!</system:String>
+    
+    <!-- Help -->
+    <system:String x:Key="Nav_Help">Help</system:String>
+    <system:String x:Key="Help_Title">Help en Info</system:String>
+    <system:String x:Key="Help_About">Over</system:String>
+    <system:String x:Key="Help_AppName">WPFLLM - AI-Assistent</system:String>
+    <system:String x:Key="Help_Version">Versie 1.0</system:String>
+    <system:String x:Key="Help_Author">Gemaakt door Damian Tarnowski</system:String>
+    <system:String x:Key="Help_Contact">Contact: hdtdtr@gmail.com</system:String>
+    <system:String x:Key="Help_ReportBug">🐛 Bug melden / Contact</system:String>
+    <system:String x:Key="Help_ReportBug_Text">Bug gevonden of suggestie? Laat het ons weten!</system:String>
+    <system:String x:Key="Help_ReportBug_Button">Bericht versturen</system:String>
+    <system:String x:Key="Help_EmailCopied">E-mail gekopieerd naar klembord: hdtdtr@gmail.com</system:String>
+    <system:String x:Key="Help_Description">Een krachtige desktop AI-assistent met RAG-mogelijkheden (Retrieval-Augmented Generation), lokale embeddings en documentanalyse.</system:String>
+    
+    <system:String x:Key="Help_GettingStarted">Aan de slag</system:String>
+    <system:String x:Key="Help_GettingStarted_Text">1. Ga naar Instellingen en configureer uw API-sleutel (OpenRouter of compatibele API)
+2. Begin met chatten in het Chat-tabblad
+3. Optioneel: voeg documenten toe aan de Kennisbank voor RAG-verbeterde antwoorden</system:String>
+    
+    <system:String x:Key="Help_Features">Functies</system:String>
+    <system:String x:Key="Help_Feature_Chat">Chat - Gesprek met AI-modellen met streaming-antwoorden</system:String>
+    <system:String x:Key="Help_Feature_KB">Kennisbank - Importeer documenten (PDF, DOCX, TXT, MD, JSON, CSV) en gebruik ze als context voor AI-antwoorden</system:String>
+    <system:String x:Key="Help_Feature_DocAnalysis">Documentanalyse - Analyseer documenten voor samenvattingen, kernpunten en nalevingscontroles</system:String>
+    <system:String x:Key="Help_Feature_Embeddings">Embeddings - Download en gebruik lokale embedding-modellen voor offline vectorzoekopdrachten</system:String>
+    <system:String x:Key="Help_Feature_RAG">RAG-systeem - Hybride ophalen combineert vectorzoekopdrachten en trefwoordzoekopdrachten met RRF-fusie</system:String>
+    
+    <system:String x:Key="Help_RAG">RAG-systeem</system:String>
+    <system:String x:Key="Help_RAG_Text">Het RAG-systeem (Retrieval-Augmented Generation) verbetert AI-antwoorden door relevante context uit uw documenten op te halen:
+• Vectorzoeken - Semantische gelijkenis met embeddings
+• Trefwoordzoeken - Volledige tekstzoekopdracht (FTS5) voor exacte overeenkomsten
+• Hybride modus - Combineert beide methoden met Reciprocal Rank Fusion (RRF)
+• Flight Recorder - Debug-paneel toont bronnen, kandidaten en tijden</system:String>
+    
+    <system:String x:Key="Help_Embeddings">Lokale Embeddings</system:String>
+    <system:String x:Key="Help_Embeddings_Text">Download embedding-modellen om lokaal vectoren te genereren zonder API-oproepen:
+1. Ga naar het Embeddings-tabblad
+2. Download een model (aanbevolen: Multilingual E5 Large Instruct)
+3. Klik op "Geselecteerd model laden"
+4. Schakel "Lokale embeddings gebruiken" in bij Instellingen</system:String>
+    
+    <system:String x:Key="Help_Shortcuts">Sneltoetsen</system:String>
+    <system:String x:Key="Help_Shortcut_Send">Enter - Bericht verzenden</system:String>
+    <system:String x:Key="Help_Shortcut_NewLine">Shift+Enter - Nieuwe regel</system:String>
+    <system:String x:Key="Help_Shortcut_Stop">Escape - Generatie stoppen</system:String>
+
+    <!-- Validation Messages -->
+    <system:String x:Key="Validation_NoApiKey">⚠️ Geen API-sleutel geconfigureerd! Ga naar Instellingen en configureer je API-sleutel om de chat te gebruiken.</system:String>
+    <system:String x:Key="Validation_NoApiKeyAnalysis">⚠️ Geen API-sleutel geconfigureerd! Ga naar Instellingen en configureer je API-sleutel om documenten te analyseren.</system:String>
+    <system:String x:Key="Validation_EmptyKnowledgeBase">📚 Kennisbank is leeg!
+
+Om RAG (documentzoekopdracht) te gebruiken:
+1. Klik op 'Documenten toevoegen' en selecteer bestanden
+2. Klik op 'Embeddings genereren'
+3. Activeer RAG in de chatinstellingen</system:String>
+    <system:String x:Key="Chat_Welcome">Start een gesprek!</system:String>
+    <system:String x:Key="Chat_WelcomeHint">Typ hieronder een bericht en druk op Enter.
+Zorg ervoor dat je een API-sleutel hebt geconfigureerd in Instellingen.</system:String>
+
+    <!-- Button Labels -->
+    <system:String x:Key="Btn_NewChat">+ Nieuwe chat</system:String>
+    <system:String x:Key="Btn_DeleteSelected">Geselecteerde verwijderen</system:String>
+    <system:String x:Key="Btn_Export">📤 Exporteren</system:String>
+    <system:String x:Key="Btn_Import">📥 Importeren</system:String>
+    <system:String x:Key="Btn_Send">Verzenden</system:String>
+    <system:String x:Key="Btn_Stop">Stop</system:String>
+    <system:String x:Key="Btn_AddDocuments">Documenten toevoegen</system:String>
+    <system:String x:Key="Btn_GenerateEmbeddings">Embeddings genereren</system:String>
+    <system:String x:Key="Btn_Cancel">Annuleren</system:String>
+    <system:String x:Key="Btn_Use">Gebruiken</system:String>
+    <system:String x:Key="Btn_ShowDetails">Details weergeven</system:String>
+    <system:String x:Key="Btn_SaveSettings">Instellingen opslaan</system:String>
+    <system:String x:Key="Btn_DownloadModel">Model downloaden (~2.4 GB)</system:String>
+    <system:String x:Key="Chk_UseLocalLlm">Gebruik lokaal LLM-model (offline)</system:String>
+
+</ResourceDictionary>

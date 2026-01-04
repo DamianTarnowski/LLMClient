@@ -1,0 +1,220 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+
+    <!-- App Title -->
+    <system:String x:Key="AppTitle">WPFLLM - Assistant IA</system:String>
+    
+    <!-- Main Navigation -->
+    <system:String x:Key="Nav_Chat">Discussion</system:String>
+    <system:String x:Key="Nav_KnowledgeBase">Base de connaissances</system:String>
+    <system:String x:Key="Nav_DocumentAnalysis">Analyse de documents</system:String>
+    <system:String x:Key="Nav_Embeddings">Embeddings</system:String>
+    <system:String x:Key="Nav_Settings">Paramètres</system:String>
+    
+    <!-- Chat View -->
+    <system:String x:Key="Chat_NewConversation">Nouvelle conversation</system:String>
+    <system:String x:Key="Chat_DeleteConversation">Supprimer</system:String>
+    <system:String x:Key="Chat_Conversations">Conversations</system:String>
+    <system:String x:Key="Chat_TypeMessage">Tapez votre message...</system:String>
+    <system:String x:Key="Chat_Send">Envoyer</system:String>
+    <system:String x:Key="Chat_Stop">Arrêter</system:String>
+    <system:String x:Key="Chat_Thinking">Réflexion...</system:String>
+    <system:String x:Key="Chat_Sources">Sources</system:String>
+    <system:String x:Key="Chat_NoSources">Aucune source utilisée</system:String>
+    <system:String x:Key="Chat_RagEnabled">RAG activé</system:String>
+    <system:String x:Key="Chat_RagDisabled">RAG désactivé</system:String>
+    
+    <!-- Knowledge Base -->
+    <system:String x:Key="KB_Title">Base de Connaissances</system:String>
+    <system:String x:Key="KB_Description">Ajoutez des documents pour activer RAG. Le système utilisera le contenu pertinent de ces documents pour répondre à vos questions.</system:String>
+    <system:String x:Key="KB_AddDocument">Ajouter un Document</system:String>
+    <system:String x:Key="KB_DeleteDocument">Supprimer</system:String>
+    <system:String x:Key="KB_GenerateEmbeddings">Générer les embeddings</system:String>
+    <system:String x:Key="KB_Documents">Documents</system:String>
+    <system:String x:Key="KB_Chunks">fragments</system:String>
+    <system:String x:Key="KB_NoDocuments">Aucun document ajouté</system:String>
+    <system:String x:Key="KB_DragDrop">Glissez-déposez des fichiers ici ou cliquez</system:String>
+    <system:String x:Key="KB_SupportedFormats">Formats: PDF, DOCX, TXT, MD, JSON, CSV</system:String>
+    <system:String x:Key="KB_Indexing">Indexation...</system:String>
+    <system:String x:Key="KB_Indexed">Indexé</system:String>
+    <system:String x:Key="KB_Pending">En attente</system:String>
+    
+    <!-- Document Analysis -->
+    <system:String x:Key="DA_Title">Analyse de documents</system:String>
+    <system:String x:Key="DA_PasteText">Collez le texte à analyser...</system:String>
+    <system:String x:Key="DA_ImportFile">Importer un fichier</system:String>
+    <system:String x:Key="DA_Analyze">Analyser</system:String>
+    <system:String x:Key="DA_Clear">Effacer</system:String>
+    <system:String x:Key="DA_Summary">Résumé</system:String>
+    <system:String x:Key="DA_KeyPoints">Points clés</system:String>
+    <system:String x:Key="DA_DetectedIntents">Intentions détectées</system:String>
+    <system:String x:Key="DA_RedFlags">Signaux d'alerte</system:String>
+    <system:String x:Key="DA_ComplianceCheck">Vérification de conformité</system:String>
+    <system:String x:Key="DA_SuggestedResponse">Réponse suggérée</system:String>
+    <system:String x:Key="DA_Analyzing">Analyse du document...</system:String>
+    <system:String x:Key="DA_NoIssues">Aucun problème détecté</system:String>
+    <system:String x:Key="DA_CopyResponse">Copier la réponse</system:String>
+    <system:String x:Key="DA_RegenerateResponse">Régénérer</system:String>
+    
+    <!-- RAG Debug Panel -->
+    <system:String x:Key="Debug_Title">Débogage RAG</system:String>
+    <system:String x:Key="Debug_Sources">Sources</system:String>
+    <system:String x:Key="Debug_Metrics">Métriques</system:String>
+    <system:String x:Key="Debug_TopK">Top K</system:String>
+    <system:String x:Key="Debug_Similarity">Similarité</system:String>
+    <system:String x:Key="Debug_RetrievalMode">Mode de récupération</system:String>
+    <system:String x:Key="Debug_Vector">Vecteur</system:String>
+    <system:String x:Key="Debug_Keyword">Mot-clé (FTS)</system:String>
+    <system:String x:Key="Debug_Hybrid">Hybride</system:String>
+    <system:String x:Key="Debug_Latency">Latence</system:String>
+    <system:String x:Key="Debug_RetrievalTime">Récupération</system:String>
+    <system:String x:Key="Debug_GenerationTime">Génération</system:String>
+    <system:String x:Key="Debug_TotalTime">Total</system:String>
+    <system:String x:Key="Debug_Score">Score</system:String>
+    <system:String x:Key="Debug_Document">Document</system:String>
+    <system:String x:Key="Debug_Chunk">Fragment</system:String>
+    
+    <!-- Embeddings -->
+    <system:String x:Key="Emb_Title">Embeddings locaux</system:String>
+    <system:String x:Key="Emb_Description">Générer des embeddings localement sans API - plus rapide, moins cher, plus privé</system:String>
+    <system:String x:Key="Emb_Mode">Mode d'embedding</system:String>
+    <system:String x:Key="Emb_API">API</system:String>
+    <system:String x:Key="Emb_Local">Local</system:String>
+    <system:String x:Key="Emb_Downloaded">Téléchargé:</system:String>
+    <system:String x:Key="Emb_AvailableModels">Modèles disponibles</system:String>
+    <system:String x:Key="Emb_Download">Télécharger</system:String>
+    <system:String x:Key="Emb_Load">Charger</system:String>
+    <system:String x:Key="Emb_Unload">Décharger</system:String>
+    <system:String x:Key="Emb_Delete">Supprimer</system:String>
+    <system:String x:Key="Emb_Loaded">Chargé</system:String>
+    <system:String x:Key="Emb_NotLoaded">Non chargé</system:String>
+    <system:String x:Key="Emb_Downloading">Téléchargement...</system:String>
+    <system:String x:Key="Emb_TestSimilarity">Tester la similarité</system:String>
+    <system:String x:Key="Emb_TestDesc">Vérifier la qualité des embeddings avec des mots exemples</system:String>
+    
+    <!-- Settings -->
+    <system:String x:Key="Settings_Title">Paramètres</system:String>
+    <system:String x:Key="Settings_Language">Langue</system:String>
+    <system:String x:Key="Settings_APIConfiguration">Configuration API</system:String>
+    <system:String x:Key="Settings_APIKey">Clé API</system:String>
+    <system:String x:Key="Settings_Endpoint">Point de terminaison</system:String>
+    <system:String x:Key="Settings_Model">Modèle</system:String>
+    <system:String x:Key="Settings_RAGSettings">Paramètres RAG</system:String>
+    <system:String x:Key="Settings_EnableRAG">Activer RAG</system:String>
+    <system:String x:Key="Settings_TopK">Top K résultats</system:String>
+    <system:String x:Key="Settings_MinSimilarity">Similarité minimale</system:String>
+    <system:String x:Key="Settings_RetrievalMode">Mode de récupération</system:String>
+    <system:String x:Key="Settings_Security">Sécurité</system:String>
+    <system:String x:Key="Settings_EncryptData">Chiffrer les données</system:String>
+    <system:String x:Key="Settings_Save">Enregistrer</system:String>
+    <system:String x:Key="Settings_Reset">Réinitialiser</system:String>
+    <system:String x:Key="Settings_Saved">Paramètres enregistrés</system:String>
+    
+    <!-- Status Bar -->
+    <system:String x:Key="Status_Offline">Mode hors ligne</system:String>
+    <system:String x:Key="Status_Online">En ligne</system:String>
+    <system:String x:Key="Status_Encrypted">Chiffré</system:String>
+    <system:String x:Key="Status_NotEncrypted">Non chiffré</system:String>
+    <system:String x:Key="Status_NetworkCalls">Appels réseau</system:String>
+    <system:String x:Key="Status_Ready">Prêt</system:String>
+    <system:String x:Key="Status_Processing">Traitement...</system:String>
+    
+    <!-- Workspaces -->
+    <system:String x:Key="WS_Title">Espaces de travail</system:String>
+    <system:String x:Key="WS_Create">Créer un espace</system:String>
+    <system:String x:Key="WS_Delete">Supprimer</system:String>
+    <system:String x:Key="WS_Rename">Renommer</system:String>
+    <system:String x:Key="WS_Documents">documents</system:String>
+    <system:String x:Key="WS_LastUpdated">Dernière mise à jour</system:String>
+    <system:String x:Key="WS_Default">Espace par défaut</system:String>
+    
+    <!-- Common -->
+    <system:String x:Key="Common_Yes">Oui</system:String>
+    <system:String x:Key="Common_No">Non</system:String>
+    <system:String x:Key="Common_OK">OK</system:String>
+    <system:String x:Key="Common_Cancel">Annuler</system:String>
+    <system:String x:Key="Common_Close">Fermer</system:String>
+    <system:String x:Key="Common_Error">Erreur</system:String>
+    <system:String x:Key="Common_Warning">Avertissement</system:String>
+    <system:String x:Key="Common_Info">Information</system:String>
+    <system:String x:Key="Common_Confirm">Confirmer</system:String>
+    <system:String x:Key="Common_Loading">Chargement...</system:String>
+    <system:String x:Key="Common_Copy">Copier</system:String>
+    <system:String x:Key="Common_Copied">Copié!</system:String>
+    
+    <!-- Help -->
+    <system:String x:Key="Nav_Help">Aide</system:String>
+    <system:String x:Key="Help_Title">Aide et À propos</system:String>
+    <system:String x:Key="Help_About">À propos</system:String>
+    <system:String x:Key="Help_AppName">WPFLLM - Assistant IA</system:String>
+    <system:String x:Key="Help_Version">Version 1.0</system:String>
+    <system:String x:Key="Help_Author">Créé par Damian Tarnowski</system:String>
+    <system:String x:Key="Help_Contact">Contact: hdtdtr@gmail.com</system:String>
+    <system:String x:Key="Help_ReportBug">🐛 Signaler un bug / Contact</system:String>
+    <system:String x:Key="Help_ReportBug_Text">Vous avez trouvé un bug ou avez une suggestion ? Faites-le nous savoir !</system:String>
+    <system:String x:Key="Help_ReportBug_Button">Envoyer un message</system:String>
+    <system:String x:Key="Help_EmailCopied">Email copié dans le presse-papiers : hdtdtr@gmail.com</system:String>
+    <system:String x:Key="Help_Description">Un puissant assistant IA de bureau avec des capacités RAG (Retrieval-Augmented Generation), des embeddings locaux et une analyse de documents.</system:String>
+    
+    <system:String x:Key="Help_GettingStarted">Premiers pas</system:String>
+    <system:String x:Key="Help_GettingStarted_Text">1. Allez dans Paramètres et configurez votre clé API (OpenRouter ou API compatible)
+2. Commencez à discuter dans l'onglet Discussion
+3. Optionnellement, ajoutez des documents à la Base de connaissances pour des réponses améliorées par RAG</system:String>
+    
+    <system:String x:Key="Help_Features">Fonctionnalités</system:String>
+    <system:String x:Key="Help_Feature_Chat">Discussion - Conversation avec des modèles IA avec réponses en streaming</system:String>
+    <system:String x:Key="Help_Feature_KB">Base de connaissances - Importez des documents (PDF, DOCX, TXT, MD, JSON, CSV) et utilisez-les comme contexte pour les réponses IA</system:String>
+    <system:String x:Key="Help_Feature_DocAnalysis">Analyse de documents - Analysez des documents pour des résumés, points clés et vérifications de conformité</system:String>
+    <system:String x:Key="Help_Feature_Embeddings">Embeddings - Téléchargez et utilisez des modèles d'embedding locaux pour la recherche vectorielle hors ligne</system:String>
+    <system:String x:Key="Help_Feature_RAG">Système RAG - Récupération hybride combinant recherche vectorielle et par mots-clés avec fusion RRF</system:String>
+    
+    <system:String x:Key="Help_RAG">Système RAG</system:String>
+    <system:String x:Key="Help_RAG_Text">Le système RAG (Retrieval-Augmented Generation) améliore les réponses IA en récupérant le contexte pertinent de vos documents:
+• Recherche vectorielle - Similarité sémantique utilisant les embeddings
+• Recherche par mots-clés - Recherche plein texte (FTS5) pour correspondances exactes
+• Mode hybride - Combine les deux méthodes avec Reciprocal Rank Fusion (RRF)
+• Flight Recorder - Panneau de débogage montrant sources, candidats et temps</system:String>
+    
+    <system:String x:Key="Help_Embeddings">Embeddings locaux</system:String>
+    <system:String x:Key="Help_Embeddings_Text">Téléchargez des modèles d'embedding pour générer des vecteurs localement sans appels API:
+1. Allez dans l'onglet Embeddings
+2. Téléchargez un modèle (recommandé: Multilingual E5 Large Instruct)
+3. Cliquez sur "Charger le modèle sélectionné"
+4. Activez "Utiliser les embeddings locaux" dans les Paramètres</system:String>
+    
+    <system:String x:Key="Help_Shortcuts">Raccourcis clavier</system:String>
+    <system:String x:Key="Help_Shortcut_Send">Entrée - Envoyer le message</system:String>
+    <system:String x:Key="Help_Shortcut_NewLine">Shift+Entrée - Nouvelle ligne</system:String>
+    <system:String x:Key="Help_Shortcut_Stop">Échap - Arrêter la génération</system:String>
+
+    <!-- Validation Messages -->
+    <system:String x:Key="Validation_NoApiKey">⚠️ Aucune clé API configurée ! Allez dans Paramètres et configurez votre clé API pour utiliser le chat.</system:String>
+    <system:String x:Key="Validation_NoApiKeyAnalysis">⚠️ Aucune clé API configurée ! Allez dans Paramètres et configurez votre clé API pour analyser les documents.</system:String>
+    <system:String x:Key="Validation_EmptyKnowledgeBase">📚 La base de connaissances est vide !
+
+Pour utiliser RAG (recherche de documents) :
+1. Cliquez sur 'Ajouter des documents' et sélectionnez des fichiers
+2. Cliquez sur 'Générer les embeddings'
+3. Activez RAG dans les paramètres du chat</system:String>
+    <system:String x:Key="Chat_Welcome">Commencez une conversation !</system:String>
+    <system:String x:Key="Chat_WelcomeHint">Tapez un message ci-dessous et appuyez sur Entrée.
+Assurez-vous d'avoir configuré une clé API dans les Paramètres.</system:String>
+
+    <!-- Button Labels -->
+    <system:String x:Key="Btn_NewChat">+ Nouveau chat</system:String>
+    <system:String x:Key="Btn_DeleteSelected">Supprimer la sélection</system:String>
+    <system:String x:Key="Btn_Export">📤 Exporter</system:String>
+    <system:String x:Key="Btn_Import">📥 Importer</system:String>
+    <system:String x:Key="Btn_Send">Envoyer</system:String>
+    <system:String x:Key="Btn_Stop">Stop</system:String>
+    <system:String x:Key="Btn_AddDocuments">Ajouter des documents</system:String>
+    <system:String x:Key="Btn_GenerateEmbeddings">Générer les embeddings</system:String>
+    <system:String x:Key="Btn_Cancel">Annuler</system:String>
+    <system:String x:Key="Btn_Use">Utiliser</system:String>
+    <system:String x:Key="Btn_ShowDetails">Afficher les détails</system:String>
+    <system:String x:Key="Btn_SaveSettings">Enregistrer les paramètres</system:String>
+    <system:String x:Key="Btn_DownloadModel">Télécharger le modèle (~2.4 Go)</system:String>
+    <system:String x:Key="Chk_UseLocalLlm">Utiliser le modèle LLM local (hors ligne)</system:String>
+
+</ResourceDictionary>

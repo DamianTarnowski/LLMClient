@@ -1,0 +1,520 @@
+<UserControl x:Class="WPFLLM.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+            <StackPanel MaxWidth="700">
+            
+                <!-- Language Selection -->
+                <TextBlock Text="{DynamicResource Settings_Language}" 
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,0,0,16"/>
+                
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,32">
+                    <StackPanel>
+                        <TextBlock Text="🌐 Select Language / Wybierz język" 
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,0,0,12"/>
+                        <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                                  SelectedValue="{Binding SelectedLanguage}"
+                                  SelectedValuePath="Code"
+                                  DisplayMemberPath="NativeName"
+                                  Background="{StaticResource SurfaceLightBrush}"
+                                  Foreground="{StaticResource TextBrush}"
+                                  Padding="12,10"
+                                  FontSize="14"/>
+                    </StackPanel>
+                </Border>
+            
+                <TextBlock Text="{DynamicResource Settings_APIConfiguration}" 
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,0,0,24"/>
+
+                <!-- Mode Toggle: OpenRouter vs Native -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- OpenRouter Option -->
+                        <RadioButton IsChecked="{Binding UseOpenRouter}"
+                                     GroupName="ApiMode"
+                                     Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="🌐 OpenRouter" 
+                                           FontWeight="Bold" 
+                                           FontSize="14"
+                                           Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock Text="{DynamicResource Settings_OpenRouterDesc}" 
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"/>
+                            </StackPanel>
+                        </RadioButton>
+                        
+                        <!-- Native API Option -->
+                        <RadioButton Grid.Column="1"
+                                     IsChecked="{Binding UseOpenRouter, Converter={StaticResource InverseBoolConverter}}"
+                                     GroupName="ApiMode"
+                                     Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="🔑 Native API" 
+                                           FontWeight="Bold" 
+                                           FontSize="14"
+                                           Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock Text="{DynamicResource Settings_NativeDesc}" 
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"/>
+                            </StackPanel>
+                        </RadioButton>
+                        
+                        <!-- Native Provider Selection (only when Native mode) -->
+                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
+                                    Visibility="{Binding UseOpenRouter, Converter={StaticResource InverseBoolToVisConverter}}">
+                            <TextBlock Text="{DynamicResource Settings_SelectProvider}" 
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,0,0,8"/>
+                            <ComboBox ItemsSource="{Binding NativeProviderNames}"
+                                      SelectedItem="{Binding NativeProvider}"
+                                      Background="{StaticResource SurfaceLightBrush}"
+                                      Foreground="{StaticResource TextBrush}"
+                                      Padding="10,8"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Provider Info Box -->
+                <Border Background="{StaticResource SurfaceLightBrush}" 
+                        CornerRadius="6" 
+                        Padding="12"
+                        Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding ProviderDescription}" 
+                                       Foreground="{StaticResource TextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" 
+                                Content="🔗 Get API Key"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding OpenKeyUrlCommand}"
+                                Padding="12,6"
+                                VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- API Key -->
+                <TextBlock Text="{DynamicResource Settings_APIKey}" 
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Margin="0,0,0,8"/>
+                <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}"
+                         Margin="0,0,0,16"/>
+
+                <!-- API Endpoint (disabled for OpenRouter) -->
+                <TextBlock Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8">
+                    <Run Text="{DynamicResource Settings_Endpoint}"/>
+                    <Run Text="{DynamicResource Settings_EndpointAuto}" Foreground="{StaticResource PrimaryBrush}" 
+                         FontSize="10"/>
+                </TextBlock>
+                <TextBox Text="{Binding ApiEndpoint, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}"
+                         IsEnabled="{Binding UseOpenRouter, Converter={StaticResource InverseBoolConverter}}"
+                         Margin="0,0,0,16"/>
+
+                <!-- Favorite Models -->
+                <TextBlock Text="⭐ Ulubione modele" 
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,24,0,12"
+                           Visibility="{Binding FavoriteModels.Count, Converter={StaticResource CountToVis}}"/>
+                
+                <ItemsControl ItemsSource="{Binding FavoriteModels}"
+                              Margin="0,0,0,16"
+                              Visibility="{Binding FavoriteModels.Count, Converter={StaticResource CountToVis}}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource SurfaceBrush}" 
+                                    CornerRadius="6" 
+                                    Padding="12,8"
+                                    Margin="0,0,0,4"
+                                    Cursor="Hand">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding DisplayName}" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextBrush}"/>
+                                        <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11">
+                                            <Run Text="{Binding Provider, Mode=OneWay}"/>
+                                            <Run Text=" • "/>
+                                            <Run Text="{Binding PricingInfo, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" 
+                                            Content="{DynamicResource Btn_Use}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Padding="12,4"
+                                            Command="{Binding DataContext.UseFavoriteModelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Model Browser -->
+                <TextBlock Text="{DynamicResource Settings_ModelBrowser}" 
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,24,0,16"/>
+
+                <TextBlock Text="{DynamicResource Settings_ModelBrowserDesc}" 
+                           Foreground="{StaticResource TextMutedBrush}"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,16"/>
+
+                <!-- Provider Filter and Search -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox ItemsSource="{Binding Providers}"
+                              SelectedItem="{Binding SelectedProvider}"
+                              Background="{StaticResource SurfaceBrush}"
+                              Foreground="{StaticResource TextBrush}"
+                              Padding="10,8"
+                              Margin="0,0,8,0"/>
+                    <TextBox Grid.Column="1"
+                             Text="{Binding ModelSearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+                    <Button Grid.Column="2" Content="⟳ Refresh" 
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding LoadModelsCommand}"
+                            IsEnabled="{Binding IsLoadingModels, Converter={StaticResource InverseBoolConverter}}"
+                            Padding="12,6"
+                            Margin="8,0,0,0"/>
+                </Grid>
+
+                <!-- Models List -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="6" 
+                        Height="280"
+                        Margin="0,0,0,8">
+                    <ListBox ItemsSource="{Binding FilteredModels}"
+                             SelectedItem="{Binding SelectedModel}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="12,10"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    Padding="{TemplateBinding Padding}"
+                                                    BorderThickness="0,0,0,1"
+                                                    BorderBrush="{StaticResource SurfaceLightBrush}">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource SurfaceLightBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Foreground="{StaticResource TextBrush}">
+                                            <Run Text="{Binding DisplayName, Mode=OneWay}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{Binding Provider, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                                        </TextBlock>
+                                        <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}">
+                                            <Run Text="{Binding ContextInfo, Mode=OneWay}"/>
+                                            <Run Text=" • "/>
+                                            <Run Text="{Binding PricingInfo, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding Id}" 
+                                               FontSize="10" 
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               VerticalAlignment="Center"
+                                               Opacity="0.7"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <!-- Current Model -->
+                <Border Background="{StaticResource SurfaceBrush}" 
+                        CornerRadius="6" 
+                        Padding="16"
+                        Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Settings_CurrentModel}" 
+                                       FontSize="12"
+                                       Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding Model}" 
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource PrimaryBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" 
+                                Command="{Binding ToggleFavoriteModelCommand}"
+                                Padding="8,6"
+                                Margin="0,0,8,0"
+                                ToolTip="Add/Remove from favorites">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                    <Setter Property="Content" Value="☆"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCurrentModelFavorite}" Value="True">
+                                            <Setter Property="Content" Value="⭐"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Grid.Column="2" 
+                                Content="{DynamicResource Btn_ShowDetails}"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ToggleModelDetailsCommand}"
+                                Padding="12,6"/>
+                    </Grid>
+                </Border>
+
+                <!-- Manual Model Input -->
+                <TextBlock Text="{DynamicResource Settings_ManualModelId}" 
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Margin="0,0,0,8"/>
+                <TextBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}"
+                         Margin="0,0,0,16"/>
+
+            <TextBlock Text="{DynamicResource Settings_GenerationSettings}" 
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="{StaticResource TextBrush}"
+                       Margin="0,24,0,24"/>
+
+            <!-- Temperature -->
+            <TextBlock Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8">
+                <Run Text="{DynamicResource Settings_Temperature}"/>
+                <Run Text="{Binding Temperature, StringFormat=F2}"/>
+            </TextBlock>
+            <Slider Value="{Binding Temperature}"
+                    Minimum="0" Maximum="2" 
+                    TickFrequency="0.1"
+                    IsSnapToTickEnabled="True"
+                    Margin="0,0,0,16"/>
+
+            <!-- Max Tokens -->
+            <TextBlock Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8">
+                <Run Text="{DynamicResource Settings_MaxTokens}"/>
+                <Run Text="{Binding MaxTokens}"/>
+            </TextBlock>
+            <Slider Value="{Binding MaxTokens}"
+                    Minimum="256" Maximum="16384" 
+                    TickFrequency="256"
+                    IsSnapToTickEnabled="True"
+                    Margin="0,0,0,16"/>
+
+            <!-- System Prompt -->
+            <TextBlock Text="{DynamicResource Settings_SystemPrompt}" 
+                       Foreground="{StaticResource TextMutedBrush}"
+                       Margin="0,0,0,8"/>
+            <TextBox Text="{Binding SystemPrompt, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource ModernTextBox}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="120"
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,0,0,16"/>
+
+            <!-- Local LLM Section -->
+            <TextBlock Text="{DynamicResource Settings_LocalLLM}" 
+                       FontSize="18" 
+                       FontWeight="Bold" 
+                       Foreground="{StaticResource TextBrush}"
+                       Margin="0,0,0,16"/>
+
+            <CheckBox Content="{DynamicResource Chk_UseLocalLlm}"
+                      IsChecked="{Binding UseLocalLlm}"
+                      Foreground="{StaticResource TextBrush}"
+                      Margin="0,0,0,12"/>
+
+            <TextBlock Text="{DynamicResource Settings_LocalLLMModel}" 
+                       Foreground="{StaticResource TextMutedBrush}"
+                       Margin="0,0,0,4"/>
+            <TextBlock Text="{DynamicResource Settings_LocalLLMSpecs}" 
+                       Foreground="{StaticResource TextMutedBrush}"
+                       FontSize="12"
+                       Margin="0,0,0,12"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="{DynamicResource Settings_Status}" Foreground="{StaticResource TextMutedBrush}"/>
+                <TextBlock Foreground="{StaticResource PrimaryBrush}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{DynamicResource Settings_NotDownloaded}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLocalLlmModelDownloaded}" Value="True">
+                                    <Setter Property="Text" Value="{DynamicResource Settings_Ready}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+
+            <Button Content="{DynamicResource Btn_DownloadModel}"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding DownloadLocalLlmModelCommand}"
+                    IsEnabled="{Binding IsDownloadingModel, Converter={StaticResource InverseBool}}"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,8"/>
+
+            <TextBlock Text="{Binding DownloadProgress}" 
+                       Foreground="{StaticResource TextMutedBrush}"
+                       Margin="0,0,0,24"/>
+
+            <!-- Security Section -->
+            <TextBlock Text="{DynamicResource Settings_Security}" 
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="{StaticResource TextBrush}"
+                       Margin="0,24,0,16"/>
+
+            <Border Background="{StaticResource SurfaceBrush}" 
+                    CornerRadius="8" 
+                    Padding="16"
+                    Margin="0,0,0,16">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding EncryptData}"
+                              Foreground="{StaticResource TextBrush}"
+                              Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔒 " FontSize="16"/>
+                            <TextBlock Text="{DynamicResource Settings_EncryptData}"/>
+                        </StackPanel>
+                    </CheckBox>
+                    
+                    <Border Background="{StaticResource SurfaceLightBrush}" 
+                            CornerRadius="6" 
+                            Padding="12">
+                        <TextBlock Foreground="{StaticResource TextMutedBrush}" 
+                                   TextWrapping="Wrap"
+                                   FontSize="12">
+                            <Run Text="🛡️ "/>
+                            <Run Text="Data is encrypted using AES-256-GCM with keys protected by Windows DPAPI. "/>
+                            <Run Text="Your data never leaves this device and remains encrypted at rest."/>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Save Button -->
+            <Button Content="{DynamicResource Btn_SaveSettings}"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding SaveSettingsCommand}"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,16"/>
+
+            <!-- Status Message -->
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       FontWeight="SemiBold"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Model Details Panel -->
+        <Border Grid.Column="1" 
+                Background="{StaticResource SurfaceBrush}"
+                Width="350"
+                Visibility="{Binding ShowModelDetails, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <Border Background="{StaticResource SurfaceLightBrush}" Padding="16">
+                    <Grid>
+                        <TextBlock Text="Model Details" 
+                                   FontSize="16" 
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextBrush}"/>
+                        <Button Content="✕" 
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ToggleModelDetailsCommand}"
+                                Padding="8,4"
+                                FontSize="14"/>
+                    </Grid>
+                </Border>
+                
+                <ScrollViewer Grid.Row="1" Padding="16">
+                    <TextBlock Text="{Binding ModelDetailsText}"
+                               Foreground="{StaticResource TextBrush}"
+                               TextWrapping="Wrap"
+                               FontFamily="Consolas"
+                               FontSize="12"
+                               LineHeight="20"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
