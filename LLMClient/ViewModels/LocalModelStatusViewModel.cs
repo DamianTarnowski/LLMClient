@@ -30,8 +30,8 @@ namespace LLMClient.ViewModels
         private DateTime _lastSpeedCheck = DateTime.MinValue;
         private double _currentSpeedMBps = 0;
         
-        // Model info
-        private MlcModelInfo? _selectedModel;
+        // Model info (from ILocalModelService - works for both ONNX and LLamaSharp)
+        private long _modelSizeBytes = 0;
         private string _modelName = "";
         private string _modelSize = "";
         private string _modelDescription = "";
@@ -53,12 +53,12 @@ namespace LLMClient.ViewModels
             // Load selected model info
             LoadSelectedModelInfo();
             
-            // Subscribe to model selection changes
-            WeakReferenceMessenger.Default.Register<MlcModelSelectedMessage>(this, (r, m) =>
+            // Subscribe to model selection changes (GGUF/LLamaSharp)
+            WeakReferenceMessenger.Default.Register<GgufModelSelectedMessage>(this, (r, m) =>
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Received model change: {m.Value}");
+                    System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Received GGUF model change: {m.Value}");
                     RefreshModelInfo();
                 });
             });
@@ -69,15 +69,29 @@ namespace LLMClient.ViewModels
         
         private void LoadSelectedModelInfo()
         {
-            var selectedModelId = Preferences.Get("MlcSelectedModelId", MlcModelCatalog.GetDefaultModel().Id);
-            _selectedModel = MlcModelCatalog.GetModelById(selectedModelId) ?? MlcModelCatalog.GetDefaultModel();
-            
-            ModelName = _selectedModel?.DisplayName ?? "";
-            ModelSize = _selectedModel?.SizeDisplay ?? "";
-            ModelDescription = _selectedModel?.Description ?? "";
-            ShowModelInfo = true;
-            
-            System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Selected model: {_selectedModel?.DisplayName} ({_selectedModel?.SizeMB} MB)");
+            try
+            {
+                // Get model info from ILocalModelService (works for both ONNX and LLamaSharp)
+                var modelInfo = _localModelService.GetModelInfoAsync().GetAwaiter().GetResult();
+                
+                ModelName = modelInfo.DisplayName ?? "Model lokalny";
+                _modelSizeBytes = modelInfo.SizeInMB * 1024L * 1024L;
+                ModelSize = modelInfo.SizeInMB > 0 
+                    ? (modelInfo.SizeInMB < 1024 ? $"{modelInfo.SizeInMB} MB" : $"{modelInfo.SizeInMB / 1024.0:F1} GB")
+                    : "";
+                ModelDescription = "";
+                ShowModelInfo = true;
+                
+                System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Selected model: {ModelName} ({modelInfo.SizeInMB} MB)");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Error loading model info: {ex.Message}");
+                ModelName = "Model lokalny";
+                ModelSize = "";
+                ModelDescription = "";
+                ShowModelInfo = false;
+            }
         }
 
         public bool IsVisible
@@ -254,9 +268,9 @@ namespace LLMClient.ViewModels
             }
         }
         
-        public string ModelSizeBytes => _selectedModel?.SizeMB.ToString() ?? "";
-        public string ModelLanguages => _selectedModel?.LanguagesDisplay ?? "";
-        public string ModelCategory => _selectedModel?.CategoryDisplay ?? "";
+        public string ModelSizeBytes => _modelSizeBytes > 0 ? (_modelSizeBytes / (1024 * 1024)).ToString() : "";
+        public string ModelLanguages => "";
+        public string ModelCategory => "";
 
         private async void OnLocalModelStateChanged(LocalModelState state)
         {
@@ -269,7 +283,7 @@ namespace LLMClient.ViewModels
 
             // Calculate speed and estimated time
             var now = DateTime.UtcNow;
-            long totalBytes = (_selectedModel?.SizeMB ?? 1000) * 1024L * 1024L; // Use actual model size
+            long totalBytes = _modelSizeBytes > 0 ? _modelSizeBytes : 1000L * 1024L * 1024L; // Use actual model size
             var downloadedBytes = (long)(totalBytes * progress / 100.0);
 
             if (_lastSpeedCheck != DateTime.MinValue && (now - _lastSpeedCheck).TotalSeconds >= 1)
@@ -484,7 +498,7 @@ namespace LLMClient.ViewModels
 
         private string GetModelStatusText(string statusKey)
         {
-            var modelName = _selectedModel?.DisplayName ?? "Model lokalny";
+            var modelName = !string.IsNullOrEmpty(_modelName) ? _modelName : "Model lokalny";
             return statusKey switch
             {
                 "NotDownloaded" => $"{modelName} - nie pobrany",
@@ -534,11 +548,11 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                var modelName = _selectedModel?.DisplayName ?? "Model";
-                var modelSize = _selectedModel?.SizeDisplay ?? "?";
-                var modelDesc = _selectedModel?.Description ?? "";
-                var languages = _selectedModel?.LanguagesDisplay ?? "";
-                var ramRequired = _selectedModel?.RecommendedRamGB ?? 4;
+                var modelName = !string.IsNullOrEmpty(_modelName) ? _modelName : "Model";
+                var modelSize = !string.IsNullOrEmpty(_modelSize) ? _modelSize : "?";
+                var modelDesc = _modelDescription;
+                var languages = "";
+                var ramRequired = _modelSizeBytes > 0 ? (int)Math.Ceiling(_modelSizeBytes / (1024.0 * 1024.0 * 1024.0)) + 2 : 4;
                 
                 var message = $"📦 Model: {modelName}\n" +
                               $"📁 Rozmiar: {modelSize}\n" +
@@ -569,7 +583,8 @@ namespace LLMClient.ViewModels
             {
                 if (Shell.Current != null)
                 {
-                    await Shell.Current.GoToAsync("MlcModelSelectorPage");
+                    // Używamy GgufModelManagerPage dla wszystkich platform (LLamaSharp/ONNX)
+                    await Shell.Current.GoToAsync("GgufModelManagerPage");
                 }
             }
             catch (Exception ex)

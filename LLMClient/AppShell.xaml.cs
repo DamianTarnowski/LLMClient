@@ -8,12 +8,9 @@ namespace LLMClient
         {
             InitializeComponent();
             Routing.RegisterRoute(nameof(ModelConfigurationPage), typeof(ModelConfigurationPage));
-            Routing.RegisterRoute(nameof(MlcModelSelectorPage), typeof(MlcModelSelectorPage));
-
-            // Hide MLC Model Manager on non-mobile platforms
-#if !(ANDROID || IOS)
-            MlcModelSelectorShellContent.IsVisible = false;
-#endif
+            
+            // MLC disabled - using only ONNX and LLamaSharp (GGUF)
+            Routing.RegisterRoute(nameof(GgufModelManagerPage), typeof(GgufModelManagerPage));
         }
     }
 }

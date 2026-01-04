@@ -5,9 +5,9 @@ namespace LLMClient.Models
 {
     public enum EngineType
     {
-        OnnxGenAI,   // CPU-based, cross-platform
-        LLamaSharp,  // llama.cpp - Windows + Android ARM64
-        MlcLlm       // GPU (OpenCL/Vulkan/Metal) - iOS only, Android disabled
+        OnnxGenAI,      // CPU-based, cross-platform (ONNX Runtime GenAI)
+        LLamaSharp,     // llama.cpp - Windows + Android + iOS
+        MediaPipeGenAI  // Google AI Edge - Android + iOS (Gemma-3n multimodal)
     }
 
     public static class EngineSettings
@@ -30,18 +30,15 @@ namespace LLMClient.Models
         /// <summary>
         /// Returns the default engine for the current platform.
         /// Android: LLamaSharp (llama.cpp) - CPU-based but well-optimized
-        /// iOS: MLC LLM with Metal GPU
-        /// Windows: ONNX GenAI or LLamaSharp
-        /// MLC LLM temporarily disabled on Android - see docs/MLC_LLM_ISSUES.md
+        /// iOS: LLamaSharp (llama.cpp) - MLC disabled
+        /// Windows: ONNX GenAI (default) or LLamaSharp
         /// </summary>
         public static EngineType GetDefaultEngine()
         {
-#if ANDROID
-            return EngineType.LLamaSharp; // llama.cpp for Android
-#elif IOS
-            return EngineType.MlcLlm; // Metal GPU on iOS
+#if ANDROID || IOS
+            return EngineType.LLamaSharp; // llama.cpp for mobile
 #else
-            return EngineType.OnnxGenAI;
+            return EngineType.OnnxGenAI;  // ONNX for Windows
 #endif
         }
 

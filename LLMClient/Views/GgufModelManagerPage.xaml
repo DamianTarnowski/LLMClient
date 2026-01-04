@@ -21,96 +21,155 @@
     <ScrollView>
         <StackLayout Padding="16" Spacing="16">
 
-            <!-- Header -->
-            <Label Text="Zarządzanie Modelami GGUF"
-                   FontSize="22"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
-                   Margin="0,0,0,8"/>
-            
-            <Label Text="Wybierz i pobierz model AI do lokalnej inferencji. Mniejsze modele są szybsze na urządzeniach mobilnych."
-                   FontSize="13"
-                   TextColor="{StaticResource Gray500}"
-                   HorizontalTextAlignment="Center"
-                   Margin="0,0,0,12"/>
+            <!-- Header with gradient accent -->
+            <Border StrokeThickness="0" 
+                    StrokeShape="RoundRectangle 20"
+                    Padding="24,20"
+                    Margin="0,0,0,16">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource Tertiary}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackLayout Spacing="8">
+                    <Label Text="🤖 Modele GGUF"
+                           FontSize="26"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Wybierz i pobierz model AI do lokalnej inferencji"
+                           FontSize="14"
+                           TextColor="#E0E7FF"
+                           HorizontalTextAlignment="Center"/>
+                </StackLayout>
+            </Border>
 
             <!-- Current Model Status -->
-            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                    StrokeShape="RoundRectangle 16"
-                    StrokeThickness="0"
-                    Padding="16">
-                <StackLayout Spacing="8">
-                    <Label Text="Aktualny Model"
-                           FontSize="14"
-                           FontAttributes="Bold"
-                           TextColor="{StaticResource Gray500}"/>
-                    <Label x:Name="CurrentModelLabel"
-                           Text="Ładowanie..."
-                           FontSize="18"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
-                    <Label x:Name="ModelStatusLabel"
-                           Text=""
-                           FontSize="13"
-                           TextColor="{StaticResource Secondary}"/>
-                </StackLayout>
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Gray400}" Offset="0,2" Radius="8" Opacity="0.1" />
+                </Border.Shadow>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                    <Border Grid.Column="0" 
+                            WidthRequest="48" HeightRequest="48" 
+                            StrokeShape="RoundRectangle 24" 
+                            StrokeThickness="0"
+                            BackgroundColor="{StaticResource Secondary}">
+                        <Label Text="✓" FontSize="24" TextColor="White" 
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <StackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="Aktualny Model"
+                               FontSize="12"
+                               TextColor="{StaticResource Gray500}"/>
+                        <Label x:Name="CurrentModelLabel"
+                               Text="Ładowanie..."
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
+                        <Label x:Name="ModelStatusLabel"
+                               Text=""
+                               FontSize="13"
+                               TextColor="{StaticResource Secondary}"/>
+                    </StackLayout>
+                </Grid>
             </Border>
 
             <!-- Download Progress -->
             <Border x:Name="ProgressSection"
                     BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
                     StrokeShape="RoundRectangle 16"
-                    StrokeThickness="0"
-                    Padding="16"
+                    Stroke="{StaticResource Primary}"
+                    StrokeThickness="2"
+                    Padding="20"
                     IsVisible="False">
-                <StackLayout Spacing="8">
-                    <Label Text="Pobieranie modelu..."
-                           FontSize="14"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
-                    <ProgressBar x:Name="DownloadProgressBar"
-                                 Progress="0"
-                                 ProgressColor="{StaticResource Primary}"/>
+                <StackLayout Spacing="12">
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <ActivityIndicator IsRunning="True" Color="{StaticResource Primary}" 
+                                          WidthRequest="20" HeightRequest="20"/>
+                        <Label Text="Pobieranie modelu..."
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center"/>
+                    </StackLayout>
+                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                            StrokeShape="RoundRectangle 6"
+                            StrokeThickness="0"
+                            HeightRequest="12">
+                        <ProgressBar x:Name="DownloadProgressBar"
+                                     Progress="0"
+                                     ProgressColor="{StaticResource Primary}"
+                                     BackgroundColor="Transparent"
+                                     HeightRequest="12"/>
+                    </Border>
                     <Label x:Name="ProgressLabel"
                            Text="0%"
-                           FontSize="12"
-                           TextColor="{StaticResource Gray500}"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Primary}"
                            HorizontalTextAlignment="Center"/>
                 </StackLayout>
             </Border>
 
-            <!-- Models List -->
-            <Label Text="Dostępne Modele"
-                   FontSize="16"
-                   FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
-                   Margin="0,8,0,0"/>
+            <!-- Models List Header -->
+            <StackLayout Orientation="Horizontal" Margin="0,12,0,4">
+                <Label Text="📦 Dostępne Modele"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                       VerticalOptions="Center"/>
+                <Label Text=" • Wybierz jeden"
+                       FontSize="13"
+                       TextColor="{StaticResource Gray500}"
+                       VerticalOptions="Center"/>
+            </StackLayout>
 
             <CollectionView x:Name="ModelsCollectionView"
                             SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                                StrokeShape="RoundRectangle 12"
-                                StrokeThickness="0"
-                                Padding="16"
-                                Margin="0,4">
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                        <Border StrokeShape="RoundRectangle 14"
+                                Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                                StrokeThickness="1"
+                                Padding="18"
+                                Margin="0,6">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                                    <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12">
                                 <!-- Model Name -->
-                                <StackLayout Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                                <StackLayout Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="10">
                                     <Label Text="{Binding DisplayName}"
-                                           FontSize="16"
+                                           FontSize="17"
                                            FontAttributes="Bold"
                                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                                            VerticalOptions="Center"/>
-                                    <Border BackgroundColor="{StaticResource Primary}"
-                                            StrokeShape="RoundRectangle 8"
+                                    <Border StrokeShape="RoundRectangle 10"
                                             StrokeThickness="0"
-                                            Padding="6,2"
+                                            Padding="8,4"
                                             IsVisible="{Binding IsRecommended}">
-                                        <Label Text="Zalecany"
-                                               FontSize="10"
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                                                <GradientStop Color="{StaticResource Tertiary}" Offset="1.0" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Label Text="⭐ Zalecany"
+                                               FontSize="11"
                                                TextColor="White"
                                                FontAttributes="Bold"/>
                                     </Border>
@@ -121,14 +180,17 @@
                                        Text="{Binding Description}"
                                        FontSize="13"
                                        TextColor="{StaticResource Gray500}"
-                                       Margin="0,4,0,0"/>
+                                       Margin="0,6,0,0"
+                                       LineBreakMode="WordWrap"/>
                                 
-                                <!-- Size -->
-                                <Label Grid.Column="0" Grid.Row="2"
-                                       Text="{Binding SizeInMB, StringFormat='Rozmiar: {0} MB'}"
-                                       FontSize="12"
-                                       TextColor="{StaticResource Gray400}"
-                                       Margin="0,4,0,0"/>
+                                <!-- Size with icon -->
+                                <StackLayout Grid.Column="0" Grid.Row="2" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                                    <Label Text="💾" FontSize="12" VerticalOptions="Center"/>
+                                    <Label Text="{Binding SizeInMB, StringFormat='{0} MB'}"
+                                           FontSize="12"
+                                           TextColor="{StaticResource Gray400}"
+                                           VerticalOptions="Center"/>
+                                </StackLayout>
                                 
                                 <!-- Action Button -->
                                 <Button Grid.Column="1" Grid.RowSpan="3"
@@ -136,12 +198,16 @@
                                         Command="{Binding ActionCommand}"
                                         BackgroundColor="{Binding ButtonColor}"
                                         TextColor="White"
-                                        CornerRadius="10"
-                                        HeightRequest="44"
-                                        WidthRequest="100"
-                                        FontSize="13"
+                                        CornerRadius="12"
+                                        HeightRequest="48"
+                                        WidthRequest="110"
+                                        FontSize="14"
                                         FontAttributes="Bold"
-                                        VerticalOptions="Center"/>
+                                        VerticalOptions="Center">
+                                    <Button.Shadow>
+                                        <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="4" Opacity="0.2" />
+                                    </Button.Shadow>
+                                </Button>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -150,15 +216,24 @@
 
             <!-- Actions -->
             <Button x:Name="LoadModelButton"
-                    Text="Załaduj Wybrany Model"
-                    BackgroundColor="{StaticResource Secondary}"
+                    Text="🚀 Załaduj Wybrany Model"
                     TextColor="White"
-                    CornerRadius="12"
-                    HeightRequest="50"
-                    FontSize="15"
+                    CornerRadius="14"
+                    HeightRequest="56"
+                    FontSize="16"
                     FontAttributes="Bold"
-                    Margin="0,16,0,0"
-                    Clicked="OnLoadModelClicked"/>
+                    Margin="0,20,0,0"
+                    Clicked="OnLoadModelClicked">
+                <Button.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="{StaticResource Secondary}" Offset="0.0" />
+                        <GradientStop Color="#059669" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Button.Background>
+                <Button.Shadow>
+                    <Shadow Brush="{StaticResource Secondary}" Offset="0,4" Radius="8" Opacity="0.3" />
+                </Button.Shadow>
+            </Button>
 
         </StackLayout>
     </ScrollView>

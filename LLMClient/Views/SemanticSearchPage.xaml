@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
              xmlns:converters="clr-namespace:LLMClient.Converters"
+             x:DataType="viewmodels:SemanticSearchViewModel"
              Title="Wyszukiwanie Semantyczne"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
@@ -248,7 +249,7 @@
                                     Margin="12,4">
 
                                 <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:SemanticSearchViewModel}}, Path=NavigateToMessageCommand}"
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToMessageCommand}"
                                                           CommandParameter="{Binding .}"/>
                                 </Border.GestureRecognizers>
 

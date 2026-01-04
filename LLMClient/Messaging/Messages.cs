@@ -36,9 +36,9 @@ namespace LLMClient.Messaging
         public ModelsChangedMessage() : base(true) {}
     }
 
-    // MLC Model selection changed
-    public sealed class MlcModelSelectedMessage : ValueChangedMessage<string>
+    // GGUF Model selection changed (LLamaSharp)
+    public sealed class GgufModelSelectedMessage : ValueChangedMessage<string>
     {
-        public MlcModelSelectedMessage(string modelId) : base(modelId) {}
+        public GgufModelSelectedMessage(string modelId) : base(modelId) {}
     }
 }

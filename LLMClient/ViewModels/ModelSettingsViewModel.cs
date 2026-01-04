@@ -137,18 +137,11 @@ namespace LLMClient.ViewModels
             }
         }
 
-        // Engine options vary by platform:
-        // - Windows: ONNX GenAI (CPU) + LLamaSharp (CPU/GPU)
-        // - Android: ONNX GenAI (CPU) + LLamaSharp (CPU) - MLC disabled due to Vulkan issues
-        // - iOS: ONNX GenAI (CPU) + MLC LLM (GPU via Metal)
-#if WINDOWS
-        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp };
-#elif ANDROID
-        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp };
-#elif IOS
-        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.MlcLlm };
+        // Engine options: ONNX GenAI (CPU) + LLamaSharp (llama.cpp) + MediaPipe GenAI (Gemma)
+#if ANDROID || IOS
+        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp, EngineType.MediaPipeGenAI };
 #else
-        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI };
+        public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp };
 #endif
 
         public EngineType SelectedEngine
@@ -199,19 +192,13 @@ namespace LLMClient.ViewModels
                 // Show friendly name based on selected local engine
                 var engineName = SelectedEngine switch
                 {
-                    EngineType.LLamaSharp => "Llama (Local CPU/GPU)",
-                    EngineType.OnnxGenAI => "Qwen ONNX (Local CPU)",
-                    EngineType.MlcLlm => "MLC LLM (Local GPU)",
+                    EngineType.LLamaSharp => "LLamaSharp (llama.cpp)",
+                    EngineType.OnnxGenAI => "ONNX GenAI (Phi-4)",
+                    EngineType.MediaPipeGenAI => "MediaPipe (Gemma)",
                     _ => "Local Model"
                 };
                 CurrentModelName = engineName;
-#if ANDROID
-                ModelType = SelectedEngine == EngineType.MlcLlm ? "GPU Accelerated (OpenCL)" : "Local AI Model";
-#elif IOS
-                ModelType = SelectedEngine == EngineType.MlcLlm ? "GPU Accelerated (Metal)" : "Local AI Model";
-#else
                 ModelType = "Local AI Model";
-#endif
             }
             else
             {

@@ -6,29 +6,41 @@
              x:DataType="viewModels:LocalModelStatusViewModel"
              x:Name="LocalModelStatusRoot">
 
-    <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-            StrokeShape="RoundRectangle 12"
-            StrokeThickness="0"
-            Padding="16,12"
-            Margin="16,8"
+    <Border StrokeShape="RoundRectangle 16"
+            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+            StrokeThickness="1"
+            Padding="20,16"
+            Margin="16,12"
             IsVisible="{Binding IsVisible}">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+            </LinearGradientBrush>
+        </Border.Background>
         <Border.Shadow>
-            <Shadow Brush="{StaticResource Gray400}" Offset="0,1" Radius="4" Opacity="0.1" />
+            <Shadow Brush="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Black}}" 
+                    Offset="0,4" Radius="12" Opacity="0.15" />
         </Border.Shadow>
 
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
 
             <!-- Status Icon -->
             <Border Grid.Column="0" Grid.Row="0"
-                    WidthRequest="44"
-                    HeightRequest="44"
-                    StrokeShape="RoundRectangle 22"
+                    WidthRequest="52"
+                    HeightRequest="52"
+                    StrokeShape="RoundRectangle 26"
                     StrokeThickness="0"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Primary}}"
-                    Margin="0,0,12,0"
+                    Margin="0,0,16,0"
                     VerticalOptions="Center">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource Tertiary}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Label Text="{Binding StatusIcon}"
-                       FontSize="20"
+                       FontSize="24"
                        HorizontalOptions="Center"
                        VerticalOptions="Center" />
             </Border>
@@ -59,29 +71,37 @@
             </StackLayout>
 
             <!-- Action Buttons -->
-            <StackLayout Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="8" VerticalOptions="Center">
+            <StackLayout Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="10" VerticalOptions="Center">
                 <!-- Change Model Button (only when not downloaded/downloading) -->
                 <Button Text="Zmień"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
-                        TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
-                        FontSize="11"
-                        CornerRadius="8"
-                        Padding="10,6"
-                        HeightRequest="32"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
+                        TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                        FontSize="12"
+                        CornerRadius="10"
+                        Padding="14,0"
+                        HeightRequest="38"
                         Command="{Binding SelectModelCommand}"
-                        IsVisible="{Binding ShowModelInfo}" />
+                        IsVisible="{Binding ShowModelInfo}">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Gray400}" Offset="0,1" Radius="2" Opacity="0.1" />
+                    </Button.Shadow>
+                </Button>
                 
                 <!-- Main Action Button -->
                 <Button Text="{Binding ActionButtonText}"
                         BackgroundColor="{Binding ActionButtonColor}"
                         TextColor="White"
-                        FontSize="12"
+                        FontSize="13"
                         FontAttributes="Bold"
-                        CornerRadius="10"
-                        Padding="16,8"
-                        HeightRequest="36"
+                        CornerRadius="12"
+                        Padding="20,0"
+                        HeightRequest="42"
                         Command="{Binding ActionCommand}"
-                        IsVisible="{Binding ShowActionButton}" />
+                        IsVisible="{Binding ShowActionButton}">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Primary}" Offset="0,3" Radius="6" Opacity="0.3" />
+                    </Button.Shadow>
+                </Button>
             </StackLayout>
 
             <!-- Warning Banner -->

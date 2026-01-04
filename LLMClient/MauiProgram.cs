@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel.Services;
 using LLMClient.Services;
 using LLMClient.ViewModels;
 using LLMClient.Views;
@@ -32,10 +31,6 @@ namespace LLMClient
             // Rejestracja serwisów dla Dependency Injection
             builder.Services.AddSingleton<DatabaseService>();
 
-            // MLC Model Download Service (Android/iOS)
-#if ANDROID || IOS
-            builder.Services.AddSingleton<MlcModelDownloadService>();
-#endif
             builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
             builder.Services.AddSingleton<IStreamingBatchService, StreamingBatchService>();
@@ -78,24 +73,21 @@ namespace LLMClient
                 return new SafeLocalModelWrapper(wrapperLogger, switchable, errorHandling);
             });
 #elif ANDROID
-            // Android: LLamaSharp (llama.cpp) for local inference
-            // MLC LLM temporarily disabled due to Samsung S25 OpenCL removal and Vulkan build issues
+            // Android: LLamaSharp (llama.cpp) + MediaPipe GenAI (Gemma)
             builder.Services.AddSingleton<LlamaSharpLocalModelService>(provider =>
             {
                 var llamaLogger = provider.GetRequiredService<ILogger<LlamaSharpLocalModelService>>();
                 return new LlamaSharpLocalModelService(llamaLogger);
             });
 
-            // Keep MLC registered but disabled (for future use when Vulkan is fixed)
-            builder.Services.AddSingleton<MlcLlmLocalModelService>(provider =>
+            // MediaPipe GenAI for Gemma models (Google AI Edge)
+            builder.Services.AddSingleton<MediaPipeLocalModelService>(provider =>
             {
-                var mlcLogger = provider.GetRequiredService<ILogger<MlcLlmLocalModelService>>();
-                var databaseService = provider.GetService<DatabaseService>();
-                var downloadService = provider.GetService<MlcModelDownloadService>();
-                return new MlcLlmLocalModelService(mlcLogger, databaseService, downloadService);
+                var mpLogger = provider.GetRequiredService<ILogger<MediaPipeLocalModelService>>();
+                return new MediaPipeLocalModelService(mpLogger);
             });
 
-            // Switchable service: ONNX + LLamaSharp (MLC disabled)
+            // Switchable service: ONNX + LLamaSharp + MediaPipe
             builder.Services.AddSingleton<SwitchableLocalModelService>(provider =>
             {
                 var logger = provider.GetRequiredService<ILogger<SwitchableLocalModelService>>();
@@ -103,7 +95,7 @@ namespace LLMClient
                     logger,
                     () => provider.GetRequiredService<RobustLocalModelService>(),      // ONNX
                     () => provider.GetRequiredService<LlamaSharpLocalModelService>(),  // LLamaSharp (llama.cpp)
-                    () => provider.GetRequiredService<MlcLlmLocalModelService>());     // MLC (disabled)
+                    () => provider.GetRequiredService<MediaPipeLocalModelService>());  // MediaPipe (Gemma)
             });
 
             // Expose ILocalModelService via safety wrapper around the switchable service
@@ -115,24 +107,22 @@ namespace LLMClient
                 return new SafeLocalModelWrapper(wrapperLogger, switchable, errorHandling);
             });
 #elif IOS
-            // iOS: MLC LLM for Metal GPU acceleration + ONNX fallback
-            builder.Services.AddSingleton<MlcLlmLocalModelService>(provider =>
+            // iOS: MediaPipe GenAI for Gemma models (Google AI Edge)
+            builder.Services.AddSingleton<MediaPipeLocalModelService>(provider =>
             {
-                var mlcLogger = provider.GetRequiredService<ILogger<MlcLlmLocalModelService>>();
-                var databaseService = provider.GetService<DatabaseService>();
-                var downloadService = provider.GetService<MlcModelDownloadService>();
-                return new MlcLlmLocalModelService(mlcLogger, databaseService, downloadService);
+                var mpLogger = provider.GetRequiredService<ILogger<MediaPipeLocalModelService>>();
+                return new MediaPipeLocalModelService(mpLogger);
             });
 
-            // Switchable service for iOS
+            // Switchable service for iOS: ONNX + MediaPipe
             builder.Services.AddSingleton<SwitchableLocalModelService>(provider =>
             {
                 var logger = provider.GetRequiredService<ILogger<SwitchableLocalModelService>>();
                 return new SwitchableLocalModelService(
                     logger,
                     () => provider.GetRequiredService<RobustLocalModelService>(),
-                    () => provider.GetRequiredService<RobustLocalModelService>(),
-                    () => provider.GetRequiredService<MlcLlmLocalModelService>());
+                    () => provider.GetRequiredService<RobustLocalModelService>(),  // No LLamaSharp on iOS
+                    () => provider.GetRequiredService<MediaPipeLocalModelService>());
             });
 
             // Expose ILocalModelService via safety wrapper around the switchable service
@@ -230,22 +220,12 @@ namespace LLMClient
             // Rejestracja ModelSettingsViewModel
             builder.Services.AddTransient<ModelSettingsViewModel>();
 
-            // MLC Model Selector ViewModel (Android/iOS only)
-#if ANDROID || IOS
-            builder.Services.AddTransient<MlcModelSelectorViewModel>();
-#endif
-
             // Rejestracja Pages
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<ModelConfigurationPage>();
             builder.Services.AddTransient<SemanticSearchPage>();
             builder.Services.AddTransient<MemoryPage>();
             builder.Services.AddTransient<ModelSettingsPage>();
-
-            // MLC Model Selector Page (Android/iOS only)
-#if ANDROID || IOS
-            builder.Services.AddTransient<MlcModelSelectorPage>();
-#endif
 
             // GGUF Model Manager Page (Windows/Android - LLamaSharp)
 #if WINDOWS || ANDROID

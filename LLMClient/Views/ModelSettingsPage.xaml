@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
              x:Class="LLMClient.Views.ModelSettingsPage"
+             x:DataType="viewmodels:ModelSettingsViewModel"
              Title="Ustawienia Modelu"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
@@ -21,70 +23,130 @@
     <ScrollView>
         <StackLayout Padding="20" Spacing="16">
 
-            <!-- Header -->
-            <Label Text="Ustawienia Modelu AI"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
-                   Margin="0,0,0,12"/>
-
-            <!-- Current Model Info -->
-            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                    StrokeShape="RoundRectangle 16"
-                    StrokeThickness="0"
-                    Padding="20">
+            <!-- Header with gradient -->
+            <Border StrokeThickness="0" 
+                    StrokeShape="RoundRectangle 20"
+                    Padding="24,20"
+                    Margin="0,0,0,8">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                        <GradientStop Color="{StaticResource Tertiary}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Border.Shadow>
-                    <Shadow Brush="{StaticResource Gray400}" Offset="0,2" Radius="8" Opacity="0.1" />
+                    <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="12" Opacity="0.3" />
                 </Border.Shadow>
-                <StackLayout Spacing="8">
-                    <Label Text="Aktywny Model"
+                <StackLayout Spacing="4">
+                    <Label Text="⚙️ Ustawienia Modelu"
+                           FontSize="26"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Dostosuj parametry AI"
                            FontSize="14"
-                           FontAttributes="Bold"
-                           TextColor="{StaticResource Gray500}"/>
-                    <Label Text="{Binding CurrentModelName}"
-                           FontSize="18"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
-                    <Label Text="{Binding ModelType}"
-                           FontSize="13"
-                           TextColor="{StaticResource Secondary}"/>
+                           TextColor="#E0E7FF"
+                           HorizontalTextAlignment="Center"/>
                 </StackLayout>
             </Border>
 
-            <!-- Local Engine Selection -->
-            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                    StrokeShape="RoundRectangle 16"
-                    StrokeThickness="0"
+            <!-- Current Model Info -->
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
                     Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Gray400}" Offset="0,3" Radius="10" Opacity="0.12" />
+                </Border.Shadow>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                    <Border Grid.Column="0" 
+                            WidthRequest="52" HeightRequest="52" 
+                            StrokeShape="RoundRectangle 26" 
+                            StrokeThickness="0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="{StaticResource Secondary}" Offset="0.0" />
+                                <GradientStop Color="#059669" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Label Text="🤖" FontSize="24" 
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <StackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="Aktywny Model"
+                               FontSize="12"
+                               TextColor="{StaticResource Gray500}"/>
+                        <Label Text="{Binding CurrentModelName}"
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
+                        <Label Text="{Binding ModelType}"
+                               FontSize="13"
+                               TextColor="{StaticResource Secondary}"/>
+                    </StackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Local Engine Selection -->
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
+                    Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <StackLayout Spacing="12">
-                    <Label Text="Silnik Lokalny"
-                           FontSize="16"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <Label Text="⚡" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="Silnik Lokalny"
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center"/>
+                    </StackLayout>
                     <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
-                            StrokeShape="RoundRectangle 10"
+                            StrokeShape="RoundRectangle 12"
                             StrokeThickness="0"
-                            Padding="12,0">
+                            Padding="14,4">
                         <Picker ItemsSource="{Binding EngineOptions}"
                                 SelectedItem="{Binding SelectedEngine}"
                                 Title="Wybierz silnik"
                                 TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
-                                TitleColor="{StaticResource Gray500}" />
+                                TitleColor="{StaticResource Gray500}"
+                                FontSize="15"/>
                     </Border>
                 </StackLayout>
             </Border>
 
             <!-- System Prompt Section -->
-            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                    StrokeShape="RoundRectangle 16"
-                    StrokeThickness="0"
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
                     Padding="20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <StackLayout Spacing="12">
-                    <Label Text="Prompt Systemowy"
-                           FontSize="16"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <Label Text="📝" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="Prompt Systemowy"
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center"/>
+                    </StackLayout>
 
                     <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                             StrokeShape="RoundRectangle 12"
@@ -123,16 +185,26 @@
             </Border>
 
             <!-- Local Model Parameters -->
-            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                    StrokeShape="RoundRectangle 16"
-                    StrokeThickness="0"
+            <Border StrokeShape="RoundRectangle 16"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    StrokeThickness="1"
                     Padding="20"
                     IsVisible="{Binding IsLocalModelActive}">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark=#111827}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <StackLayout Spacing="20">
-                    <Label Text="Parametry Modelu Lokalnego"
-                           FontSize="16"
-                           FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <Label Text="🏛️" FontSize="18" VerticalOptions="Center"/>
+                        <Label Text="Parametry Modelu"
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center"/>
+                    </StackLayout>
 
                     <!-- Temperature -->
                     <StackLayout Spacing="8">
@@ -261,26 +333,44 @@
             </Border>
 
             <!-- Action Buttons -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,12,0,0">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16" Margin="0,20,0,0">
                 <Button Grid.Column="0"
-                        Text="Zapisz"
+                        Text="✔️ Zapisz"
                         Command="{Binding SaveCommand}"
-                        BackgroundColor="{StaticResource Secondary}"
                         TextColor="White"
-                        CornerRadius="12"
-                        HeightRequest="50"
-                        FontSize="15"
-                        FontAttributes="Bold"/>
+                        CornerRadius="14"
+                        HeightRequest="54"
+                        FontSize="16"
+                        FontAttributes="Bold">
+                    <Button.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="{StaticResource Secondary}" Offset="0.0" />
+                            <GradientStop Color="#059669" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Secondary}" Offset="0,3" Radius="6" Opacity="0.3" />
+                    </Button.Shadow>
+                </Button>
 
                 <Button Grid.Column="1"
-                        Text="Resetuj"
+                        Text="🔄 Resetuj"
                         Command="{Binding ResetCommand}"
-                        BackgroundColor="{StaticResource Error}"
                         TextColor="White"
-                        CornerRadius="12"
-                        HeightRequest="50"
-                        FontSize="15"
-                        FontAttributes="Bold"/>
+                        CornerRadius="14"
+                        HeightRequest="54"
+                        FontSize="16"
+                        FontAttributes="Bold">
+                    <Button.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="{StaticResource Error}" Offset="0.0" />
+                            <GradientStop Color="#DC2626" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource Error}" Offset="0,3" Radius="6" Opacity="0.3" />
+                    </Button.Shadow>
+                </Button>
             </Grid>
 
         </StackLayout>

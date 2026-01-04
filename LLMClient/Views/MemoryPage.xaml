@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodel="clr-namespace:LLMClient.ViewModels"
              xmlns:converters="clr-namespace:LLMClient.Converters"
+             x:DataType="viewmodel:MemoryPageViewModel"
              Title="Pamięć AI"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 

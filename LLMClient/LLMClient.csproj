@@ -20,7 +20,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
-		<!-- Android: Extract native libraries on install (required for MLC LLM) -->
+		<!-- Android: Extract native libraries on install -->
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 		<AndroidUseAapt2>true</AndroidUseAapt2>
 		<AndroidExtractNativeLibsOnInstall>true</AndroidExtractNativeLibsOnInstall>
@@ -88,6 +88,10 @@
 		<!-- v0.25.0 has official Android ARM64 support with libllama.so -->
 		<PackageReference Include="LLamaSharp" Version="0.25.0" Condition="$(TargetFramework.Contains('windows')) OR $(TargetFramework.Contains('android'))" />
 		
+		<!-- MediaPipe GenAI for Google AI Edge LLM inference (Gemma-3n, multimodal) -->
+		<PackageReference Include="Xamarin.Google.MediaPipe.Tasks.GenAI" Version="0.10.29" Condition="$(TargetFramework.Contains('android'))" />
+		<PackageReference Include="MediaPipeTasksGenAI.iOS" Version="0.10.24" Condition="$(TargetFramework.Contains('ios'))" />
+		
 		<!-- Windows backends: CPU + CUDA -->
 		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
 			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
@@ -148,21 +152,6 @@
 
     <!-- LLamaSharp native libs now come from LLamaSharp.Backend.Cpu.Android NuGet package -->
     
-    <!-- MLC LLM native libs are intentionally not bundled by default.
-        To experiment locally, drop the .so files into Platforms/Android/libs/arm64-v8a and the build will pick them up. -->
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm4j_runtime_packed.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\libtvm4j_runtime_packed.so')" />
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libtvm_ffi.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\libtvm_ffi.so')" />
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\libphi2_q4f16_1_.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\libphi2_q4f16_1_.so')" />
-    <AndroidNativeLibrary Include="Platforms\Android\libs\arm64-v8a\librtld_global_loader.so" Abi="arm64-v8a" Condition="Exists('Platforms\\Android\\libs\\arm64-v8a\\librtld_global_loader.so')" />
-
-    <!-- Java source files for MLC LLM / TVM integration -->
-    <!-- Apache TVM Java bindings (org.apache.tvm package) -->
-    <AndroidJavaSource Include="Platforms\Android\Java\org\apache\tvm\*.java" />
-    <AndroidJavaSource Include="Platforms\Android\Java\org\apache\tvm\rpc\*.java" />
-    <!-- MLC LLM FFI engine (ai.mlc.mlcllm package) -->
-    <AndroidJavaSource Include="Platforms\Android\Java\ai\mlc\mlcllm\*.java" />
-    <!-- RTLD_GLOBAL loader helper (com.llmclient.mlcllm package) -->
-    <AndroidJavaSource Include="Platforms\Android\Java\com\llmclient\mlcllm\*.java" />
   </ItemGroup>
 
 	<!-- Generate path property for LLamaSharp.Backend.Cpu to allow runtime asset filtering -->

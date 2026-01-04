@@ -10,18 +10,18 @@ namespace LLMClient.Services
     /// <summary>
     /// Allows switching between different local model engine implementations at runtime.
     /// Delegates ILocalModelService calls to the currently selected engine and rewires events.
-    /// Supports: ONNX GenAI (CPU), LLamaSharp (Windows), MLC LLM (GPU - Android/iOS)
+    /// Supports: ONNX GenAI (CPU), LLamaSharp (llama.cpp), MediaPipe GenAI (Google AI Edge)
     /// </summary>
     public class SwitchableLocalModelService : ILocalModelService, IDisposable
     {
         private readonly ILogger<SwitchableLocalModelService> _logger;
         private readonly Func<ILocalModelService> _onnxFactory;
         private readonly Func<ILocalModelService> _llamaFactory;
-        private readonly Func<ILocalModelService?> _mlcFactory;
+        private readonly Func<ILocalModelService?> _mediaPipeFactory;
 
         private ILocalModelService? _onnxService;
         private ILocalModelService? _llamaService;
-        private ILocalModelService? _mlcService;
+        private ILocalModelService? _mediaPipeService;
 
         private readonly object _swapLock = new();
 
@@ -35,12 +35,12 @@ namespace LLMClient.Services
             ILogger<SwitchableLocalModelService> logger,
             Func<ILocalModelService> onnxFactory,
             Func<ILocalModelService> llamaFactory,
-            Func<ILocalModelService?>? mlcFactory = null)
+            Func<ILocalModelService?>? mediaPipeFactory = null)
         {
             _logger = logger;
             _onnxFactory = onnxFactory;
             _llamaFactory = llamaFactory;
-            _mlcFactory = mlcFactory ?? (() => null);
+            _mediaPipeFactory = mediaPipeFactory ?? (() => null);
 
             _currentEngine = EngineSettings.LoadSelectedEngine();
             _current = ChooseService(_currentEngine);
@@ -63,9 +63,9 @@ namespace LLMClient.Services
             return _llamaService ??= _llamaFactory();
         }
 
-        private ILocalModelService? GetMlcService()
+        private ILocalModelService? GetMediaPipeService()
         {
-            return _mlcService ??= _mlcFactory();
+            return _mediaPipeService ??= _mediaPipeFactory();
         }
 
         private ILocalModelService ChooseService(EngineType engine)
@@ -74,8 +74,11 @@ namespace LLMClient.Services
             {
                 case EngineType.LLamaSharp:
                     return GetLlamaService();
-                case EngineType.MlcLlm:
-                    return GetMlcService() ?? GetOnnxService(); // Fallback to ONNX if MLC not available
+                case EngineType.MediaPipeGenAI:
+                    var mp = GetMediaPipeService();
+                    if (mp != null) return mp;
+                    _logger.LogWarning("[Switchable] MediaPipe niedostępny, fallback do ONNX");
+                    return GetOnnxService();
                 default:
                     return GetOnnxService();
             }
