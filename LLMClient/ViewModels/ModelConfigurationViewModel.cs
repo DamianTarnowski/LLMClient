@@ -87,7 +87,18 @@ namespace LLMClient.ViewModels
         {
             AiProvider.OpenAI,
             AiProvider.Gemini,
-            AiProvider.OpenAICompatible
+            AiProvider.Anthropic,
+            AiProvider.Mistral,
+            AiProvider.Groq,
+            AiProvider.DeepSeek,
+            AiProvider.xAI,
+            AiProvider.Perplexity,
+            AiProvider.Together,
+            AiProvider.Fireworks,
+            AiProvider.OpenRouter,
+            AiProvider.Cohere,
+            AiProvider.OpenAICompatible,
+            AiProvider.LocalModel
         };
 
         public ICommand AddNewModelCommand { get; }
