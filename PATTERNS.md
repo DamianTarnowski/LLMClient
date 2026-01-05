@@ -570,14 +570,32 @@ public MainPageViewModel(
 
 Data access abstraction.
 
+### Batch Loading (N+1 Query Optimization)
+
+Optimizing database access by loading related data in batches instead of sequential queries.
+
 ```csharp
 // Services/DatabaseService.cs
-public interface IDatabaseService
+public async Task<List<Conversation>> GetConversationsAsync()
 {
-    Task<List<Conversation>> GetConversationsAsync();
-    Task<Conversation> SaveConversationAsync(Conversation conversation);
-    Task DeleteConversationAsync(int id);
-    // ...
+    await EnsureDatabaseInitializedAsync();
+    
+    // Load all conversations and messages in 2 queries (instead of N+1)
+    var conversations = await _database!.Table<Conversation>().ToListAsync();
+    var allMessages = await _database.Table<Message>().ToListAsync();
+    
+    // Group in memory for O(1) lookup
+    var messagesByConversation = allMessages
+        .GroupBy(m => m.ConversationId)
+        .ToDictionary(g => g.Key, g => g.ToList());
+
+    foreach (var conversation in conversations)
+    {
+        conversation.Messages = messagesByConversation.TryGetValue(conversation.Id, out var msgs)
+            ? new ObservableCollection<Message>(msgs)
+            : [];
+    }
+    return conversations;
 }
 ```
 
@@ -786,6 +804,7 @@ Projekt LLMClient demonstruje wykorzystanie najnowszych funkcji C# 12 i .NET 10:
 | **BindableProperty** | Tworzenie właściwości bindowalnych w kontrolkach |
 | **Dependency Injection** | Wstrzykiwanie zależności przez konstruktor |
 | **Repository Pattern** | Abstrakcja dostępu do danych |
+| **Batch Loading** | Optymalizacja zapytań (rozwiązanie problemu N+1) przez pobieranie danych grupowo |
 | **Service Layer** | Separacja logiki biznesowej |
 | **Dispose Pattern** | Prawidłowe zwalnianie zasobów |
 | **SecureStorage** | Bezpieczne przechowywanie kluczy API |

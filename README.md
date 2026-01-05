@@ -21,7 +21,7 @@ LLMClient is an advanced, cross-platform AI client built with .NET MAUI that ena
 
 ## Technology Stack
 
-- **Framework:** .NET 9 / .NET MAUI
+- **Framework:** .NET 10 / .NET MAUI
 - **Languages:** C#, XAML, Rust
 - **Architecture:** MVVM (Model-View-ViewModel)
 - **AI & LLM:**
@@ -35,9 +35,9 @@ LLMClient is an advanced, cross-platform AI client built with .NET MAUI that ena
 
 ### Requirements
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Rust toolchain (for compiling the tokenizer library)
-- Configured .NET MAUI environment (according to [official documentation](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation?view=net-maui-9.0&tabs=visual-studio))
+- Configured .NET MAUI environment (according to [official documentation](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation?view=net-maui-10.0&tabs=visual-studio))
 
 ### Building and Running
 
@@ -155,7 +155,7 @@ LLMClient to zaawansowany, wieloplatformowy klient AI, stworzony w .NET MAUI, kt
 
 ## Stos Technologiczny
 
-- **Framework:** .NET 9 / .NET MAUI
+- **Framework:** .NET 10 / .NET MAUI
 - **Języki:** C#, XAML, Rust
 - **Architektura:** MVVM (Model-View-ViewModel)
 - **AI & LLM:**
@@ -169,9 +169,9 @@ LLMClient to zaawansowany, wieloplatformowy klient AI, stworzony w .NET MAUI, kt
 
 ### Wymagania
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Rust toolchain (do kompilacji biblioteki tokenizera)
-- Skonfigurowane środowisko dla .NET MAUI (zgodnie z [oficjalną dokumentacją](https://learn.microsoft.com/pl-pl/dotnet/maui/get-started/installation?view=net-maui-9.0&tabs=visual-studio))
+- Skonfigurowane środowisko dla .NET MAUI (zgodnie z [oficjalną dokumentacją](https://learn.microsoft.com/pl-pl/dotnet/maui/get-started/installation?view=net-maui-10.0&tabs=visual-studio))
 
 ### Budowanie i Uruchomienie
 
