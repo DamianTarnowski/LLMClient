@@ -245,6 +245,7 @@ public partial class MainPage : ContentPage
                 " Ustawienia modeli",
                 " Konfiguracja API",
                 " Dokumenty RAG",
+                " Pomoc",
                 " Diagnostyka i testy");
 
             switch (result)
@@ -260,6 +261,9 @@ public partial class MainPage : ContentPage
                     break;
                 case " Dokumenty RAG":
                     viewModel.GoToRagCommand.Execute(null);
+                    break;
+                case " Pomoc":
+                    await Shell.Current.GoToAsync(nameof(Views.HelpPage));
                     break;
                 case " Diagnostyka i testy":
                     viewModel.GoToDiagnosticsCommand.Execute(null);

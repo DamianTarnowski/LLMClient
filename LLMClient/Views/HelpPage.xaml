@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="LLMClient.Views.HelpPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
+             Title="{helpers:Translate Help}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="20">
+            
+            <!-- Header -->
+            <Label Text="{helpers:Translate HelpTitle}"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                   HorizontalOptions="Center" />
+            
+            <Label Text="{helpers:Translate HelpSubtitle}"
+                   FontSize="14"
+                   TextColor="{StaticResource Gray500}"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20" />
+
+            <!-- Getting Started Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe037;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpGettingStarted}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpGettingStartedContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Chat Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe0b7;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Secondary}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpChat}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpChatContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Local Model Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xea3b;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Success}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpLocalModel}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpLocalModelContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- API Models Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe157;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpAPIModels}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpAPIModelsContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Memory Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe322;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Warning}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpMemory}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpMemoryContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Search Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe8b6;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpSearch}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpSearchContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- RAG Documents Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe873;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Secondary}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpRAG}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpRAGContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Tips Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource Gray800}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe80e;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                        <Label Text="{helpers:Translate HelpTips}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{helpers:Translate HelpTipsContent}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                           LineHeight="1.5" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Version Info -->
+            <Label Text="{helpers:Translate HelpVersion}"
+                   FontSize="12"
+                   TextColor="{StaticResource Gray500}"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

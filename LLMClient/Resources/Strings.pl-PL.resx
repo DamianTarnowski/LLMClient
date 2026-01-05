@@ -351,4 +351,71 @@
   <data name="DatabaseEncrypted" xml:space="preserve">
     <value>Baza danych jest zaszyfrowana i bezpieczna</value>
   </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Pomoc</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Instrukcja obsługi</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>Dowiedz się, jak efektywnie korzystać z LLMClient</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Pierwsze kroki</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>Witaj w LLMClient! Ta aplikacja pozwala rozmawiać z modelami AI - lokalnie na Twoim urządzeniu lub przez chmurowe API. Zacznij od utworzenia nowej konwersacji przyciskiem "+ Nowa konwersacja". Wybierz tryb Lokalny (prywatny, offline) lub API (wymaga internetu i kluczy API).</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>Rozmowa z AI</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Wpisz wiadomość w pole tekstowe na dole i naciśnij Wyślij. AI odpowie na podstawie historii konwersacji. Możesz załączać obrazy (w trybie API z obsługiwanymi modelami). Kliknij prawym przyciskiem na wiadomości, aby ją skopiować lub usunąć. Na telefonie przesuń w lewo, aby zobaczyć opcje.</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Lokalny model AI</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>Tryb lokalny uruchamia AI bezpośrednio na Twoim urządzeniu - bez internetu, pełna prywatność. Najpierw pobierz model (około 400MB), następnie załaduj go, aby rozpocząć rozmowę. Model wykorzystuje CPU/GPU Twojego urządzenia. Wyładuj, gdy nie używasz, aby zwolnić pamięć.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Modele chmurowe API</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>Tryb API łączy się z usługami chmurowymi jak OpenAI, Google Gemini, Anthropic Claude i inne. Potrzebujesz kluczy API od tych dostawców. Przejdź do Ustawienia > Konfiguracja modeli, aby dodać klucze. Modele API są potężniejsze, ale wymagają połączenia z internetem.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>Pamięć AI</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>Funkcja Pamięci pozwala AI zapamiętywać ważne informacje o Tobie między konwersacjami. Aplikacja automatycznie wyodrębnia kluczowe fakty z rozmów. Możesz też ręcznie dodawać, edytować lub usuwać wspomnienia. Dzięki temu AI staje się bardziej spersonalizowane.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Wyszukiwanie semantyczne</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Przeszukuj wszystkie swoje konwersacje używając języka naturalnego. Wyszukiwanie semantyczne rozumie znaczenie, nie tylko słowa kluczowe. Na przykład wyszukaj "przepisy, o które pytałem", aby znaleźć rozmowy o gotowaniu, nawet jeśli nie użyłeś słowa "przepis".</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>Dokumenty RAG</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Wgraj własne dokumenty (PDF, TXT, DOCX), aby stworzyć osobistą bazę wiedzy. AI może wtedy odpowiadać na pytania na podstawie Twoich dokumentów. Przydatne do nauki, badań lub pracy z dużymi tekstami.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Wskazówki</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Bądź konkretny w pytaniach dla lepszych odpowiedzi
+• Używaj trybu lokalnego, gdy potrzebujesz prywatności lub jesteś offline
+• AI pamięta kontekst w ramach konwersacji
+• Twórz nowe konwersacje dla różnych tematów
+• Twoje dane są szyfrowane i przechowywane lokalnie
+• Dostosuj rozmiar czcionki w Ustawieniach</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Twój prywatny towarzysz AI</value>
+  </data>
 </root>

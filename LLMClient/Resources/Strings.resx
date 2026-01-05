@@ -313,4 +313,71 @@
   <data name="DatabaseEncrypted" xml:space="preserve">
     <value>Database is encrypted and secure</value>
   </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>User Guide</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>Learn how to use LLMClient effectively</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Getting Started</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>Welcome to LLMClient! This app lets you chat with AI models - either locally on your device or via cloud APIs. Start by creating a new conversation using the "+ New Conversation" button. Choose between Local mode (private, offline) or API mode (requires internet and API keys).</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>Chatting with AI</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Type your message in the text field at the bottom and press Send. The AI will respond based on your conversation history. You can attach images (in API mode with supported models). Right-click on messages to copy or delete them. Swipe left on mobile to reveal actions.</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Local AI Model</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>The Local mode runs AI directly on your device - no internet required, complete privacy. First download the model (about 400MB), then load it to start chatting. The model uses your device's CPU/GPU. Unload when not in use to free memory.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Cloud API Models</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>API mode connects to cloud services like OpenAI, Google Gemini, Anthropic Claude, and others. You need API keys from these providers. Go to Settings > Model Configuration to add your keys. API models are more powerful but require internet connection.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>AI Memory</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>The Memory feature lets the AI remember important information about you across conversations. The app automatically extracts key facts from your chats. You can also manually add, edit, or delete memories. This makes the AI more personalized over time.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Semantic Search</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Search through all your conversations using natural language. The semantic search understands meaning, not just keywords. For example, search "recipes I asked about" to find cooking-related chats even if you didn't use the word "recipe".</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>RAG Documents</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Upload your own documents (PDF, TXT, DOCX) to create a personal knowledge base. The AI can then answer questions based on your documents. This is useful for studying, research, or working with large texts.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Pro Tips</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Be specific in your questions for better answers
+• Use Local mode when you need privacy or are offline
+• The AI remembers context within a conversation
+• Create new conversations for different topics
+• Your data is encrypted and stored locally
+• Adjust font size in Settings for comfort</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Your private AI companion</value>
+  </data>
 </root>

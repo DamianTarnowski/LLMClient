@@ -13,7 +13,10 @@ namespace LLMClient
             Routing.RegisterRoute(nameof(GgufModelManagerPage), typeof(GgufModelManagerPage));
             
             // Diagnostyka i Testy - dostępna dla użytkowników
-            Routing.RegisterRoute(nameof(DebugPage), typeof(DebugPage));
+            Routing.RegisterRoute(nameof(Views.DebugPage), typeof(Views.DebugPage));
+            
+            // Pomoc / Instrukcja
+            Routing.RegisterRoute(nameof(Views.HelpPage), typeof(Views.HelpPage));
         }
     }
 }
