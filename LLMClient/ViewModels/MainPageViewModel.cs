@@ -43,6 +43,7 @@ namespace LLMClient.ViewModels
         private string? _currentActiveModel;
         private bool _isLocalModelBusy;
         private bool _isUpdatingFilteredMessages;
+        private CancellationTokenSource? _searchDebounceToken;
 
         public ObservableCollection<Conversation> Conversations
         {
@@ -1239,6 +1240,30 @@ namespace LLMClient.ViewModels
         #region Search Methods
 
         private void PerformSearch()
+        {
+            // Cancel previous debounce
+            _searchDebounceToken?.Cancel();
+            _searchDebounceToken = new CancellationTokenSource();
+            var token = _searchDebounceToken.Token;
+            
+            // Debounce: wait 250ms before searching (avoids regex on every keystroke)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(250, token);
+                    if (token.IsCancellationRequested) return;
+                    
+                    await MainThread.InvokeOnMainThreadAsync(() => ExecuteSearch());
+                }
+                catch (OperationCanceledException)
+                {
+                    // Cancelled by new keystroke - expected
+                }
+            }, token);
+        }
+        
+        private void ExecuteSearch()
         {
             if (SelectedConversation == null)
             {
