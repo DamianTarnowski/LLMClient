@@ -2,21 +2,22 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:LLMClient.ViewModels"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:Class="LLMClient.Views.DebugPage"
              x:DataType="vm:DebugViewModel"
-             Title="🔧 Debug &amp; Diagnostyka"
+             Title="{helpers:Translate DebugDiagnostics}"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
             
             <!-- Header -->
-            <Label Text="🔧 Panel Debug" 
+            <Label Text="{helpers:Translate DebugPanel}" 
                    FontSize="24" 
                    FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
             
-            <Label Text="Narzędzia diagnostyczne i testy dla deweloperów"
+            <Label Text="{helpers:Translate DiagnosticTools}"
                    FontSize="14"
                    TextColor="{StaticResource Gray500}"/>
 
@@ -26,7 +27,7 @@
                     StrokeThickness="0"
                     Padding="16">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="📊 Informacje Systemowe" FontSize="16" FontAttributes="Bold"
+                    <Label Text="{helpers:Translate SystemInfo}" FontSize="16" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
                     <Label Text="{Binding SystemInfo}" FontSize="12" TextColor="{StaticResource Gray500}"/>
                 </VerticalStackLayout>
@@ -38,7 +39,7 @@
                     StrokeThickness="0"
                     Padding="16">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="🧠 Model Embeddingowy" FontSize="16" FontAttributes="Bold"
+                    <Label Text="{helpers:Translate EmbeddingModel}" FontSize="16" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
                     <Label Text="{Binding EmbeddingModelInfo}" FontSize="12" 
                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray200}}"/>
@@ -51,10 +52,10 @@
                     StrokeThickness="0"
                     Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="🔍 Test Wyszukiwania RAG" FontSize="16" FontAttributes="Bold"
+                    <Label Text="{helpers:Translate RAGSearchTest}" FontSize="16" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
                     
-                    <Label Text="Wprowadź zapytanie testowe:" FontSize="12" TextColor="{StaticResource Gray500}"/>
+                    <Label Text="{helpers:Translate EnterTestQuery}" FontSize="12" TextColor="{StaticResource Gray500}"/>
                     
                     <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray700}}"
                             StrokeShape="RoundRectangle 8"
@@ -107,7 +108,7 @@
                     StrokeThickness="0"
                     Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="✂️ Test Tokenizera" FontSize="16" FontAttributes="Bold"
+                    <Label Text="{helpers:Translate TokenizerTest}" FontSize="16" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
                     
                     <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray700}}"
@@ -115,12 +116,12 @@
                             StrokeThickness="0"
                             Padding="12,8">
                         <Entry Text="{Binding TokenizerTestText}" 
-                               Placeholder="Tekst do tokenizacji..."
+                               Placeholder="{helpers:Translate TextToTokenize}"
                                FontSize="14"
                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
                     </Border>
                     
-                    <Button Text="🔬 Tokenizuj" 
+                    <Button Text="{helpers:Translate Tokenize}" 
                             Command="{Binding TestTokenizerCommand}"
                             BackgroundColor="{StaticResource Primary}"
                             TextColor="White"/>
@@ -137,11 +138,11 @@
                     StrokeThickness="0"
                     Padding="16">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="💾 Statystyki Bazy Danych" FontSize="16" FontAttributes="Bold"
+                    <Label Text="{helpers:Translate DatabaseStats}" FontSize="16" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
                     <Label Text="{Binding DatabaseStats}" FontSize="12" 
                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"/>
-                    <Button Text="🔄 Odśwież" 
+                    <Button Text="{helpers:Translate Refresh}" 
                             Command="{Binding RefreshStatsCommand}"
                             BackgroundColor="{StaticResource Secondary}"
                             TextColor="White"
@@ -155,13 +156,13 @@
                     StrokeThickness="0"
                     Padding="16">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="⚠️ Akcje Deweloperskie" FontSize="16" FontAttributes="Bold"
+                    <Label Text="{helpers:Translate DeveloperActions}" FontSize="16" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light=#92400E, Dark=#FCD34D}"/>
-                    <Label Text="Te akcje mogą wpłynąć na dane aplikacji!"
+                    <Label Text="{helpers:Translate ActionsWarning}"
                            FontSize="11"
                            TextColor="{AppThemeBinding Light=#B45309, Dark=#FDE68A}"/>
                     
-                    <Button Text="🗑️ Wyczyść embeddingi RAG" 
+                    <Button Text="{helpers:Translate ClearRAGEmbeddings}" 
                             Command="{Binding ClearEmbeddingsCommand}"
                             BackgroundColor="#EF4444"
                             TextColor="White"/>

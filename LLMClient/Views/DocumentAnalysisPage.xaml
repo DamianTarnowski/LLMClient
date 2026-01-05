@@ -4,8 +4,9 @@
              xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
              xmlns:models="clr-namespace:LLMClient.Models"
              x:Class="LLMClient.Views.DocumentAnalysisPage"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:DataType="viewmodels:DocumentAnalysisViewModel"
-             Title="Analiza dokumentu"
+             Title="{helpers:Translate DocumentAnalysis}"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ScrollView>
@@ -25,12 +26,12 @@
                     <Shadow Brush="{StaticResource Primary}" Offset="0,4" Radius="12" Opacity="0.3" />
                 </Border.Shadow>
                 <StackLayout Spacing="4">
-                    <Label Text="🔍 Analiza Dokumentu"
+                    <Label Text="{helpers:Translate DocumentAnalysis}"
                            FontSize="26"
                            FontAttributes="Bold"
                            TextColor="White"
                            HorizontalOptions="Center"/>
-                    <Label Text="Wyciągaj kluczowe informacje z tekstu"
+                    <Label Text="{helpers:Translate ExtractKeyInfo}"
                            FontSize="14"
                            TextColor="#E0E7FF"
                            HorizontalTextAlignment="Center"/>
@@ -51,7 +52,7 @@
                 <StackLayout Spacing="12">
                     <StackLayout Orientation="Horizontal" Spacing="8">
                         <Label Text="📝" FontSize="18" VerticalOptions="Center"/>
-                        <Label Text="Tekst do analizy"
+                        <Label Text="{helpers:Translate TextToAnalyze}"
                                FontSize="17"
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
@@ -65,7 +66,7 @@
                             HeightRequest="150">
                         <Editor Text="{Binding InputText}"
                                 BackgroundColor="Transparent"
-                                Placeholder="Wklej tekst dokumentu, transkryptu lub rozmowy do analizy..."
+                                Placeholder="{helpers:Translate PasteDocumentText}"
                                 PlaceholderColor="{StaticResource Gray500}"
                                 TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                                 FontSize="14"/>
@@ -74,7 +75,7 @@
                     <!-- Action buttons -->
                     <Grid ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8" Margin="0,8,0,0">
                         <Button Grid.Column="0"
-                                Text="🚀 Analizuj"
+                                Text="{helpers:Translate Analyze}"
                                 Command="{Binding AnalyzeCommand}"
                                 IsEnabled="{Binding CanAnalyze}"
                                 TextColor="White"
@@ -160,7 +161,7 @@
                     </LinearGradientBrush>
                 </Border.Background>
                 <StackLayout Spacing="8">
-                    <Label Text="⏳ Wynik (streaming)"
+                    <Label Text="{helpers:Translate StreamingResult}"
                            FontSize="17"
                            FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"/>
@@ -183,7 +184,7 @@
                     </LinearGradientBrush>
                 </Border.Background>
                 <StackLayout Spacing="8">
-                    <Label Text="📋 Podsumowanie"
+                    <Label Text="{helpers:Translate Summary}"
                            FontSize="17"
                            FontAttributes="Bold"
                            TextColor="{StaticResource Primary}"/>
@@ -199,7 +200,7 @@
                        CornerRadius="8"
                        BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
                     <VerticalStackLayout>
-                        <Label Text="🎯 Kluczowe punkty"
+                        <Label Text="{helpers:Translate KeyPoints}"
                                FontSize="16"
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
@@ -223,7 +224,7 @@
                        CornerRadius="8"
                        BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
                     <VerticalStackLayout>
-                        <Label Text="🔍 Wykryte intencje"
+                        <Label Text="{helpers:Translate DetectedIntents}"
                                FontSize="16"
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
@@ -264,7 +265,7 @@
                        BackgroundColor="{AppThemeBinding Light=#FEF2F2, Dark=#450A0A}"
                        BorderColor="{StaticResource Danger}">
                     <VerticalStackLayout>
-                        <Label Text="⚠️ Czerwone flagi"
+                        <Label Text="{helpers:Translate RedFlags}"
                                FontSize="16"
                                FontAttributes="Bold"
                                TextColor="{StaticResource Danger}"
@@ -307,7 +308,7 @@
                        CornerRadius="8"
                        BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
                     <VerticalStackLayout>
-                        <Label Text="✅ Lista kontrolna"
+                        <Label Text="{helpers:Translate Checklist}"
                                FontSize="16"
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray200}}"
@@ -342,7 +343,7 @@
                        BackgroundColor="{AppThemeBinding Light=#F0FDF4, Dark=#052E16}"
                        BorderColor="{StaticResource Success}">
                     <VerticalStackLayout>
-                        <Label Text="💬 Sugerowana odpowiedź"
+                        <Label Text="{helpers:Translate SuggestedResponse}"
                                FontSize="16"
                                FontAttributes="Bold"
                                TextColor="{StaticResource Success}"

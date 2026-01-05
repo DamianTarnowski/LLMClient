@@ -555,4 +555,118 @@
   <data name="Chunks" xml:space="preserve">
     <value>chunks</value>
   </data>
+  
+  <!-- Debug Page -->
+  <data name="DebugDiagnostics" xml:space="preserve">
+    <value>Debug &amp; Diagnostics</value>
+  </data>
+  <data name="DebugPanel" xml:space="preserve">
+    <value>Debug Panel</value>
+  </data>
+  <data name="DiagnosticTools" xml:space="preserve">
+    <value>Diagnostic and testing tools for developers</value>
+  </data>
+  <data name="SystemInfo" xml:space="preserve">
+    <value>System Information</value>
+  </data>
+  <data name="EmbeddingModel" xml:space="preserve">
+    <value>Embedding Model</value>
+  </data>
+  <data name="RAGSearchTest" xml:space="preserve">
+    <value>RAG Search Test</value>
+  </data>
+  <data name="EnterTestQuery" xml:space="preserve">
+    <value>Enter test query:</value>
+  </data>
+  <data name="TokenizerTest" xml:space="preserve">
+    <value>Tokenizer Test</value>
+  </data>
+  <data name="TextToTokenize" xml:space="preserve">
+    <value>Text to tokenize...</value>
+  </data>
+  <data name="Tokenize" xml:space="preserve">
+    <value>Tokenize</value>
+  </data>
+  <data name="DatabaseStats" xml:space="preserve">
+    <value>Database Statistics</value>
+  </data>
+  <data name="DeveloperActions" xml:space="preserve">
+    <value>Developer Actions</value>
+  </data>
+  <data name="ActionsWarning" xml:space="preserve">
+    <value>These actions may affect application data!</value>
+  </data>
+  <data name="ClearRAGEmbeddings" xml:space="preserve">
+    <value>Clear RAG embeddings</value>
+  </data>
+  
+  <!-- GGUF Model Manager -->
+  <data name="GGUFModels" xml:space="preserve">
+    <value>GGUF Models</value>
+  </data>
+  <data name="SelectDownloadModel" xml:space="preserve">
+    <value>Select and download AI model for local inference</value>
+  </data>
+  <data name="CurrentModel" xml:space="preserve">
+    <value>Current Model</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="DownloadingModel" xml:space="preserve">
+    <value>Downloading model...</value>
+  </data>
+  <data name="AvailableModelsSelect" xml:space="preserve">
+    <value>Available Models • Select one</value>
+  </data>
+  <data name="Recommended" xml:space="preserve">
+    <value>Recommended</value>
+  </data>
+  <data name="LoadSelectedModel" xml:space="preserve">
+    <value>Load Selected Model</value>
+  </data>
+  
+  <!-- Document Analysis Page -->
+  <data name="DocumentAnalysis" xml:space="preserve">
+    <value>Document Analysis</value>
+  </data>
+  <data name="ExtractKeyInfo" xml:space="preserve">
+    <value>Extract key information from text</value>
+  </data>
+  <data name="TextToAnalyze" xml:space="preserve">
+    <value>Text to analyze</value>
+  </data>
+  <data name="PasteDocumentText" xml:space="preserve">
+    <value>Paste document, transcript or conversation text to analyze...</value>
+  </data>
+  <data name="Analyze" xml:space="preserve">
+    <value>Analyze</value>
+  </data>
+  <data name="StreamingResult" xml:space="preserve">
+    <value>Result (streaming)</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="KeyPoints" xml:space="preserve">
+    <value>Key points</value>
+  </data>
+  <data name="DetectedIntents" xml:space="preserve">
+    <value>Detected intents</value>
+  </data>
+  <data name="RedFlags" xml:space="preserve">
+    <value>Red flags</value>
+  </data>
+  <data name="Checklist" xml:space="preserve">
+    <value>Checklist</value>
+  </data>
+  <data name="SuggestedResponse" xml:space="preserve">
+    <value>Suggested response</value>
+  </data>
+  <data name="Words" xml:space="preserve">
+    <value>words</value>
+  </data>
+  <data name="Sentences" xml:space="preserve">
+    <value>sentences</value>
+  </data>
 </root>

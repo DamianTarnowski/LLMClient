@@ -142,3 +142,54 @@ private const int MAX_MEMORY_CHARS = 30000; // Zmień tutaj
 
 ### Dodawanie Kategorii Pamięci
 System obsługuje dowolne kategorie - dodaj je w UI MemoryPage lub pozwól AI na automatyczne kategoryzowanie.
+
+## Lokalizacja UI
+
+### Zasady Lokalizacji
+**WAŻNE:** Przy tworzeniu nowych kontrolek/stron XAML, wszystkie stringi użytkownika muszą być od razu zlokalizowane!
+
+1. **Dodaj namespace helpers** do pliku XAML:
+   ```xml
+   xmlns:helpers="clr-namespace:LLMClient.Helpers"
+   ```
+
+2. **Używaj TranslateExtension** zamiast hardcodowanych stringów:
+   ```xml
+   <!-- ❌ ŹLE -->
+   <Label Text="Zapisz"/>
+   <Button Text="Anuluj"/>
+   
+   <!-- ✅ DOBRZE -->
+   <Label Text="{helpers:Translate Save}"/>
+   <Button Text="{helpers:Translate Cancel}"/>
+   ```
+
+3. **Dodaj klucze do plików zasobów**:
+   - `Resources/Strings.resx` - angielski (domyślny)
+   - `Resources/Strings.pl-PL.resx` - polski
+   - Inne pliki językowe wg potrzeb
+
+4. **Format klucza w .resx**:
+   ```xml
+   <data name="Save" xml:space="preserve">
+     <value>Save</value>
+   </data>
+   ```
+
+### Pliki Lokalizacji
+- **Strings.resx** - Angielski (fallback)
+- **Strings.pl-PL.resx** - Polski
+- **Strings.de-DE.resx** - Niemiecki
+- **Strings.fr-FR.resx** - Francuski
+- **Strings.es-ES.resx** - Hiszpański
+- **Strings.it-IT.resx** - Włoski
+- **Strings.zh-CN.resx** - Chiński
+- **Strings.ja-JP.resx** - Japoński
+- **Strings.ko-KR.resx** - Koreański
+- **Strings.ru-RU.resx** - Rosyjski
+- **Strings.nl-NL.resx** - Holenderski
+- **Strings.pt-BR.resx** - Portugalski (Brazylia)
+- **Strings.tr-TR.resx** - Turecki
+
+### TranslateExtension
+Lokalizacja jest obsługiwana przez `LLMClient/Helpers/TranslateExtension.cs` - markup extension XAML do tłumaczeń.
