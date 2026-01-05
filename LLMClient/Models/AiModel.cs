@@ -1,6 +1,7 @@
 ﻿using SQLite;
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Collections.Frozen;
 
 namespace LLMClient.Models
 {
@@ -27,7 +28,11 @@ namespace LLMClient.Models
 
     public static class ApiProviders
     {
-        public static readonly Dictionary<AiProvider, ApiProviderInfo> ProviderInfo = new()
+        /// <summary>
+        /// FrozenDictionary (.NET 8+) - niezmienne, zoptymalizowane pod kątem odczytu
+        /// Idealne dla statycznych danych konfiguracyjnych
+        /// </summary>
+        public static readonly FrozenDictionary<AiProvider, ApiProviderInfo> ProviderInfo = new Dictionary<AiProvider, ApiProviderInfo>
         {
             [AiProvider.OpenAI] = new("OpenAI", "https://api.openai.com/v1", "GPT-4o, GPT-4, o1, o3", "https://platform.openai.com/api-keys"),
             [AiProvider.Anthropic] = new("Anthropic", "https://api.anthropic.com/v1", "Claude 3.5/4 Sonnet, Opus, Haiku", "https://console.anthropic.com/"),
@@ -42,7 +47,7 @@ namespace LLMClient.Models
             [AiProvider.Perplexity] = new("Perplexity", "https://api.perplexity.ai", "Sonar (z dostępem do internetu)", "https://www.perplexity.ai/settings/api"),
             [AiProvider.Cohere] = new("Cohere", "https://api.cohere.ai/v1", "Command R+", "https://dashboard.cohere.com/api-keys"),
             [AiProvider.OpenRouter] = new("OpenRouter", "https://openrouter.ai/api/v1", "Agregator 200+ modeli", "https://openrouter.ai/keys"),
-        };
+        }.ToFrozenDictionary();
 
         public static string GetEndpoint(AiProvider provider)
         {
