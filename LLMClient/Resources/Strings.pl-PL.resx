@@ -307,4 +307,48 @@
   <data name="SwitchingToCloudModel" xml:space="preserve">
     <value>Przełączanie na model chmurowy...</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Lokalny</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Więcej</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>Więcej opcji</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Szukaj wiadomości</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Napisz wiadomość...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Wybierz model</value>
+  </data>
+  <data name="SelectAPIModel" xml:space="preserve">
+    <value>Wybierz model API</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Usuń konwersację</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Usuń wiadomość</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Kopiuj</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Zmień</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>aktywny</value>
+  </data>
+  <data name="DatabaseEncrypted" xml:space="preserve">
+    <value>Baza danych jest zaszyfrowana i bezpieczna</value>
+  </data>
 </root>

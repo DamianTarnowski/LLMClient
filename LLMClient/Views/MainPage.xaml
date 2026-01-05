@@ -7,6 +7,7 @@
              xmlns:views="clr-namespace:LLMClient.Views"
              xmlns:vm="clr-namespace:LLMClient.ViewModels"
              xmlns:models="clr-namespace:LLMClient.Models"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:DataType="vm:MainPageViewModel"
              Title="LLMClient"
              Shell.NavBarIsVisible="False"
@@ -144,7 +145,7 @@
                             <SwipeView>
                                 <SwipeView.RightItems>
                                     <SwipeItems>
-                                        <SwipeItem Text="Usuń"
+                                        <SwipeItem Text="{helpers:Translate Delete}"
                                                    BackgroundColor="{StaticResource Error}"
                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteConversationCommand}"
                                                    CommandParameter="{Binding .}" />
@@ -158,7 +159,7 @@
                                         StrokeThickness="0">
                                     <FlyoutBase.ContextFlyout>
                                         <MenuFlyout>
-                                            <MenuFlyoutItem Text="Usuń konwersację"
+                                            <MenuFlyoutItem Text="{helpers:Translate DeleteConversation}"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteConversationCommand}"
                                                             CommandParameter="{Binding .}" />
                                         </MenuFlyout>
@@ -232,7 +233,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Button Grid.Column="0"
-                                    Text="Lokalny"
+                                    Text="{helpers:Translate Local}"
                                     Command="{Binding EnableLocalModelCommand}"
                                     CornerRadius="10"
                                     HeightRequest="40"
@@ -248,7 +249,7 @@
                             </Button>
 
                             <Button Grid.Column="1"
-                                    Text="API"
+                                    Text="{helpers:Translate API}"
                                     Command="{Binding EnableApiModelCommand}"
                                     CornerRadius="10"
                                     HeightRequest="40"
@@ -289,7 +290,7 @@
                                     ItemsSource="{Binding AiConfiguration.Models}"
                                     SelectedItem="{Binding AiConfiguration.SelectedModel}"
                                     ItemDisplayBinding="{Binding Name}"
-                                    Title="Wybierz model"
+                                    Title="{helpers:Translate SelectModel}"
                                     TitleColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}"
                                     FontSize="14"
                                     HeightRequest="44"
@@ -305,9 +306,9 @@
                         </Grid.ColumnDefinitions>
 
                         <Button Grid.Column="0"
-                                ToolTipProperties.Text="Wyszukaj wiadomości"
+                                ToolTipProperties.Text="{helpers:Translate SearchMessages}"
                                 Command="{Binding GoToSearchCommand}"
-                                Text="Szukaj"
+                                Text="{helpers:Translate Search}"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                 TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
                                 CornerRadius="10"
@@ -324,8 +325,8 @@
 
                         <Button Grid.Column="1"
                                 x:Name="MoreOptionsButton"
-                                ToolTipProperties.Text="Więcej opcji"
-                                Text="Więcej"
+                                ToolTipProperties.Text="{helpers:Translate MoreOptions}"
+                                Text="{helpers:Translate More}"
                                 Clicked="MoreOptionsButton_Clicked"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                 TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
@@ -581,11 +582,11 @@
                             <SwipeView Margin="0,4">
                                 <SwipeView.RightItems>
                                     <SwipeItems>
-                                        <SwipeItem Text="Kopiuj"
+                                        <SwipeItem Text="{helpers:Translate Copy}"
                                                    BackgroundColor="{StaticResource Primary}"
                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CopyMessageCommand}"
                                                    CommandParameter="{Binding .}" />
-                                        <SwipeItem Text="Usuń"
+                                        <SwipeItem Text="{helpers:Translate Delete}"
                                                    BackgroundColor="{StaticResource Error}"
                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMessageCommand}"
                                                    CommandParameter="{Binding .}" />
@@ -595,10 +596,10 @@
                                 <Grid Padding="0,4">
                                     <FlyoutBase.ContextFlyout>
                                         <MenuFlyout>
-                                            <MenuFlyoutItem Text="Kopiuj"
+                                            <MenuFlyoutItem Text="{helpers:Translate Copy}"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CopyMessageCommand}"
                                                             CommandParameter="{Binding .}" />
-                                            <MenuFlyoutItem Text="Usuń wiadomość"
+                                            <MenuFlyoutItem Text="{helpers:Translate DeleteMessage}"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMessageCommand}"
                                                             CommandParameter="{Binding .}" />
                                         </MenuFlyout>
@@ -767,7 +768,7 @@
                             <Editor Grid.Column="1"
                                     x:Name="MessageEntry"
                                     Text="{Binding NewMessage}"
-                                    Placeholder="Napisz wiadomość..."
+                                    Placeholder="{helpers:Translate WriteMessage}"
                                     PlaceholderColor="{StaticResource Gray400}"
                                     TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                                     BackgroundColor="Transparent"
@@ -935,7 +936,7 @@
                                         ItemsSource="{Binding AiConfiguration.Models}"
                                         SelectedItem="{Binding AiConfiguration.SelectedModel}"
                                         ItemDisplayBinding="{Binding Name}"
-                                        Title="Wybierz model API"
+                                        Title="{helpers:Translate SelectAPIModel}"
                                         FontSize="14"
                                         HeightRequest="44"
                                         TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />

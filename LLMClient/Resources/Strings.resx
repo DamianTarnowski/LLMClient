@@ -269,4 +269,48 @@
   <data name="ProgressFormat" xml:space="preserve">
     <value>{0}% downloaded</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Local</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Search messages</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Write a message...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Select model</value>
+  </data>
+  <data name="SelectAPIModel" xml:space="preserve">
+    <value>Select API model</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Delete conversation</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Delete message</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>active</value>
+  </data>
+  <data name="DatabaseEncrypted" xml:space="preserve">
+    <value>Database is encrypted and secure</value>
+  </data>
 </root>
