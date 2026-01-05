@@ -42,23 +42,13 @@ public class IngestionService : IIngestionService
     {
         if (_disposed) return;
 
-        var job = new IngestionJob
-        {
-            FilePath = filePath,
-            FileName = Path.GetFileName(filePath),
-            EnqueuedAt = DateTime.UtcNow
-        };
+        var job = new IngestionJob(filePath, Path.GetFileName(filePath), DateTime.UtcNow);
 
         Interlocked.Increment(ref _queueCount);
         await _channel.Writer.WriteAsync(job, _cts.Token);
 
-        ProgressChanged?.Invoke(this, new IngestionProgressEventArgs
-        {
-            FileName = job.FileName,
-            Status = "W kolejce",
-            CurrentItem = 0,
-            TotalItems = _queueCount
-        });
+        ProgressChanged?.Invoke(this, new IngestionProgressEventArgs(
+            job.FileName, "W kolejce", 0, _queueCount));
     }
 
     public async Task EnqueueFilesAsync(IEnumerable<string> filePaths)
@@ -119,26 +109,19 @@ public class IngestionService : IIngestionService
         {
             try
             {
-                ProgressChanged?.Invoke(this, new IngestionProgressEventArgs
-                {
-                    FileName = job.FileName,
-                    Status = attempts > 0 ? $"Ponowna próba ({attempts}/{maxRetries})..." : "Przetwarzanie...",
-                    CurrentItem = 1,
-                    TotalItems = _queueCount
-                });
+                ProgressChanged?.Invoke(this, new IngestionProgressEventArgs(
+                    job.FileName,
+                    attempts > 0 ? $"Ponowna próba ({attempts}/{maxRetries})..." : "Przetwarzanie...",
+                    1,
+                    _queueCount));
 
                 var document = await _ragService.AddDocumentAsync(job.FilePath);
 
                 sw.Stop();
                 Interlocked.Decrement(ref _queueCount);
 
-                ItemCompleted?.Invoke(this, new IngestionCompletedEventArgs
-                {
-                    FileName = job.FileName,
-                    DocumentId = document.Id,
-                    ChunkCount = document.ChunkCount,
-                    Duration = sw.Elapsed
-                });
+                ItemCompleted?.Invoke(this, new IngestionCompletedEventArgs(
+                    job.FileName, document.Id, document.ChunkCount, sw.Elapsed));
 
                 return;
             }
@@ -184,10 +167,8 @@ public class IngestionService : IIngestionService
         GC.SuppressFinalize(this);
     }
 
-    private class IngestionJob
-    {
-        public string FilePath { get; init; } = string.Empty;
-        public string FileName { get; init; } = string.Empty;
-        public DateTime EnqueuedAt { get; init; }
-    }
+    /// <summary>
+    /// Internal job record using C# 12 primary constructor
+    /// </summary>
+    private sealed record IngestionJob(string FilePath, string FileName, DateTime EnqueuedAt);
 }

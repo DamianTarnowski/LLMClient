@@ -16,26 +16,40 @@ public interface IIngestionService : IDisposable
     void Resume();
 }
 
-public class IngestionProgressEventArgs : EventArgs
+/// <summary>
+/// Progress event args using C# 12 primary constructor
+/// </summary>
+public sealed class IngestionProgressEventArgs(string fileName, string status, int currentItem, int totalItems) : EventArgs
 {
-    public string FileName { get; init; } = string.Empty;
-    public string Status { get; init; } = string.Empty;
-    public int CurrentItem { get; init; }
-    public int TotalItems { get; init; }
+    public string FileName { get; } = fileName;
+    public string Status { get; } = status;
+    public int CurrentItem { get; } = currentItem;
+    public int TotalItems { get; } = totalItems;
     public double ProgressPercent => TotalItems > 0 ? (double)CurrentItem / TotalItems * 100 : 0;
 }
 
-public class IngestionCompletedEventArgs : EventArgs
+/// <summary>
+/// Completion event args using C# 12 primary constructor for immutability
+/// </summary>
+public sealed class IngestionCompletedEventArgs(
+    string fileName,
+    int documentId,
+    int chunkCount,
+    TimeSpan duration
+) : EventArgs
 {
-    public string FileName { get; init; } = string.Empty;
-    public int DocumentId { get; init; }
-    public int ChunkCount { get; init; }
-    public TimeSpan Duration { get; init; }
+    public string FileName { get; } = fileName;
+    public int DocumentId { get; } = documentId;
+    public int ChunkCount { get; } = chunkCount;
+    public TimeSpan Duration { get; } = duration;
 }
 
-public class IngestionErrorEventArgs : EventArgs
+/// <summary>
+/// Error event args with required properties (C# 11+)
+/// </summary>
+public sealed class IngestionErrorEventArgs : EventArgs
 {
-    public string FileName { get; init; } = string.Empty;
-    public string ErrorMessage { get; init; } = string.Empty;
+    public required string FileName { get; init; }
+    public required string ErrorMessage { get; init; }
     public bool WillRetry { get; init; }
 }
