@@ -29,7 +29,7 @@ namespace LLMClient.Services
         private DateTime? _lastDisconnectTime;
         private CancellationTokenSource? _autoResumeToken;
         
-        private const int NETWORK_CHECK_INTERVAL_SECONDS = 10;
+        private const int NETWORK_CHECK_INTERVAL_SECONDS = 30;
         private const int RECONNECT_GRACE_PERIOD_SECONDS = 30;
         private const int MAX_AUTO_RESUME_ATTEMPTS = 10;
         private int _autoResumeAttempts = 0;

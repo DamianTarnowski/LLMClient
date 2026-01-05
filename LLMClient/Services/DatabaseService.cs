@@ -490,21 +490,28 @@ namespace LLMClient.Services
             }
         }
 
-        // Metody dla Conversation - POPRAWIONE
+        // Metody dla Conversation - ZOPTYMALIZOWANE (batch load zamiast N+1)
         public async Task<List<Conversation>> GetConversationsAsync()
         {
             await EnsureDatabaseInitializedAsync();
-            var conversations = await _database.Table<Conversation>().ToListAsync();
+            
+            // Pobierz wszystkie konwersacje i wiadomości w dwóch zapytaniach (zamiast N+1)
+            var conversations = await _database!.Table<Conversation>().ToListAsync();
+            var allMessages = await _database.Table<Message>()
+                .OrderBy(m => m.Timestamp)
+                .ThenBy(m => m.Id)
+                .ToListAsync();
+            
+            // Grupuj wiadomości po ConversationId dla O(1) lookup
+            var messagesByConversation = allMessages
+                .GroupBy(m => m.ConversationId)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var conversation in conversations)
             {
-                var messages = await _database.Table<Message>()
-                    .Where(m => m.ConversationId == conversation.Id)
-                    .OrderBy(m => m.Timestamp)
-                    .ThenBy(m => m.Id)
-                    .ToListAsync();
-
-                conversation.Messages = new ObservableCollection<Message>(messages);
+                conversation.Messages = messagesByConversation.TryGetValue(conversation.Id, out var messages)
+                    ? new ObservableCollection<Message>(messages)
+                    : new ObservableCollection<Message>();
             }
 
             return conversations;
