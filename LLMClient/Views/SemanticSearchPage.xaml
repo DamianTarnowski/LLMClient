@@ -4,8 +4,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
              xmlns:converters="clr-namespace:LLMClient.Converters"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:DataType="viewmodels:SemanticSearchViewModel"
-             Title="Wyszukiwanie"
+             Title="{helpers:Translate SemanticSearch}"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ContentPage.Resources>
@@ -16,7 +17,7 @@
     </ContentPage.Resources>
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Wróć" Order="Primary" Priority="0"
+        <ToolbarItem Text="{helpers:Translate GoBack}" Order="Primary" Priority="0"
                      Command="{Binding GoBackCommand}">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="MaterialSymbols"
@@ -49,7 +50,7 @@
                         Padding="12,0"
                         Margin="0,0,0,12">
                     <Entry Text="{Binding SearchQuery}"
-                           Placeholder="Wpisz zapytanie semantyczne..."
+                           Placeholder="{helpers:Translate EnterSemanticQuery}"
                            PlaceholderColor="{StaticResource Gray500}"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                            BackgroundColor="Transparent"
@@ -59,7 +60,7 @@
                 <!-- Search Mode Selector -->
                 <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*" Margin="0,0,0,12" ColumnSpacing="8">
                     <Button Grid.Column="0"
-                            Text="Tekstowe"
+                            Text="{helpers:Translate TextMode}"
                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SetTextModeCommand}"
                             Clicked="OnTextModeClicked"
                             BackgroundColor="{Binding IsTextMode, Converter={StaticResource BoolToColorConverter}}"
@@ -68,7 +69,7 @@
                             HeightRequest="36"
                             FontSize="12"/>
                     <Button Grid.Column="1"
-                            Text="Hybrydowe"
+                            Text="{helpers:Translate HybridMode}"
                             Clicked="OnHybridModeClicked"
                             BackgroundColor="{Binding IsHybridMode, Converter={StaticResource BoolToColorConverter}}"
                             TextColor="White"
@@ -76,7 +77,7 @@
                             HeightRequest="36"
                             FontSize="12"/>
                     <Button Grid.Column="2"
-                            Text="Wektorowe"
+                            Text="{helpers:Translate VectorMode}"
                             Clicked="OnVectorModeClicked"
                             BackgroundColor="{Binding IsVectorMode, Converter={StaticResource BoolToColorConverter}}"
                             TextColor="White"
@@ -88,7 +89,7 @@
                 <!-- Search Controls -->
                 <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,12" ColumnSpacing="8">
                     <Button Grid.Column="0"
-                            Text="Szukaj"
+                            Text="{helpers:Translate Search}"
                             Command="{Binding SearchCommand}"
                             IsEnabled="{Binding CanSearch}"
                             BackgroundColor="{StaticResource Primary}"
@@ -106,7 +107,7 @@
                            VerticalOptions="Center"
                            FontSize="12"/>
                     <Button Grid.Column="2"
-                            Text="Pobierz model"
+                            Text="{helpers:Translate DownloadModel}"
                             Command="{Binding DownloadModelCommand}"
                             IsVisible="{Binding IsModelReady, Converter={StaticResource InverseBoolConverter}}"
                             IsEnabled="{Binding IsDownloadingModel, Converter={StaticResource InverseBoolConverter}}"
@@ -126,7 +127,7 @@
 
                 <!-- Settings -->
                 <Grid Grid.Row="3" Grid.ColumnSpan="2" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,8" ColumnSpacing="12" RowSpacing="8">
-                    <Label Grid.Row="0" Grid.Column="0" Text="Podobieństwo:"
+                    <Label Grid.Row="0" Grid.Column="0" Text="{helpers:Translate Similarity}"
                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                            VerticalOptions="Center" FontSize="13"
                            IsVisible="{Binding ShowVectorSettings}"/>
@@ -138,7 +139,7 @@
                             MinimumTrackColor="{StaticResource Primary}"
                             VerticalOptions="Center"
                             IsVisible="{Binding ShowVectorSettings}"/>
-                    <Label Grid.Row="0" Grid.Column="2" Text="Max:"
+                    <Label Grid.Row="0" Grid.Column="2" Text="{helpers:Translate Max}"
                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                            VerticalOptions="Center" FontSize="13"/>
                     <Stepper Grid.Row="0" Grid.Column="3"
@@ -256,7 +257,7 @@
             <Grid RowDefinitions="Auto,*">
                 <!-- Results Header -->
                 <Label Grid.Row="0"
-                       Text="Wyniki wyszukiwania"
+                       Text="{helpers:Translate SearchResults}"
                        FontSize="16"
                        FontAttributes="Bold"
                        Padding="16,12,16,8"
@@ -282,12 +283,12 @@
                                        HorizontalOptions="Center"
                                        VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Brak wyników"
+                            <Label Text="{helpers:Translate NoResults}"
                                    FontSize="16"
                                    FontAttributes="Bold"
                                    HorizontalOptions="Center"
                                    TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"/>
-                            <Label Text="Spróbuj zmienić zapytanie lub próg podobieństwa"
+                            <Label Text="{helpers:Translate TryChangingQuery}"
                                    FontSize="13"
                                    HorizontalOptions="Center"
                                    TextColor="{StaticResource Gray500}"

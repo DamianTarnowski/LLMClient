@@ -4,8 +4,9 @@
              xmlns:viewmodels="clr-namespace:LLMClient.ViewModels"
              xmlns:models="clr-namespace:LLMClient.Models"
              x:Class="LLMClient.Views.RagDocumentsPage"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:DataType="viewmodels:RagViewModel"
-             Title="Dokumenty RAG"
+             Title="{helpers:Translate RAGDocuments}"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ScrollView>
@@ -26,11 +27,11 @@
                 </Border.Shadow>
                 <Grid ColumnDefinitions="*,Auto">
                     <StackLayout Spacing="4">
-                        <Label Text="📚 Dokumenty RAG"
+                        <Label Text="{helpers:Translate RAGDocuments}"
                                FontSize="26"
                                FontAttributes="Bold"
                                TextColor="White"/>
-                        <Label Text="Zarządzaj bazą wiedzy dla AI"
+                        <Label Text="{helpers:Translate ManageKnowledgeBase}"
                                FontSize="14"
                                TextColor="#E0E7FF"/>
                     </StackLayout>
@@ -64,7 +65,7 @@
                 </Border.Background>
                 <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="12">
                     <Button Grid.Column="0"
-                            Text="➕ Dodaj dokumenty"
+                            Text="{helpers:Translate AddDocuments}"
                             Command="{Binding AddDocumentCommand}"
                             TextColor="White"
                             CornerRadius="12"
@@ -79,7 +80,7 @@
                     </Button>
                     
                     <Button Grid.Column="1"
-                            Text="⚡ Generuj embeddingi"
+                            Text="{helpers:Translate GenerateEmbeddings}"
                             Command="{Binding GenerateEmbeddingsCommand}"
                             IsEnabled="{Binding CanProcess}"
                             TextColor="White"
@@ -123,11 +124,11 @@
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12">
                     <Label Text="📄" FontSize="48" HorizontalOptions="Center"/>
-                    <Label Text="Brak dokumentów"
+                    <Label Text="{helpers:Translate NoDocuments}"
                            FontSize="18"
                            TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
                            HorizontalOptions="Center"/>
-                    <Label Text="Dodaj dokumenty PDF, DOCX lub TXT"
+                    <Label Text="{helpers:Translate AddPdfDocxTxt}"
                            FontSize="14"
                            TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
                            HorizontalOptions="Center"/>

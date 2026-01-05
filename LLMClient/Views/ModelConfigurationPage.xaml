@@ -4,7 +4,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:LLMClient.Models"
              xmlns:converters="clr-namespace:LLMClient.Converters"
-             Title="Konfiguracja Modeli AI"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
+             Title="{helpers:Translate AIModelConfiguration}"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ContentPage.Resources>
@@ -74,7 +75,7 @@
 
         <!-- Header -->
         <StackLayout Grid.Row="0" Spacing="16" Margin="0,0,0,20">
-            <Label Text="Konfiguracja Modeli AI"
+            <Label Text="{helpers:Translate AIModelConfiguration}"
                    FontSize="24"
                    FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
@@ -95,7 +96,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackLayout Grid.Column="0" Orientation="Horizontal" Spacing="12">
-                        <Label Text="Streaming:"
+                        <Label Text="{helpers:Translate Streaming}"
                                TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                                VerticalOptions="Center"
                                FontSize="14" />
@@ -104,7 +105,7 @@
                     </StackLayout>
 
                     <StackLayout Grid.Column="1" Orientation="Horizontal" Spacing="12">
-                        <Label Text="Jasny motyw:"
+                        <Label Text="{helpers:Translate LightTheme}"
                                TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                                VerticalOptions="Center"
                                FontSize="14" />
@@ -123,7 +124,7 @@
                      Margin="0,0,0,12">
 
             <Button x:Name="MobileBackButton"
-                    Text="← Lista"
+                    Text="{helpers:Translate List}"
                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
                     TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                     CornerRadius="10"
@@ -171,7 +172,7 @@
                     </Grid.RowDefinitions>
 
                     <Label Grid.Row="0"
-                           Text="Dostępne Modele"
+                           Text="{helpers:Translate AvailableModels}"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
@@ -198,13 +199,13 @@
                                    VerticalOptions="Center" />
                         </Border>
 
-                        <Label Text="Brak modeli AI"
+                        <Label Text="{helpers:Translate NoAIModels}"
                                FontSize="16"
                                FontAttributes="Bold"
                                HorizontalOptions="Center"
                                TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
 
-                        <Label Text="Dodaj pierwszy model aby rozpocząć!"
+                        <Label Text="{helpers:Translate AddFirstModel}"
                                FontSize="13"
                                HorizontalOptions="Center"
                                TextColor="{StaticResource Gray500}"
@@ -262,7 +263,7 @@
                     </CollectionView>
 
                     <Button Grid.Row="2"
-                            Text="Nowy Model"
+                            Text="{helpers:Translate NewModel}"
                             BackgroundColor="{StaticResource Primary}"
                             TextColor="White"
                             CornerRadius="12"
@@ -299,14 +300,14 @@
                 <ScrollView>
                     <StackLayout Spacing="20" IsVisible="{Binding SelectedModelForEdit, Converter={StaticResource IsNotNullConverter}}">
 
-                        <Label Text="Edytuj Model"
+                        <Label Text="{helpers:Translate EditModel}"
                                FontSize="18"
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
 
                         <!-- Nazwa -->
                         <StackLayout Spacing="8">
-                            <Label Text="Nazwa" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{helpers:Translate Name}" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
                             <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                     StrokeShape="RoundRectangle 10"
                                     StrokeThickness="0"
@@ -322,7 +323,7 @@
 
                         <!-- Dostawca -->
                         <StackLayout Spacing="8">
-                            <Label Text="Dostawca" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{helpers:Translate Provider}" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
                             <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                     StrokeShape="RoundRectangle 10"
                                     StrokeThickness="0"
@@ -336,7 +337,7 @@
 
                         <!-- Model ID -->
                         <StackLayout Spacing="8">
-                            <Label Text="Model ID" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{helpers:Translate ModelId}" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
                             <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                     StrokeShape="RoundRectangle 10"
                                     StrokeThickness="0"
@@ -352,7 +353,7 @@
 
                         <!-- API Key -->
                         <StackLayout Spacing="8">
-                            <Label Text="API Key" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{helpers:Translate ApiKey}" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
                             <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                     StrokeShape="RoundRectangle 10"
                                     StrokeThickness="0"
@@ -369,7 +370,7 @@
 
                         <!-- Endpoint (dla OpenAI Compatible) -->
                         <StackLayout Spacing="8" IsVisible="{Binding SelectedModelForEdit.RequiresEndpoint}">
-                            <Label Text="Endpoint URL" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
+                            <Label Text="{helpers:Translate EndpointUrl}" TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" FontSize="13" FontAttributes="Bold" />
                             <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                     StrokeShape="RoundRectangle 10"
                                     StrokeThickness="0"
@@ -393,7 +394,7 @@
                                 <StackLayout Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="12">
                                     <Switch IsToggled="{Binding SelectedModelForEdit.IsActive}"
                                             OnColor="{StaticResource Primary}" />
-                                    <Label Text="Aktywny"
+                                    <Label Text="{helpers:Translate Active}"
                                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                                            FontSize="14"
                                            VerticalOptions="Center" />
@@ -402,7 +403,7 @@
                                 <StackLayout Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Spacing="12">
                                     <Switch IsToggled="{Binding SelectedModelForEdit.SupportsStreaming}"
                                             OnColor="{StaticResource Primary}" />
-                                    <Label Text="Streaming"
+                                    <Label Text="{helpers:Translate Streaming}"
                                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                                            FontSize="14"
                                            VerticalOptions="Center" />
@@ -411,7 +412,7 @@
                                 <StackLayout Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
                                     <Switch IsToggled="{Binding SelectedModelForEdit.SupportsImages}"
                                             OnColor="{StaticResource Primary}" />
-                                    <Label Text="Obsługuje obrazki"
+                                    <Label Text="{helpers:Translate SupportsImages}"
                                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                                            FontSize="14"
                                            VerticalOptions="Center" />
@@ -422,7 +423,7 @@
                         <!-- Przyciski -->
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" Margin="0,8,0,0">
                             <Button Grid.Column="0"
-                                    Text="Zapisz"
+                                    Text="{helpers:Translate Save}"
                                     BackgroundColor="{StaticResource Secondary}"
                                     TextColor="White"
                                     CornerRadius="12"
@@ -432,7 +433,7 @@
                                     Command="{Binding SaveModelCommand}" />
 
                             <Button Grid.Column="1"
-                                    Text="Test"
+                                    Text="{helpers:Translate Test}"
                                     BackgroundColor="{StaticResource Primary}"
                                     TextColor="White"
                                     CornerRadius="12"
@@ -442,7 +443,7 @@
                                     Command="{Binding TestModelCommand}" />
 
                             <Button Grid.Column="2"
-                                    Text="Usuń"
+                                    Text="{helpers:Translate Delete}"
                                     BackgroundColor="{StaticResource Error}"
                                     TextColor="White"
                                     CornerRadius="12"
@@ -467,7 +468,7 @@
 
         <!-- Footer -->
         <Button Grid.Row="3"
-                Text="Zamknij"
+                Text="{helpers:Translate Close}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
                 TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
                 CornerRadius="12"
