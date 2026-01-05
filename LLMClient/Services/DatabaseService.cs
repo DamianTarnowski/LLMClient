@@ -414,10 +414,11 @@ namespace LLMClient.Services
             var models = await _database.GetAllWithChildrenAsync<AiModel>();
             
             // Migrate API keys from SQLite to SecureStorage (one-time operation)
-            if (!_migrationCompleted)
+            // Check if any model still has API key in database (not yet migrated)
+            var modelsWithDbApiKeys = models.Where(m => !string.IsNullOrWhiteSpace(m.ApiKey)).ToList();
+            if (modelsWithDbApiKeys.Any())
             {
-                await MigrateApiKeysAsync(models);
-                _migrationCompleted = true;
+                await MigrateApiKeysAsync(modelsWithDbApiKeys);
             }
             
             // Load API keys from SecureStorage for UI binding

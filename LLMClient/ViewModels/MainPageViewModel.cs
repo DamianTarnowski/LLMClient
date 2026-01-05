@@ -1297,10 +1297,13 @@ namespace LLMClient.ViewModels
             if (_isUpdatingFilteredMessages)
                 return;
             
+            // Clear previous results before adding new ones
+            FilteredMessages.Clear();
+            
             if (_searchService.HasResults)
             {
                 var searchResults = _searchService.CurrentResults;
-                var filteredMessageIds = searchResults.Select(r => r.Message.Id).Distinct();
+                var filteredMessageIds = searchResults.Select(r => r.Message.Id).Distinct().ToHashSet();
                 
                 if (SelectedConversation?.Messages != null)
                 {

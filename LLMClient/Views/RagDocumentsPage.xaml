@@ -112,7 +112,8 @@
                     Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
                     StrokeThickness="1"
                     Padding="8"
-                    MinHeightRequest="200">
+                    HeightRequest="200"
+                    VerticalOptions="FillAndExpand">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Color="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark=#1F2937}" Offset="0.0" />

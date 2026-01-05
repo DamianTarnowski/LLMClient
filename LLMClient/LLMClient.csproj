@@ -21,7 +21,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Android: Extract native libraries on install -->
-		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<AndroidPackageFormat>aab</AndroidPackageFormat>
 		<AndroidUseAapt2>true</AndroidUseAapt2>
 		<AndroidExtractNativeLibsOnInstall>true</AndroidExtractNativeLibsOnInstall>
 
@@ -127,10 +127,7 @@
 		<AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
 	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
-    <AndroidNdkDirectory>C:\Users\hdtdt\Downloads\android-ndk-r27d-windows\android-ndk-r27d</AndroidNdkDirectory>
-    <AndroidNdkToolchainPath>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\windows-x86_64\bin</AndroidNdkToolchainPath>
-  </PropertyGroup>
+  <!-- NDK path is auto-detected by Visual Studio/dotnet. Set ANDROID_NDK_HOME env var if needed. -->
 
   <!-- Rust libraries are pre-built, no need to build during compilation -->
   <Target Name="BuildRustLibraryForAndroid" BeforeTargets="Build" Condition="'$(TargetFramework)' == 'net10.0-android'">
