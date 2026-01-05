@@ -1,26 +1,27 @@
-# Wzorce i Dobre Praktyki w LLMClient
+# Design Patterns and Best Practices in LLMClient
 
-Ten dokument opisuje nowoczesne wzorce programistyczne i dobre praktyki użyte w projekcie LLMClient.
-Projekt wykorzystuje .NET 10, MAUI i C# 12.
-
----
-
-## Spis Treści
-
-1. [Wzorce C# 12 / .NET 10](#wzorce-c-12--net-10)
-2. [Wzorce Asynchroniczne](#wzorce-asynchroniczne)
-3. [Wzorce MVVM](#wzorce-mvvm)
-4. [Wzorce MAUI](#wzorce-maui)
-5. [Wzorce Architektoniczne](#wzorce-architektoniczne)
-6. [Bezpieczeństwo](#bezpieczeństwo)
+This document describes modern programming patterns and best practices used in the LLMClient project.
+The project uses .NET 10, MAUI, and C# 12.
 
 ---
 
-## Wzorce C# 12 / .NET 10
+## Table of Contents
+
+1. [C# 12 / .NET 10 Patterns](#c-12--net-10-patterns)
+2. [Async Patterns](#async-patterns)
+3. [MVVM Patterns](#mvvm-patterns)
+4. [MAUI Patterns](#maui-patterns)
+5. [Architectural Patterns](#architectural-patterns)
+6. [Security](#security)
+7. [.NET 9/10 Additional Patterns](#net-910-additional-patterns)
+
+---
+
+## C# 12 / .NET 10 Patterns
 
 ### Primary Constructors (C# 12)
 
-Konstruktory główne pozwalają definiować parametry bezpośrednio w deklaracji klasy.
+Primary constructors allow defining parameters directly in the class declaration.
 
 ```csharp
 // Services/IIngestionService.cs
@@ -40,7 +41,7 @@ public sealed class IngestionProgressEventArgs(
 
 ### Required Properties (C# 11+)
 
-Wymuszenie inicjalizacji właściwości przy tworzeniu obiektu.
+Force property initialization when creating an object.
 
 ```csharp
 // Services/IIngestionService.cs
@@ -54,7 +55,7 @@ public sealed class IngestionErrorEventArgs : EventArgs
 
 ### Record Types
 
-Niezmienne typy danych z wbudowanym porównaniem i dekonstrukcją.
+Immutable data types with built-in equality and deconstruction.
 
 ```csharp
 // Models/RagTrace.cs
@@ -76,13 +77,13 @@ public sealed record RagTiming(string Name, long ElapsedMs)
     public override string ToString() => $"{Name}: {ElapsedMs}ms";
 }
 
-// Services/IngestionService.cs - prywatny record
+// Services/IngestionService.cs - private record
 private sealed record IngestionJob(string FilePath, string FileName, DateTime EnqueuedAt);
 ```
 
 ### Init-only Properties
 
-Właściwości ustawiane tylko podczas inicjalizacji.
+Properties that can only be set during initialization.
 
 ```csharp
 // Models/RagTrace.cs
@@ -95,7 +96,7 @@ public sealed class RagTrace
 
 ### Collection Expressions (C# 12)
 
-Uproszczona składnia tworzenia kolekcji.
+Simplified syntax for creating collections.
 
 ```csharp
 // Models/RagTrace.cs
@@ -105,7 +106,7 @@ public List<RagTiming> Timings { get; } = [];
 
 ### File-scoped Namespaces
 
-Redukcja wcięć w plikach.
+Reduce indentation in files.
 
 ```csharp
 // Models/RagTrace.cs
@@ -116,7 +117,7 @@ public sealed class RagTrace { ... }
 
 ### Pattern Matching
 
-Zaawansowane dopasowywanie wzorców.
+Advanced pattern matching.
 
 ```csharp
 // Services/RagService.cs - switch expression
@@ -128,7 +129,7 @@ var content = extension switch
     _ => throw new NotSupportedException($"Unsupported: {extension}")
 };
 
-// Pattern matching z is
+// Pattern matching with is
 if (existing.Chunk is not null)
 {
     // ...
@@ -137,7 +138,7 @@ if (existing.Chunk is not null)
 
 ### Sealed Classes
 
-Optymalizacja wydajności przez zapobieganie dziedziczeniu.
+Performance optimization by preventing inheritance.
 
 ```csharp
 public sealed class RagTrace { ... }
@@ -146,7 +147,7 @@ public sealed record RagChunkCandidate(...);
 
 ### FrozenDictionary (.NET 8+)
 
-Niezmienne słowniki zoptymalizowane pod kątem szybkiego odczytu.
+Immutable dictionaries optimized for fast read access.
 
 ```csharp
 // Models/AiModel.cs
@@ -155,8 +156,8 @@ using System.Collections.Frozen;
 public static class ApiProviders
 {
     /// <summary>
-    /// FrozenDictionary - niezmienne, zoptymalizowane pod kątem odczytu
-    /// Idealne dla statycznych danych konfiguracyjnych
+    /// FrozenDictionary - immutable, optimized for read access
+    /// Ideal for static configuration data
     /// </summary>
     public static readonly FrozenDictionary<AiProvider, ApiProviderInfo> ProviderInfo = 
         new Dictionary<AiProvider, ApiProviderInfo>
@@ -168,18 +169,18 @@ public static class ApiProviders
 }
 ```
 
-**Zalety FrozenDictionary:**
-- 🚀 Szybszy lookup niż zwykły Dictionary (do 40% szybciej)
-- 🔒 Gwarantowana niezmienność
-- 💾 Mniejsze zużycie pamięci dla dużych kolekcji
+**FrozenDictionary Benefits:**
+- 🚀 Faster lookup than regular Dictionary (up to 40% faster)
+- 🔒 Guaranteed immutability
+- 💾 Lower memory usage for large collections
 
 ---
 
-## Wzorce Asynchroniczne
+## Async Patterns
 
 ### IAsyncEnumerable<T> - Async Streaming
 
-Strumieniowanie danych asynchronicznie - idealne dla odpowiedzi AI w czasie rzeczywistym.
+Stream data asynchronously - ideal for real-time AI responses.
 
 ```csharp
 // Services/AiService.cs
@@ -201,7 +202,7 @@ public async IAsyncEnumerable<string> GetStreamingResponseAsync(
 
 ### Channel<T> - Producer/Consumer
 
-Bezpieczna kolejka dla wzorca producent/konsument.
+Thread-safe queue for producer/consumer pattern.
 
 ```csharp
 // Services/IngestionService.cs
@@ -236,10 +237,10 @@ public async Task EnqueueFileAsync(string filePath)
 
 ### CancellationToken
 
-Pełne wsparcie dla anulowania operacji.
+Full support for operation cancellation.
 
 ```csharp
-// Wszędzie w serwisach
+// Throughout all services
 public async Task<string> GenerateResponseAsync(
     string prompt, 
     CancellationToken cancellationToken = default)
@@ -251,7 +252,7 @@ public async Task<string> GenerateResponseAsync(
 
 ### IProgress<T>
 
-Raportowanie postępu operacji.
+Operation progress reporting.
 
 ```csharp
 // Services/RagService.cs
@@ -269,7 +270,7 @@ public async Task GenerateEmbeddingsAsync(
 }
 ```
 
-### SemaphoreSlim - Kontrola Współbieżności
+### SemaphoreSlim - Concurrency Control
 
 ```csharp
 // Services/RobustLocalModelService.cs
@@ -297,11 +298,11 @@ public async Task<bool> DownloadModelAsync(IProgress<double>? progress = null)
 
 ---
 
-## Wzorce MVVM
+## MVVM Patterns
 
 ### INotifyPropertyChanged
 
-Powiadamianie UI o zmianach właściwości.
+Notify UI about property changes.
 
 ```csharp
 // ViewModels/MainPageViewModel.cs
@@ -329,7 +330,7 @@ public class MainPageViewModel : INotifyPropertyChanged
 
 ### ObservableCollection<T>
 
-Kolekcja automatycznie powiadamiająca UI o zmianach.
+Collection that automatically notifies UI about changes.
 
 ```csharp
 // ViewModels/MainPageViewModel.cs
@@ -348,7 +349,7 @@ public ObservableCollection<Conversation> Conversations
 
 ### ICommand / Command
 
-Bindowanie akcji do UI.
+Bind actions to UI.
 
 ```csharp
 // ViewModels/MainPageViewModel.cs
@@ -366,7 +367,7 @@ public MainPageViewModel(...)
 
 ### WeakReferenceMessenger (CommunityToolkit.Mvvm)
 
-Luźno powiązana komunikacja między komponentami.
+Loosely-coupled communication between components.
 
 ```csharp
 // Messaging/Messages.cs
@@ -374,17 +375,17 @@ public record ScrollToBottomMessage;
 public record LocalModelLoadedMessage;
 public record ModelsChangedMessage;
 
-// ViewModels/MainPageViewModel.cs - wysyłanie
+// ViewModels/MainPageViewModel.cs - sending
 WeakReferenceMessenger.Default.Send(new ScrollToBottomMessage());
 WeakReferenceMessenger.Default.Send(new LocalModelLoadedMessage());
 
-// Views/MainPage.xaml.cs - odbieranie
+// Views/MainPage.xaml.cs - receiving
 WeakReferenceMessenger.Default.Register<ScrollToBottomMessage>(this, (r, m) =>
 {
     ScrollToBottom();
 });
 
-// Wyrejestrowanie w OnDisappearing
+// Unregister in OnDisappearing
 protected override void OnDisappearing()
 {
     base.OnDisappearing();
@@ -394,7 +395,7 @@ protected override void OnDisappearing()
 
 ### IQueryAttributable
 
-Przekazywanie parametrów między stronami.
+Pass parameters between pages.
 
 ```csharp
 // ViewModels/MainPageViewModel.cs
@@ -404,7 +405,7 @@ public class MainPageViewModel : INotifyPropertyChanged, IQueryAttributable
     {
         if (query.TryGetValue("conversationId", out var id))
         {
-            // Załaduj konwersację
+            // Load conversation
         }
     }
 }
@@ -412,11 +413,11 @@ public class MainPageViewModel : INotifyPropertyChanged, IQueryAttributable
 
 ---
 
-## Wzorce MAUI
+## MAUI Patterns
 
 ### Behaviors
 
-Rozszerzanie funkcjonalności kontrolek bez dziedziczenia.
+Extend control functionality without inheritance.
 
 ```csharp
 // Behaviors/EditorKeyboardBehavior.cs
@@ -458,7 +459,7 @@ public class EditorKeyboardBehavior : Behavior<Editor>
 
 ### XAML Markup Extensions
 
-Niestandardowe rozszerzenia XAML dla lokalizacji.
+Custom XAML extensions for localization.
 
 ```csharp
 // Helpers/TranslateExtension.cs
@@ -473,13 +474,13 @@ public class TranslateExtension : IMarkupExtension<string>
     }
 }
 
-// Użycie w XAML
+// Usage in XAML
 <Label Text="{helpers:Translate WelcomeMessage}"/>
 ```
 
 ### BindableProperty
 
-Tworzenie właściwości bindowalnych w kontrolkach.
+Create bindable properties in controls.
 
 ```csharp
 public static readonly BindableProperty SendCommandProperty = 
@@ -492,10 +493,10 @@ public static readonly BindableProperty SendCommandProperty =
 
 ### Shell Navigation
 
-Nawigacja z parametrami.
+Navigation with parameters.
 
 ```csharp
-// Nawigacja z parametrami
+// Navigation with parameters
 await Shell.Current.GoToAsync($"//conversation?id={conversationId}");
 
 // Query parameters
@@ -508,7 +509,7 @@ public partial class ConversationPage : ContentPage
 
 ### Platform-specific Code
 
-Kod specyficzny dla platformy z dyrektywami preprocesora.
+Platform-specific code with preprocessor directives.
 
 ```csharp
 // Services/RobustLocalModelService.cs
@@ -535,11 +536,11 @@ private long GetTotalDeviceMemory()
 
 ---
 
-## Wzorce Architektoniczne
+## Architectural Patterns
 
 ### Dependency Injection
 
-Wstrzykiwanie zależności przez konstruktor.
+Constructor-based dependency injection.
 
 ```csharp
 // MauiProgram.cs
@@ -567,7 +568,7 @@ public MainPageViewModel(
 
 ### Repository Pattern
 
-Abstrakcja dostępu do danych.
+Data access abstraction.
 
 ```csharp
 // Services/DatabaseService.cs
@@ -582,10 +583,10 @@ public interface IDatabaseService
 
 ### Service Layer
 
-Separacja logiki biznesowej.
+Business logic separation.
 
 ```csharp
-// Services/RagService.cs - logika RAG
+// Services/RagService.cs - RAG logic
 public class RagService : IRagService
 {
     public async Task<string> GetRelevantContextAsync(
@@ -593,23 +594,23 @@ public class RagService : IRagService
         int topK = 3, 
         float minSimilarity = 0.5f)
     {
-        // Logika wyszukiwania semantycznego
+        // Semantic search logic
     }
 }
 
-// Services/EmbeddingService.cs - generowanie embeddingów
+// Services/EmbeddingService.cs - embedding generation
 public class EmbeddingService : IEmbeddingService
 {
     public async Task<float[]?> GenerateEmbeddingAsync(string text)
     {
-        // Logika ONNX
+        // ONNX logic
     }
 }
 ```
 
 ### Dispose Pattern
 
-Prawidłowe zwalnianie zasobów.
+Proper resource disposal.
 
 ```csharp
 // Services/EmbeddingService.cs
@@ -633,9 +634,9 @@ public class EmbeddingService : IEmbeddingService, IDisposable
 
 ---
 
-## Bezpieczeństwo
+## Security
 
-### SecureStorage dla API Keys
+### SecureStorage for API Keys
 
 ```csharp
 // Services/SecureApiKeyService.cs
@@ -650,7 +651,7 @@ public async Task<string?> GetApiKeyAsync(string modelId)
 }
 ```
 
-### SQLCipher - Szyfrowana Baza Danych
+### SQLCipher - Encrypted Database
 
 ```csharp
 // Services/DatabaseService.cs
@@ -661,25 +662,25 @@ _database = new SQLiteAsyncConnection(connectionString);
 
 ---
 
-## Dodatkowe Wzorce .NET 9/10
+## .NET 9/10 Additional Patterns
 
 ### TimeProvider (Testability)
 
-Abstrakcja czasu dla łatwiejszego testowania.
+Time abstraction for easier testing.
 
 ```csharp
-// Zamiast DateTime.Now używaj TimeProvider
+// Instead of DateTime.Now use TimeProvider
 public class MyService(TimeProvider timeProvider)
 {
     public DateTime GetCurrentTime() => timeProvider.GetUtcNow().DateTime;
 }
 
-// W testach
+// In tests
 var fakeTime = new FakeTimeProvider(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
 var service = new MyService(fakeTime);
 ```
 
-### Interlocked dla Thread-Safety
+### Interlocked for Thread-Safety
 
 ```csharp
 // Services/IngestionService.cs
@@ -691,10 +692,10 @@ Interlocked.Decrement(ref _queueCount);
 
 ### ConfigureAwait(false)
 
-Unikanie deadlocków w bibliotekach.
+Avoid deadlocks in libraries.
 
 ```csharp
-// W serwisach (nie w UI)
+// In services (not in UI)
 await SomeAsyncOperation().ConfigureAwait(false);
 ```
 
@@ -711,6 +712,40 @@ catch (Exception ex) when (attempts < maxRetries)
 
 ---
 
+## Summary
+
+LLMClient project demonstrates the use of latest C# 12 and .NET 10 features:
+
+| Category | Patterns |
+|----------|----------|
+| **C# 12** | Primary constructors, required, collection expressions |
+| **.NET 8+** | FrozenDictionary, TimeProvider |
+| **Async** | IAsyncEnumerable, Channel<T>, CancellationToken, IProgress |
+| **MVVM** | INotifyPropertyChanged, ObservableCollection, WeakReferenceMessenger |
+| **MAUI** | Behaviors, BindableProperty, Markup Extensions |
+| **Architecture** | DI, Repository, Service Layer, Dispose Pattern |
+| **Security** | SecureStorage, SQLCipher |
+| **Thread-Safety** | Interlocked, SemaphoreSlim, Lock |
+
+### Showcase Files (for interviews)
+
+1. **`Services/IngestionService.cs`** - Channel<T>, producer/consumer, record, exception filters
+2. **`Services/AiService.cs`** - IAsyncEnumerable streaming, CancellationToken
+3. **`Models/RagTrace.cs`** - Record types, init properties, sealed, collection expressions
+4. **`Models/AiModel.cs`** - FrozenDictionary, record ApiProviderInfo
+5. **`Services/IIngestionService.cs`** - Primary constructors, required properties
+6. **`Behaviors/EditorKeyboardBehavior.cs`** - MAUI Behaviors, BindableProperty
+7. **`ViewModels/MainPageViewModel.cs`** - MVVM, WeakReferenceMessenger, ICommand
+
+---
+
+*Last updated: January 2026*
+
+---
+---
+
+# 🇵🇱 Polskie Tłumaczenie / Polish Translation
+
 ## Podsumowanie
 
 Projekt LLMClient demonstruje wykorzystanie najnowszych funkcji C# 12 i .NET 10:
@@ -725,6 +760,39 @@ Projekt LLMClient demonstruje wykorzystanie najnowszych funkcji C# 12 i .NET 10:
 | **Architektura** | DI, Repository, Service Layer, Dispose Pattern |
 | **Bezpieczeństwo** | SecureStorage, SQLCipher |
 | **Thread-Safety** | Interlocked, SemaphoreSlim, Lock |
+
+### Słowniczek Wzorców
+
+| Wzorzec | Opis po polsku |
+|---------|----------------|
+| **Primary Constructors** | Konstruktory główne - definiowanie parametrów bezpośrednio w deklaracji klasy |
+| **Required Properties** | Wymuszenie inicjalizacji właściwości przy tworzeniu obiektu |
+| **Record Types** | Niezmienne typy danych z wbudowanym porównaniem i dekonstrukcją |
+| **Init-only Properties** | Właściwości ustawiane tylko podczas inicjalizacji |
+| **Collection Expressions** | Uproszczona składnia tworzenia kolekcji `[]` |
+| **File-scoped Namespaces** | Redukcja wcięć w plikach |
+| **Pattern Matching** | Zaawansowane dopasowywanie wzorców (switch expressions, is not null) |
+| **Sealed Classes** | Optymalizacja wydajności przez zapobieganie dziedziczeniu |
+| **FrozenDictionary** | Niezmienne słowniki zoptymalizowane pod kątem szybkiego odczytu |
+| **IAsyncEnumerable** | Strumieniowanie danych asynchronicznie |
+| **Channel<T>** | Bezpieczna kolejka dla wzorca producent/konsument |
+| **CancellationToken** | Pełne wsparcie dla anulowania operacji |
+| **IProgress<T>** | Raportowanie postępu operacji |
+| **SemaphoreSlim** | Kontrola współbieżności |
+| **INotifyPropertyChanged** | Powiadamianie UI o zmianach właściwości |
+| **ObservableCollection** | Kolekcja automatycznie powiadamiająca UI o zmianach |
+| **WeakReferenceMessenger** | Luźno powiązana komunikacja między komponentami |
+| **Behaviors** | Rozszerzanie funkcjonalności kontrolek bez dziedziczenia |
+| **BindableProperty** | Tworzenie właściwości bindowalnych w kontrolkach |
+| **Dependency Injection** | Wstrzykiwanie zależności przez konstruktor |
+| **Repository Pattern** | Abstrakcja dostępu do danych |
+| **Service Layer** | Separacja logiki biznesowej |
+| **Dispose Pattern** | Prawidłowe zwalnianie zasobów |
+| **SecureStorage** | Bezpieczne przechowywanie kluczy API |
+| **SQLCipher** | Szyfrowana baza danych SQLite |
+| **Interlocked** | Atomowe operacje na zmiennych (thread-safety) |
+| **ConfigureAwait** | Unikanie deadlocków w bibliotekach |
+| **Exception Filters** | Filtrowanie wyjątków z warunkiem `when` |
 
 ### Pliki Showcase (do pokazania na rekrutacji)
 
