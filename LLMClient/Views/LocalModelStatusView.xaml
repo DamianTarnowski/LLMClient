@@ -3,6 +3,7 @@
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:LLMClient.ViewModels"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:DataType="viewModels:LocalModelStatusViewModel"
              x:Name="LocalModelStatusRoot">
 
@@ -73,7 +74,7 @@
             <!-- Action Buttons -->
             <StackLayout Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="10" VerticalOptions="Center">
                 <!-- Change Model Button (only when not downloaded/downloading) -->
-                <Button Text="Zmień"
+                <Button Text="{helpers:Translate Change}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                         TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
                         FontSize="12"

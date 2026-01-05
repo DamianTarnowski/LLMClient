@@ -132,7 +132,7 @@
                                    FontSize="48"
                                    TextColor="{StaticResource Gray400}"
                                    HorizontalOptions="Center" />
-                            <Label Text="Brak konwersacji"
+                            <Label Text="{helpers:Translate NoConversations}"
                                    TextColor="{StaticResource Gray500}"
                                    FontSize="14"
                                    HorizontalOptions="Center"
@@ -352,7 +352,7 @@
 
                         <Button Grid.Column="0"
                                 x:Name="DesktopLanguageButton"
-                                ToolTipProperties.Text="Zmień język"
+                                ToolTipProperties.Text="{helpers:Translate ChangeLanguage}"
                                 Text="{Binding L[Language]}"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}"
                                 TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
@@ -515,7 +515,7 @@
                                           Color="{StaticResource Primary}"
                                           WidthRequest="48"
                                           HeightRequest="48" />
-                        <Label Text="Ładowanie modelu..."
+                        <Label Text="{helpers:Translate LoadingModel}"
                                FontSize="14"
                                TextColor="{StaticResource Gray600}"
                                HorizontalOptions="Center" />
@@ -551,13 +551,13 @@
                            VerticalOptions="Center" />
                 </Border>
 
-                <Label Text="Rozpocznij rozmowę"
+                <Label Text="{helpers:Translate StartConversation}"
                        FontSize="20"
                        FontAttributes="Bold"
                        TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                        HorizontalOptions="Center" />
 
-                <Label Text="Napisz wiadomość poniżej, aby rozpocząć&#x0a;konwersację z AI."
+                <Label Text="{helpers:Translate WriteMessageBelow}"
                        FontSize="14"
                        TextColor="{StaticResource Gray500}"
                        HorizontalOptions="Center"
@@ -1005,7 +1005,7 @@
                                             BackgroundColor="Transparent">
 
                                 <CollectionView.EmptyView>
-                                    <Label Text="Brak konwersacji"
+                                    <Label Text="{helpers:Translate NoConversations}"
                                            TextColor="{StaticResource Gray500}"
                                            FontSize="13"
                                            HorizontalOptions="Center"

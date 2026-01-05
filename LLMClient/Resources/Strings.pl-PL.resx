@@ -450,4 +450,147 @@
   <data name="AddMemory" xml:space="preserve">
     <value>Dodaj wspomnienie</value>
   </data>
+  
+  <!-- Additional UI strings -->
+  <data name="NoConversations" xml:space="preserve">
+    <value>Brak konwersacji</value>
+  </data>
+  <data name="ChangeLanguage" xml:space="preserve">
+    <value>Zmień język</value>
+  </data>
+  <data name="LoadingModel" xml:space="preserve">
+    <value>Ładowanie modelu...</value>
+  </data>
+  <data name="StartConversation" xml:space="preserve">
+    <value>Rozpocznij rozmowę</value>
+  </data>
+  <data name="WriteMessageBelow" xml:space="preserve">
+    <value>Napisz wiadomość poniżej, aby rozpocząć konwersację z AI.</value>
+  </data>
+  <data name="SearchInMemory" xml:space="preserve">
+    <value>Wyszukaj w pamięci...</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Zmień</value>
+  </data>
+  
+  <!-- Model Configuration Page -->
+  <data name="AIModelConfiguration" xml:space="preserve">
+    <value>Konfiguracja Modeli AI</value>
+  </data>
+  <data name="Streaming" xml:space="preserve">
+    <value>Streaming</value>
+  </data>
+  <data name="LightTheme" xml:space="preserve">
+    <value>Jasny motyw</value>
+  </data>
+  <data name="AvailableModels" xml:space="preserve">
+    <value>Dostępne Modele</value>
+  </data>
+  <data name="NoAIModels" xml:space="preserve">
+    <value>Brak modeli AI</value>
+  </data>
+  <data name="AddFirstModel" xml:space="preserve">
+    <value>Dodaj pierwszy model aby rozpocząć!</value>
+  </data>
+  <data name="NewModel" xml:space="preserve">
+    <value>Nowy Model</value>
+  </data>
+  <data name="EditModel" xml:space="preserve">
+    <value>Edytuj Model</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nazwa</value>
+  </data>
+  <data name="Provider" xml:space="preserve">
+    <value>Dostawca</value>
+  </data>
+  <data name="ModelId" xml:space="preserve">
+    <value>ID Modelu</value>
+  </data>
+  <data name="ApiKey" xml:space="preserve">
+    <value>Klucz API</value>
+  </data>
+  <data name="EndpointUrl" xml:space="preserve">
+    <value>URL Endpointu</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Aktywny</value>
+  </data>
+  <data name="SupportsImages" xml:space="preserve">
+    <value>Obsługuje obrazki</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="List" xml:space="preserve">
+    <value>Lista</value>
+  </data>
+  
+  <!-- Semantic Search Page -->
+  <data name="SemanticSearch" xml:space="preserve">
+    <value>Wyszukiwanie</value>
+  </data>
+  <data name="GoBack" xml:space="preserve">
+    <value>Wróć</value>
+  </data>
+  <data name="EnterSemanticQuery" xml:space="preserve">
+    <value>Wpisz zapytanie semantyczne...</value>
+  </data>
+  <data name="TextMode" xml:space="preserve">
+    <value>Tekstowe</value>
+  </data>
+  <data name="HybridMode" xml:space="preserve">
+    <value>Hybrydowe</value>
+  </data>
+  <data name="VectorMode" xml:space="preserve">
+    <value>Wektorowe</value>
+  </data>
+  <data name="DownloadModel" xml:space="preserve">
+    <value>Pobierz model</value>
+  </data>
+  <data name="Similarity" xml:space="preserve">
+    <value>Podobieństwo:</value>
+  </data>
+  <data name="Max" xml:space="preserve">
+    <value>Max:</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>Wyniki wyszukiwania</value>
+  </data>
+  <data name="NoResults" xml:space="preserve">
+    <value>Brak wyników</value>
+  </data>
+  <data name="TryChangingQuery" xml:space="preserve">
+    <value>Spróbuj zmienić zapytanie lub próg podobieństwa</value>
+  </data>
+  
+  <!-- RAG Documents Page -->
+  <data name="RAGDocuments" xml:space="preserve">
+    <value>Dokumenty RAG</value>
+  </data>
+  <data name="ManageKnowledgeBase" xml:space="preserve">
+    <value>Zarządzaj bazą wiedzy dla AI</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>oczekuje</value>
+  </data>
+  <data name="AddDocuments" xml:space="preserve">
+    <value>Dodaj dokumenty</value>
+  </data>
+  <data name="GenerateEmbeddings" xml:space="preserve">
+    <value>Generuj embeddingi</value>
+  </data>
+  <data name="NoDocuments" xml:space="preserve">
+    <value>Brak dokumentów</value>
+  </data>
+  <data name="AddPdfDocxTxt" xml:space="preserve">
+    <value>Dodaj dokumenty PDF, DOCX lub TXT</value>
+  </data>
+  <data name="Chunks" xml:space="preserve">
+    <value>chunków</value>
+  </data>
 </root>
