@@ -431,10 +431,15 @@ public class RagService : IRagService
         return floats;
     }
 
-    public Task ClearAllEmbeddingsAsync()
+    public async Task ClearAllEmbeddingsAsync()
     {
-        // TODO: Implement clearing embeddings when model changes
-        // For now, users need to manually re-generate embeddings in RAG section
-        return Task.CompletedTask;
+        var allChunks = await _databaseService.GetAllRagChunksAsync();
+        foreach (var chunk in allChunks)
+        {
+            chunk.Embedding = null;
+            chunk.EmbeddingVersion = 0;
+            await _databaseService.UpdateRagChunkEmbeddingAsync(chunk);
+        }
+        System.Diagnostics.Debug.WriteLine($"[RagService] Cleared embeddings for {allChunks.Count} chunks");
     }
 }

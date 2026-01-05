@@ -206,11 +206,13 @@ namespace LLMClient.Services
                     activityManager.GetMemoryInfo(memInfo);
                     return memInfo.TotalMem;
                 }
+                return 0;
 #elif WINDOWS
                 // On Windows, use GC info as approximation
                 return (long)GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
-#endif
+#else
                 return 0;
+#endif
             }
             catch (Exception ex)
             {
@@ -231,11 +233,13 @@ namespace LLMClient.Services
                     activityManager.GetMemoryInfo(memInfo);
                     return memInfo.AvailMem;
                 }
+                return 0;
 #elif WINDOWS
                 var gcInfo = GC.GetGCMemoryInfo();
                 return (long)(gcInfo.TotalAvailableMemoryBytes - gcInfo.MemoryLoadBytes);
-#endif
+#else
                 return 0;
+#endif
             }
             catch (Exception ex)
             {
