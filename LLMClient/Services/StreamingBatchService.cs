@@ -96,15 +96,24 @@ namespace LLMClient.Services
             }
         }
 
-        public void StopBatching()
+        public async Task StopBatchingAsync()
         {
+            // Final flush BEFORE setting _isBatching to false
+            // (FlushAsync checks _isBatching and exits early if false)
+            await FlushAsync();
+            
             lock (_lock)
             {
                 _isBatching = false;
+                _currentMessage = null;
             }
-
-            // Final flush
-            _ = Task.Run(async () => await FlushAsync());
+        }
+        
+        [Obsolete("Use StopBatchingAsync instead to ensure final chunks are saved")]
+        public void StopBatching()
+        {
+            // Synchronous wrapper for backward compatibility
+            StopBatchingAsync().GetAwaiter().GetResult();
         }
     }
-} 
+}

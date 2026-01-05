@@ -548,14 +548,17 @@ namespace LLMClient.Services
         public Task DeleteConversationAsync(Conversation conversation) => DeleteConversationAsync(conversation.Id);
 
         // Metody dla Message - POPRAWIONE
-        public Task<List<Message>> GetMessagesAsync(int conversationId, int limit = 50, int offset = 0) =>
-            _database.Table<Message>()
+        public async Task<List<Message>> GetMessagesAsync(int conversationId, int limit = 50, int offset = 0)
+        {
+            await EnsureDatabaseInitializedAsync();
+            return await _database!.Table<Message>()
                 .Where(m => m.ConversationId == conversationId)
                 .OrderBy(m => m.Timestamp)
                 .ThenBy(m => m.Id)
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
+        }
 
         public async Task<int> SaveMessageAsync(Message message)
         {
@@ -872,11 +875,7 @@ namespace LLMClient.Services
                 .OrderByDescending(m => m.UpdatedAt)
                 .ToListAsync();
             System.Diagnostics.Debug.WriteLine($"[DatabaseService] Retrieved {memories.Count} memories from database");
-            
-            foreach (var memory in memories)
-            {
-                System.Diagnostics.Debug.WriteLine($"[DatabaseService] Memory: {memory.Key} = {memory.Value} (ID: {memory.Id})");
-            }
+            // Note: Not logging Memory.Key/Value to avoid leaking sensitive user data to logs
             
             return memories;
         }

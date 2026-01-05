@@ -300,8 +300,8 @@ namespace LLMClient.Services
                 chatHistory.AddSystemMessage(systemMessage);
             }
 
-            // Dodaj historię konwersacji
-            foreach (var msg in conversationHistory.Take(20)) // Ogranicz do ostatnich 20 wiadomości
+            // Dodaj historię konwersacji (ostatnie 20 wiadomości, nie pierwsze!)
+            foreach (var msg in conversationHistory.TakeLast(20))
             {
                 if (msg.IsUser)
                 {
