@@ -25,7 +25,8 @@ namespace LLMClient.Services
         public MemoryService(string dbPath)
         {
             _database = new SQLiteAsyncConnection(dbPath);
-            _database.CreateTableAsync<Memory>().Wait();
+            // Inicjalizacja tabeli jest wykonywana asynchronicznie przy pierwszym użyciu
+            Task.Run(async () => await _database.CreateTableAsync<Memory>()).ConfigureAwait(false);
         }
 
         public async Task<List<Memory>> GetAllMemoriesAsync()
@@ -134,7 +135,14 @@ namespace LLMClient.Services
 
         public void Dispose()
         {
-            _database?.CloseAsync()?.Wait();
+            try
+            {
+                _database?.CloseAsync()?.GetAwaiter().GetResult();
+            }
+            catch (Exception)
+            {
+                // Ignoruj błędy podczas zamykania - Dispose nie powinien rzucać wyjątków
+            }
         }
     }
 }

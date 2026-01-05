@@ -126,7 +126,8 @@ public class RagService : IRagService
         var allChunks = await _databaseService.GetAllRagChunksAsync();
         if (allChunks.Count == 0) return string.Empty;
 
-        var scored = new List<(RagChunk Chunk, float Score)>();
+        // Użyj Dictionary dla bezpiecznej modyfikacji i lepszej wydajności O(1)
+        var scoredDict = new Dictionary<int, (RagChunk Chunk, float Score)>();
 
         if (mode == RetrievalMode.Vector || mode == RetrievalMode.Hybrid)
         {
@@ -139,7 +140,7 @@ public class RagService : IRagService
                     var similarity = CosineSimilarity(queryEmbedding, chunkEmbedding);
                     if (similarity >= minSimilarity)
                     {
-                        scored.Add((chunk, similarity));
+                        scoredDict[chunk.Id] = (chunk, similarity);
                     }
                 }
             }
@@ -155,22 +156,20 @@ public class RagService : IRagService
                 if (matchCount > 0)
                 {
                     var keywordScore = (float)matchCount / queryTerms.Length;
-                    var existing = scored.FirstOrDefault(s => s.Chunk.Id == chunk.Id);
-                    if (existing.Chunk != null)
+                    if (scoredDict.TryGetValue(chunk.Id, out var existing))
                     {
                         var hybridScore = (existing.Score * 0.7f) + (keywordScore * 0.3f);
-                        scored.Remove(existing);
-                        scored.Add((chunk, hybridScore));
+                        scoredDict[chunk.Id] = (chunk, hybridScore);
                     }
                     else if (keywordScore >= 0.3f)
                     {
-                        scored.Add((chunk, keywordScore * 0.5f));
+                        scoredDict[chunk.Id] = (chunk, keywordScore * 0.5f);
                     }
                 }
             }
         }
 
-        var topChunks = scored
+        var topChunks = scoredDict.Values
             .OrderByDescending(x => x.Score)
             .Take(topK)
             .Select(x => x.Chunk.Content);
@@ -202,7 +201,8 @@ public class RagService : IRagService
             return new RetrievalResult { Trace = trace };
         }
 
-        var scored = new List<(RagChunk Chunk, float VectorScore, float KeywordScore, float FinalScore)>();
+        // Użyj Dictionary dla bezpiecznej modyfikacji i lepszej wydajności O(1)
+        var scoredDict = new Dictionary<int, (RagChunk Chunk, float VectorScore, float KeywordScore, float FinalScore)>();
 
         // Vector search
         var vectorSw = System.Diagnostics.Stopwatch.StartNew();
@@ -215,7 +215,7 @@ public class RagService : IRagService
                 {
                     var chunkEmbedding = BytesToFloatArray(chunk.Embedding!);
                     var similarity = CosineSimilarity(queryEmbedding, chunkEmbedding);
-                    scored.Add((chunk, similarity, 0f, similarity));
+                    scoredDict[chunk.Id] = (chunk, similarity, 0f, similarity);
                 }
             }
         }
@@ -233,16 +233,14 @@ public class RagService : IRagService
                 if (matchCount > 0)
                 {
                     var keywordScore = (float)matchCount / queryTerms.Length;
-                    var existing = scored.FirstOrDefault(s => s.Chunk.Id == chunk.Id);
-                    if (existing.Chunk != null)
+                    if (scoredDict.TryGetValue(chunk.Id, out var existing))
                     {
                         var hybridScore = (existing.VectorScore * 0.7f) + (keywordScore * 0.3f);
-                        scored.Remove(existing);
-                        scored.Add((chunk, existing.VectorScore, keywordScore, hybridScore));
+                        scoredDict[chunk.Id] = (chunk, existing.VectorScore, keywordScore, hybridScore);
                     }
                     else
                     {
-                        scored.Add((chunk, 0f, keywordScore, keywordScore * 0.5f));
+                        scoredDict[chunk.Id] = (chunk, 0f, keywordScore, keywordScore * 0.5f);
                     }
                 }
             }
@@ -250,7 +248,7 @@ public class RagService : IRagService
         trace.Timings.Add(new RagTiming("KeywordSearch", keywordSw.ElapsedMilliseconds));
 
         // Filter and rank
-        var filtered = scored.Where(s => s.FinalScore >= minSimilarity).OrderByDescending(s => s.FinalScore).ToList();
+        var filtered = scoredDict.Values.Where(s => s.FinalScore >= minSimilarity).OrderByDescending(s => s.FinalScore).ToList();
         var topResults = filtered.Take(topK).ToList();
 
         // Build candidates for trace
@@ -325,7 +323,7 @@ public class RagService : IRagService
                 await _databaseService.UpdateRagChunkEmbeddingAsync(chunk);
             }
 
-            await Task.Delay(50, cancellationToken);
+            await Task.Delay(10, cancellationToken); // Zmniejszono z 50ms dla lepszej wydajności
         }
 
         progress?.Report("Zakończono!");

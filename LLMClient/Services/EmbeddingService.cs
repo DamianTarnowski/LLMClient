@@ -61,7 +61,7 @@ namespace LLMClient.Services
         public Task<bool> IsModelDownloadedAsync()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var modelsDir = Path.Combine(appData, "User Name", "com.companyname.llmclient", "Data", "models", ModelVersion);
+            var modelsDir = Path.Combine(appData, "LLMClient", "models", ModelVersion);
             var modelPath = Path.Combine(modelsDir, "model.onnx");
             var modelExternalDataPath = Path.Combine(modelsDir, "model.onnx_data");
 
@@ -130,7 +130,7 @@ namespace LLMClient.Services
         {
             _logger.LogInformation("DownloadModelIfNeededAsync rozpoczęty");
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var modelsDir = Path.Combine(appData, "User Name", "com.companyname.llmclient", "Data", "models", ModelVersion);
+            var modelsDir = Path.Combine(appData, "LLMClient", "models", ModelVersion);
             Directory.CreateDirectory(modelsDir);
             
             var modelPath = Path.Combine(modelsDir, "model.onnx");
