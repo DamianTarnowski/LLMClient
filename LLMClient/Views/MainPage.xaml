@@ -156,6 +156,13 @@
                                         BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight2}, Dark={StaticResource SurfaceDark3}}"
                                         StrokeShape="RoundRectangle 12"
                                         StrokeThickness="0">
+                                    <FlyoutBase.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Usuń konwersację"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteConversationCommand}"
+                                                            CommandParameter="{Binding .}" />
+                                        </MenuFlyout>
+                                    </FlyoutBase.ContextFlyout>
                                     <Grid.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectConversationCommand}"
                                                               CommandParameter="{Binding .}" />
@@ -586,6 +593,16 @@
                                 </SwipeView.RightItems>
 
                                 <Grid Padding="0,4">
+                                    <FlyoutBase.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Kopiuj"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CopyMessageCommand}"
+                                                            CommandParameter="{Binding .}" />
+                                            <MenuFlyoutItem Text="Usuń wiadomość"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMessageCommand}"
+                                                            CommandParameter="{Binding .}" />
+                                        </MenuFlyout>
+                                    </FlyoutBase.ContextFlyout>
                                     <!-- User Message -->
                                     <Border BackgroundColor="{AppThemeBinding Light=#5B4FCF, Dark=#6C5FE0}"
                                             StrokeShape="RoundRectangle 20,20,4,20"
