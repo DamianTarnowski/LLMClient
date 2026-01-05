@@ -788,20 +788,26 @@ namespace LLMClient.ViewModels
         private async Task LoadDataAsync()
         {
             var conversations = await _databaseService.GetConversationsAsync();
-            Conversations = new ObservableCollection<Conversation>(conversations.OrderByDescending(c => c.CreatedAt));
-            OnPropertyChanged(nameof(IsConversationsEmpty));
-
-            if (Conversations.Any())
-            {
-                SelectedConversation = Conversations.First();
-            }
-            else
-            {
-                // Brak konwersacji? Utwórz automatycznie nową i ustaw jako aktywną
-                await CreateNewConversationAsync();
-            }
-
             var models = await _databaseService.GetModelsAsync();
+            
+            // Update UI-bound properties on main thread
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                Conversations = new ObservableCollection<Conversation>(conversations.OrderByDescending(c => c.CreatedAt));
+                OnPropertyChanged(nameof(IsConversationsEmpty));
+
+                if (Conversations.Any())
+                {
+                    SelectedConversation = Conversations.First();
+                }
+                else
+                {
+                    // Brak konwersacji? Utwórz automatycznie nową i ustaw jako aktywną
+                    await CreateNewConversationAsync();
+                }
+            });
+
+            // Continue with models on main thread
             AiConfiguration.Models = new ObservableCollection<AiModel>(models);
 
             try
@@ -1538,8 +1544,12 @@ namespace LLMClient.ViewModels
 
         private async Task LoadThemeAsync()
         {
-            _isLightTheme = Preferences.Get("IsLightTheme", false);
-            OnPropertyChanged(nameof(IsLightTheme));
+            var isLight = Preferences.Get("IsLightTheme", false);
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                _isLightTheme = isLight;
+                OnPropertyChanged(nameof(IsLightTheme));
+            });
         }
 
         private async Task ToggleThemeAsync(bool isLight)
