@@ -162,4 +162,128 @@
   <data name="ModelName" xml:space="preserve">
     <value>Model naam</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Lokaal</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Meer</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>Meer opties</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Berichten zoeken</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Schrijf een bericht...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Model selecteren</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Gesprek verwijderen</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Bericht verwijderen</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Kopiëren</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Terug</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Toevoegen</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Vernieuwen</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>Geen herinneringen</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>Voeg de eerste informatie toe aan AI-geheugen</value>
+  </data>
+  <data name="MemoryAI" xml:space="preserve">
+    <value>AI-geheugen</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>Beheer informatie onthouden door AI</value>
+  </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Gebruikersgids</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>Leer LLMClient effectief te gebruiken</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Aan de slag</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>Welkom bij LLMClient! Met deze app kun je chatten met AI-modellen - lokaal op je apparaat of via cloud-APIs. Begin met de knop "+ Nieuw gesprek".</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>Chatten met AI</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Typ je bericht onderaan en druk op Verzenden. De AI antwoordt op basis van de gespreksgeschiedenis. Je kunt afbeeldingen bijvoegen (in API-modus met ondersteunde modellen).</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Lokaal AI-model</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>Lokale modus draait AI direct op je apparaat - geen internet nodig, volledige privacy. Download eerst het model (ongeveer 400MB), laad het dan om te beginnen met chatten.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Cloud API-modellen</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>API-modus maakt verbinding met clouddiensten zoals OpenAI, Google Gemini, Anthropic Claude en anderen. Je hebt API-sleutels van deze providers nodig.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>AI-geheugen</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>De geheugenfunctie laat de AI belangrijke informatie over jou onthouden tussen gesprekken.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Semantisch zoeken</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Zoek door al je gesprekken met natuurlijke taal. Semantisch zoeken begrijpt betekenis, niet alleen trefwoorden.</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>RAG-documenten</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Upload je eigen documenten (PDF, TXT, DOCX) om een persoonlijke kennisbank te maken.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Pro-tips</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Wees specifiek voor betere antwoorden
+• Gebruik lokale modus voor privacy
+• AI onthoudt context in een gesprek
+• Je gegevens zijn versleuteld en lokaal opgeslagen</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Je privé AI-metgezel</value>
+  </data>
 </root>

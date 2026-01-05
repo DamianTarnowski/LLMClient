@@ -162,4 +162,132 @@
   <data name="ModelName" xml:space="preserve">
     <value>Nom du modèle</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Local</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Plus</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>Plus d'options</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Rechercher des messages</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Écrire un message...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Sélectionner un modèle</value>
+  </data>
+  <data name="SelectAPIModel" xml:space="preserve">
+    <value>Sélectionner un modèle API</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Supprimer la conversation</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Supprimer le message</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copier</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Retour</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Ajouter</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Actualiser</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Débogage</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tous</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>Aucun souvenir</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>Ajoutez la première information à la mémoire de l'IA</value>
+  </data>
+  <data name="MemoryAI" xml:space="preserve">
+    <value>Mémoire IA</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>Gérer les informations mémorisées par l'IA</value>
+  </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Aide</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Guide d'utilisation</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>Apprenez à utiliser LLMClient efficacement</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Premiers pas</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>Bienvenue dans LLMClient! Cette application vous permet de discuter avec des modèles IA - localement sur votre appareil ou via des API cloud. Commencez par créer une nouvelle conversation avec le bouton "+ Nouvelle conversation". Choisissez entre le mode Local (privé, hors ligne) ou API (nécessite Internet et clés API).</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>Discuter avec l'IA</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Tapez votre message en bas et appuyez sur Envoyer. L'IA répondra en fonction de l'historique de conversation. Vous pouvez joindre des images (en mode API avec les modèles pris en charge). Cliquez droit sur les messages pour copier ou supprimer.</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Modèle IA local</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>Le mode Local exécute l'IA directement sur votre appareil - pas d'Internet requis, confidentialité totale. Téléchargez d'abord le modèle (environ 400Mo), puis chargez-le pour commencer à discuter.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Modèles API Cloud</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>Le mode API se connecte aux services cloud comme OpenAI, Google Gemini, Anthropic Claude et autres. Vous avez besoin de clés API de ces fournisseurs. Allez dans Paramètres > Configuration du modèle pour ajouter vos clés.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>Mémoire IA</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>La fonction Mémoire permet à l'IA de retenir des informations importantes à votre sujet entre les conversations. L'application extrait automatiquement les faits clés de vos discussions.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Recherche sémantique</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Recherchez dans toutes vos conversations en langage naturel. La recherche sémantique comprend le sens, pas seulement les mots-clés.</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>Documents RAG</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Téléchargez vos propres documents (PDF, TXT, DOCX) pour créer une base de connaissances personnelle. L'IA peut alors répondre aux questions basées sur vos documents.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Conseils Pro</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Soyez précis pour de meilleures réponses
+• Utilisez le mode Local pour la confidentialité
+• L'IA se souvient du contexte dans une conversation
+• Créez de nouvelles conversations pour différents sujets
+• Vos données sont chiffrées et stockées localement</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Votre compagnon IA privé</value>
+  </data>
 </root>

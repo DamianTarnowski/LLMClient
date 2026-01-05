@@ -162,4 +162,128 @@
   <data name="ModelName" xml:space="preserve">
     <value>モデル名</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>ローカル</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>その他のオプション</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>メッセージを検索</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>メッセージを入力...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>モデルを選択</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>会話を削除</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>メッセージを削除</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>コピー</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>デバッグ</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>記憶がありません</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>AIメモリに最初の情報を追加</value>
+  </data>
+  <data name="MemoryAI" xml:space="preserve">
+    <value>AIメモリ</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>AIが記憶した情報を管理</value>
+  </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>ユーザーガイド</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>LLMClientの効果的な使い方を学ぶ</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>はじめに</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>LLMClientへようこそ！このアプリでAIモデルとチャットできます - デバイス上でローカルに、またはクラウドAPI経由で。「+ 新しい会話」ボタンで開始します。</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>AIとチャット</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>下部にメッセージを入力して送信を押します。AIが会話履歴に基づいて応答します。画像を添付できます（対応モデルのAPIモードで）。</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>ローカルAIモデル</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>ローカルモードはデバイス上で直接AIを実行 - インターネット不要、完全なプライバシー。まずモデルをダウンロード（約400MB）、読み込んでチャット開始。</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>クラウドAPIモデル</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>APIモードはOpenAI、Google Gemini、Anthropic Claudeなどのクラウドサービスに接続します。これらのプロバイダーからAPIキーが必要です。</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>AIメモリ</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>メモリ機能により、AIは会話間であなたに関する重要な情報を記憶できます。</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>セマンティック検索</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>自然言語ですべての会話を検索。セマンティック検索はキーワードだけでなく意味を理解します。</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>RAGドキュメント</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>ドキュメント（PDF、TXT、DOCX）をアップロードして個人ナレッジベースを作成。</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>プロのヒント</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• 具体的な質問でより良い回答を
+• プライバシーにはローカルモードを使用
+• AIは会話内のコンテキストを記憶
+• データは暗号化されローカルに保存</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - あなたのプライベートAIコンパニオン</value>
+  </data>
 </root>

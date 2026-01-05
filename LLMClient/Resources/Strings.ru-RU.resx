@@ -162,4 +162,128 @@
   <data name="ModelName" xml:space="preserve">
     <value>Название модели</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Локально</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Ещё</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>Дополнительные опции</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Поиск сообщений</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Написать сообщение...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Выбрать модель</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Удалить разговор</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Удалить сообщение</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Отладка</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>Нет воспоминаний</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>Добавьте первую информацию в память ИИ</value>
+  </data>
+  <data name="MemoryAI" xml:space="preserve">
+    <value>Память ИИ</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>Управление информацией, запомненной ИИ</value>
+  </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Помощь</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Руководство пользователя</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>Узнайте, как эффективно использовать LLMClient</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Начало работы</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>Добро пожаловать в LLMClient! Это приложение позволяет общаться с моделями ИИ - локально на вашем устройстве или через облачные API. Начните с кнопки "+ Новый разговор".</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>Чат с ИИ</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Введите сообщение внизу и нажмите Отправить. ИИ ответит на основе истории разговора. Вы можете прикреплять изображения (в режиме API с поддерживаемыми моделями).</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Локальная модель ИИ</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>Локальный режим запускает ИИ прямо на вашем устройстве - без интернета, полная конфиденциальность. Сначала загрузите модель (около 400МБ), затем загрузите её для начала чата.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Облачные API модели</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>Режим API подключается к облачным сервисам, таким как OpenAI, Google Gemini, Anthropic Claude и другим. Вам нужны API-ключи от этих провайдеров.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>Память ИИ</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>Функция памяти позволяет ИИ запоминать важную информацию о вас между разговорами.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Семантический поиск</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Ищите по всем разговорам на естественном языке. Семантический поиск понимает смысл, а не только ключевые слова.</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>RAG документы</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Загрузите свои документы (PDF, TXT, DOCX) для создания личной базы знаний.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Советы профи</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Будьте конкретны для лучших ответов
+• Используйте локальный режим для конфиденциальности
+• ИИ помнит контекст в разговоре
+• Ваши данные зашифрованы и хранятся локально</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Ваш личный ИИ-компаньон</value>
+  </data>
 </root>

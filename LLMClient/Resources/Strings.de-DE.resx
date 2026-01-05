@@ -162,4 +162,132 @@
   <data name="ModelName" xml:space="preserve">
     <value>Modellname</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Lokal</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Mehr</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>Weitere Optionen</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Nachrichten suchen</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Nachricht schreiben...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Modell auswählen</value>
+  </data>
+  <data name="SelectAPIModel" xml:space="preserve">
+    <value>API-Modell auswählen</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Unterhaltung löschen</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Nachricht löschen</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>Keine Erinnerungen</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>Fügen Sie die erste Information zum KI-Gedächtnis hinzu</value>
+  </data>
+  <data name="MemoryAI" xml:space="preserve">
+    <value>KI-Gedächtnis</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>Von der KI gespeicherte Informationen verwalten</value>
+  </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Hilfe</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Benutzerhandbuch</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>Lernen Sie, wie Sie LLMClient effektiv nutzen</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Erste Schritte</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>Willkommen bei LLMClient! Diese App ermöglicht Chats mit KI-Modellen - lokal auf Ihrem Gerät oder über Cloud-APIs. Starten Sie mit einer neuen Unterhaltung über die Schaltfläche "+ Neue Unterhaltung". Wählen Sie zwischen Lokal-Modus (privat, offline) oder API-Modus (erfordert Internet und API-Schlüssel).</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>Mit KI chatten</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Geben Sie Ihre Nachricht unten ein und drücken Sie Senden. Die KI antwortet basierend auf Ihrem Gesprächsverlauf. Sie können Bilder anhängen (im API-Modus mit unterstützten Modellen). Klicken Sie mit der rechten Maustaste auf Nachrichten zum Kopieren oder Löschen.</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Lokales KI-Modell</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>Der Lokal-Modus führt KI direkt auf Ihrem Gerät aus - kein Internet erforderlich, volle Privatsphäre. Laden Sie zuerst das Modell herunter (ca. 400MB), dann laden Sie es zum Chatten. Das Modell nutzt CPU/GPU Ihres Geräts. Entladen Sie es bei Nichtgebrauch.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Cloud-API-Modelle</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>Der API-Modus verbindet sich mit Cloud-Diensten wie OpenAI, Google Gemini, Anthropic Claude und anderen. Sie benötigen API-Schlüssel von diesen Anbietern. Gehen Sie zu Einstellungen > Modellkonfiguration, um Ihre Schlüssel hinzuzufügen.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>KI-Gedächtnis</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>Die Gedächtnis-Funktion lässt die KI wichtige Informationen über Sie speichern. Die App extrahiert automatisch wichtige Fakten aus Ihren Chats. Sie können auch manuell Erinnerungen hinzufügen, bearbeiten oder löschen.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Semantische Suche</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Durchsuchen Sie alle Ihre Unterhaltungen mit natürlicher Sprache. Die semantische Suche versteht Bedeutung, nicht nur Schlüsselwörter.</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>RAG-Dokumente</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Laden Sie eigene Dokumente (PDF, TXT, DOCX) hoch, um eine persönliche Wissensbasis zu erstellen. Die KI kann dann Fragen basierend auf Ihren Dokumenten beantworten.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Profi-Tipps</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Seien Sie spezifisch für bessere Antworten
+• Verwenden Sie Lokal-Modus für Privatsphäre
+• Die KI merkt sich den Kontext innerhalb einer Unterhaltung
+• Erstellen Sie neue Unterhaltungen für verschiedene Themen
+• Ihre Daten sind verschlüsselt und lokal gespeichert</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Ihr privater KI-Begleiter</value>
+  </data>
 </root>

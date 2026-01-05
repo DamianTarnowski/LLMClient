@@ -4,8 +4,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodel="clr-namespace:LLMClient.ViewModels"
              xmlns:converters="clr-namespace:LLMClient.Converters"
+             xmlns:helpers="clr-namespace:LLMClient.Helpers"
              x:DataType="viewmodel:MemoryPageViewModel"
-             Title="Pamięć AI"
+             Title="{helpers:Translate MemoryAI}"
              BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
 
     <ContentPage.Resources>
@@ -17,7 +18,7 @@
     </ContentPage.Resources>
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Wróć" Order="Primary" Priority="0"
+        <ToolbarItem Text="{helpers:Translate Back}" Order="Primary" Priority="0"
                      Command="{Binding BackToMainCommand}">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="MaterialSymbols"
@@ -25,7 +26,7 @@
                                Color="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
-        <ToolbarItem Text="Dodaj" Order="Primary" Priority="1"
+        <ToolbarItem Text="{helpers:Translate Add}" Order="Primary" Priority="1"
                      Command="{Binding AddMemoryCommand}">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="MaterialSymbols"
@@ -33,7 +34,7 @@
                                Color="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
-        <ToolbarItem Text="Odśwież" Order="Primary" Priority="2"
+        <ToolbarItem Text="{helpers:Translate Refresh}" Order="Primary" Priority="2"
                      Command="{Binding RefreshCommand}">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="MaterialSymbols"
@@ -41,7 +42,7 @@
                                Color="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
-        <ToolbarItem Text="Debug" Order="Secondary" Priority="3"
+        <ToolbarItem Text="{helpers:Translate Debug}" Order="Secondary" Priority="3"
                      Command="{Binding DebugTestCommand}">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="MaterialSymbols"
@@ -82,11 +83,11 @@
                 </Border>
 
                 <StackLayout Grid.Row="0" Grid.Column="1" VerticalOptions="Center">
-                    <Label Text="Pamięć AI"
+                    <Label Text="{helpers:Translate MemoryAI}"
                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                            FontSize="20"
                            FontAttributes="Bold" />
-                    <Label Text="Zarządzaj informacjami zapamiętanymi przez AI"
+                    <Label Text="{helpers:Translate MemoryDescription}"
                            TextColor="{StaticResource Gray500}"
                            FontSize="12" />
                 </StackLayout>
@@ -129,7 +130,7 @@
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding FilterByCategoryCommand}" CommandParameter="" />
                     </Border.GestureRecognizers>
-                    <Label Text="Wszystkie"
+                    <Label Text="{helpers:Translate All}"
                            TextColor="White"
                            FontSize="13"
                            FontAttributes="Bold" />
@@ -181,17 +182,17 @@
                            HorizontalOptions="Center"
                            VerticalOptions="Center" />
                 </Border>
-                <Label Text="Brak wspomnień"
+                <Label Text="{helpers:Translate NoMemories}"
                        FontSize="18"
                        FontAttributes="Bold"
                        HorizontalOptions="Center"
                        TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}" />
-                <Label Text="Dodaj pierwszą informację do pamięci AI"
+                <Label Text="{helpers:Translate AddFirstMemory}"
                        FontSize="14"
                        HorizontalOptions="Center"
                        HorizontalTextAlignment="Center"
                        TextColor="{StaticResource Gray500}" />
-                <Button Text="Dodaj wspomnienie"
+                <Button Text="{helpers:Translate AddMemory}"
                         BackgroundColor="{StaticResource Primary}"
                         TextColor="White"
                         CornerRadius="12"
@@ -260,10 +261,10 @@
                                 </Border.Shadow>
                                 <FlyoutBase.ContextFlyout>
                                     <MenuFlyout>
-                                        <MenuFlyoutItem Text="Edytuj"
+                                        <MenuFlyoutItem Text="{helpers:Translate Edit}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditMemoryCommand}"
                                                         CommandParameter="{Binding .}" />
-                                        <MenuFlyoutItem Text="Usuń"
+                                        <MenuFlyoutItem Text="{helpers:Translate Delete}"
                                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMemoryCommand}"
                                                         CommandParameter="{Binding .}" />
                                     </MenuFlyout>
@@ -299,7 +300,7 @@
                                                    FontSize="14"
                                                    TextColor="{AppThemeBinding Light={StaticResource Warning}, Dark={StaticResource White}}"
                                                    VerticalOptions="Center" />
-                                            <Label Text="Ważne"
+                                            <Label Text="{helpers:Translate Important}"
                                                    FontSize="11"
                                                    FontAttributes="Bold"
                                                    TextColor="{AppThemeBinding Light={StaticResource Warning}, Dark={StaticResource White}}"

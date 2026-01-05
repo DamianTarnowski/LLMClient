@@ -162,4 +162,128 @@
   <data name="ModelName" xml:space="preserve">
     <value>Model adı</value>
   </data>
+  
+  <!-- Main UI buttons -->
+  <data name="Local" xml:space="preserve">
+    <value>Yerel</value>
+  </data>
+  <data name="API" xml:space="preserve">
+    <value>API</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Daha fazla</value>
+  </data>
+  <data name="MoreOptions" xml:space="preserve">
+    <value>Daha fazla seçenek</value>
+  </data>
+  <data name="SearchMessages" xml:space="preserve">
+    <value>Mesaj ara</value>
+  </data>
+  <data name="WriteMessage" xml:space="preserve">
+    <value>Bir mesaj yazın...</value>
+  </data>
+  <data name="SelectModel" xml:space="preserve">
+    <value>Model seç</value>
+  </data>
+  <data name="DeleteConversation" xml:space="preserve">
+    <value>Sohbeti sil</value>
+  </data>
+  <data name="DeleteMessage" xml:space="preserve">
+    <value>Mesajı sil</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Kopyala</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Geri</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Ekle</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Yenile</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Hata ayıklama</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>Anı yok</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>AI belleğine ilk bilgiyi ekleyin</value>
+  </data>
+  <data name="MemoryAI" xml:space="preserve">
+    <value>AI Belleği</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>AI tarafından hatırlanan bilgileri yönet</value>
+  </data>
+  
+  <!-- Help Page -->
+  <data name="Help" xml:space="preserve">
+    <value>Yardım</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Kullanım kılavuzu</value>
+  </data>
+  <data name="HelpSubtitle" xml:space="preserve">
+    <value>LLMClient'ı etkili kullanmayı öğrenin</value>
+  </data>
+  <data name="HelpGettingStarted" xml:space="preserve">
+    <value>Başlarken</value>
+  </data>
+  <data name="HelpGettingStartedContent" xml:space="preserve">
+    <value>LLMClient'a hoş geldiniz! Bu uygulama AI modelleriyle sohbet etmenizi sağlar - cihazınızda yerel olarak veya bulut API'leri aracılığıyla. "+ Yeni sohbet" düğmesiyle başlayın.</value>
+  </data>
+  <data name="HelpChat" xml:space="preserve">
+    <value>AI ile sohbet</value>
+  </data>
+  <data name="HelpChatContent" xml:space="preserve">
+    <value>Altta mesajınızı yazın ve Gönder'e basın. AI, sohbet geçmişine göre yanıt verecektir. Görsel ekleyebilirsiniz (desteklenen modellerle API modunda).</value>
+  </data>
+  <data name="HelpLocalModel" xml:space="preserve">
+    <value>Yerel AI modeli</value>
+  </data>
+  <data name="HelpLocalModelContent" xml:space="preserve">
+    <value>Yerel mod, AI'ı doğrudan cihazınızda çalıştırır - internet gerekmez, tam gizlilik. Önce modeli indirin (yaklaşık 400MB), sonra sohbete başlamak için yükleyin.</value>
+  </data>
+  <data name="HelpAPIModels" xml:space="preserve">
+    <value>Bulut API modelleri</value>
+  </data>
+  <data name="HelpAPIModelsContent" xml:space="preserve">
+    <value>API modu OpenAI, Google Gemini, Anthropic Claude ve diğerleri gibi bulut hizmetlerine bağlanır. Bu sağlayıcılardan API anahtarlarına ihtiyacınız var.</value>
+  </data>
+  <data name="HelpMemory" xml:space="preserve">
+    <value>AI Belleği</value>
+  </data>
+  <data name="HelpMemoryContent" xml:space="preserve">
+    <value>Bellek özelliği, AI'ın sohbetler arasında sizin hakkınızdaki önemli bilgileri hatırlamasını sağlar.</value>
+  </data>
+  <data name="HelpSearch" xml:space="preserve">
+    <value>Semantik arama</value>
+  </data>
+  <data name="HelpSearchContent" xml:space="preserve">
+    <value>Doğal dil kullanarak tüm sohbetlerinizde arayın. Semantik arama sadece anahtar kelimeleri değil, anlamı anlar.</value>
+  </data>
+  <data name="HelpRAG" xml:space="preserve">
+    <value>RAG belgeleri</value>
+  </data>
+  <data name="HelpRAGContent" xml:space="preserve">
+    <value>Kişisel bir bilgi tabanı oluşturmak için belgelerinizi (PDF, TXT, DOCX) yükleyin.</value>
+  </data>
+  <data name="HelpTips" xml:space="preserve">
+    <value>Pro ipuçları</value>
+  </data>
+  <data name="HelpTipsContent" xml:space="preserve">
+    <value>• Daha iyi yanıtlar için spesifik olun
+• Gizlilik için yerel modu kullanın
+• AI sohbet içindeki bağlamı hatırlar
+• Verileriniz şifrelenir ve yerel olarak saklanır</value>
+  </data>
+  <data name="HelpVersion" xml:space="preserve">
+    <value>LLMClient v1.0 - Özel AI arkadaşınız</value>
+  </data>
 </root>

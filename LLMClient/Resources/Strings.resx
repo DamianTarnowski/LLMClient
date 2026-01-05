@@ -380,4 +380,36 @@
   <data name="HelpVersion" xml:space="preserve">
     <value>LLMClient v1.0 - Your private AI companion</value>
   </data>
+  
+  <!-- Memory Page -->
+  <data name="MemoryAI" xml:space="preserve">
+    <value>AI Memory</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>Manage information remembered by AI</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="NoMemories" xml:space="preserve">
+    <value>No memories</value>
+  </data>
+  <data name="AddFirstMemory" xml:space="preserve">
+    <value>Add the first piece of information to AI memory</value>
+  </data>
+  <data name="AddMemory" xml:space="preserve">
+    <value>Add memory</value>
+  </data>
 </root>
