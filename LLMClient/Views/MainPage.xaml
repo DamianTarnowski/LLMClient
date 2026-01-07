@@ -573,7 +573,7 @@
                             BackgroundColor="Transparent"
                             SelectionMode="None"
                             ItemsLayout="VerticalList"
-                            Padding="16,8">
+                            Margin="16,8">
 
                 <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Message">
