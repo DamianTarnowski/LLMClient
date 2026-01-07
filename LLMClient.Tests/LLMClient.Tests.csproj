@@ -6,11 +6,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <UseWinUI>true</UseWinUI>
-    <!-- Disable MAUI asset processing in test project to avoid conflicts -->
+    <IsTestProject>true</IsTestProject>
+    <!-- Completely disable MAUI asset processing -->
     <UseMaui>false</UseMaui>
-    <EnableDefaultMauiItems>false</EnableDefaultMauiItems>
+    <_MauiForceImageGeneration>false</_MauiForceImageGeneration>
+    <_MauiEnableDefaultImages>false</_MauiEnableDefaultImages>
   </PropertyGroup>
+
+  <!-- Override MAUI Resizetizer targets to prevent processing -->
+  <Target Name="_DisableMauiResizetizer" BeforeTargets="_MauiCollectImageAssets;_MauiCollectFontAssets;_MauiCollectSplashScreenAssets;_MauiCollectAppIconAssets">
+    <ItemGroup>
+      <MauiImage Remove="@(MauiImage)" />
+      <MauiIcon Remove="@(MauiIcon)" />
+      <MauiSplashScreen Remove="@(MauiSplashScreen)" />
+      <MauiFont Remove="@(MauiFont)" />
+      <MauiAsset Remove="@(MauiAsset)" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
@@ -19,7 +31,6 @@
     <PackageReference Include="NUnit.Analyzers" Version="4.4.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
   </ItemGroup>
 
@@ -28,7 +39,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LLMClient\LLMClient.csproj" />
+    <ProjectReference Include="..\LLMClient\LLMClient.csproj">
+      <PrivateAssets>contentfiles;analyzers</PrivateAssets>
+      <ExcludeAssets>contentfiles</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+  
+  <!-- Explicitly exclude MAUI assets from being processed in test project -->
+  <ItemGroup>
+    <MauiIcon Remove="@(MauiIcon)" />
+    <MauiSplashScreen Remove="@(MauiSplashScreen)" />
+    <MauiImage Remove="@(MauiImage)" />
+    <MauiAsset Remove="@(MauiAsset)" />
+    <MauiFont Remove="@(MauiFont)" />
   </ItemGroup>
 
 </Project>
