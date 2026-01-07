@@ -130,6 +130,94 @@ The project uses the MVVM pattern and is divided into the following layers:
 
 See the project roadmap for planned enhancements: [ROADMAP.md](./ROADMAP.md)
 
+## Testing
+
+LLMClient has comprehensive test coverage with **500+ automated tests** covering all major functionality.
+
+### Test Structure
+
+```
+LLMClient.Tests/
+├── Models/              (~163 unit tests)
+│   ├── ModelsTests.cs           - Conversation, Message, Memory, AiModel
+│   ├── EdgeCaseTests.cs         - Edge cases and boundary conditions
+│   ├── RagTraceTests.cs         - RAG tracing and timing
+│   ├── ErrorReportTests.cs      - Error reporting models
+│   ├── EmbeddingModelTests.cs   - Embedding model selection
+│   ├── DocumentAnalysisTests.cs - Document analysis models
+│   ├── EngineSettingsTests.cs   - Engine configuration
+│   └── ModelSettingsTests.cs    - Model settings
+├── Services/            (~41 tests)
+│   ├── MockServiceTests.cs      - Service mocks
+│   └── ServiceInterfaceContractTests.cs - Interface contracts
+└── Integration/         (~300 tests)
+    ├── MemoryIntegrationTests.cs      - Memory CRUD, search, context
+    ├── EmbeddingIntegrationTests.cs   - Embedding generation, similarity
+    ├── RagIntegrationTests.cs         - RAG document ingestion, retrieval
+    ├── AdvancedRagTests.cs            - Hybrid search, reranking
+    ├── ConversationIntegrationTests.cs - Conversation and message handling
+    ├── SearchIntegrationTests.cs      - Message search, highlighting
+    ├── LocalModelIntegrationTests.cs  - Local model engine, streaming
+    ├── RobustLocalModelTests.cs       - Model state, download, memory
+    ├── IngestionPipelineTests.cs      - Document queue, processing
+    ├── MemoryContextIntegrationTests.cs - Context generation, summarization
+    ├── AiServiceIntegrationTests.cs   - AI generation, summarization
+    ├── EndToEndWorkflowTests.cs       - Complete workflows
+    ├── ErrorHandlingIntegrationTests.cs - Error scenarios, retry
+    ├── CacheOptimizationTests.cs      - Caching, batching, lazy loading
+    ├── DocumentProcessingTests.cs     - Chunking, analysis
+    ├── LocalizationIntegrationTests.cs - Polish/English, formatting
+    ├── SecurityIntegrationTests.cs    - API keys, sanitization
+    ├── ExportImportIntegrationTests.cs - Export, backup
+    ├── OnboardingIntegrationTests.cs  - First-run experience
+    ├── ModelDownloadIntegrationTests.cs - Download progress, installation
+    ├── ConcurrencyIntegrationTests.cs - Thread safety, rate limiting
+    ├── PerformanceIntegrationTests.cs - Response time, throughput
+    └── OpenRouterIntegrationTests.cs  - Real API integration tests
+```
+
+### Running Tests
+
+```bash
+# Run all unit tests (excluding integration tests with real API)
+dotnet test LLMClient.Tests --filter "Category!=Integration"
+
+# Run all tests including integration tests
+dotnet test LLMClient.Tests
+
+# Run specific test category
+dotnet test LLMClient.Tests --filter "FullyQualifiedName~Memory"
+```
+
+### Test Coverage Areas
+
+| Area | Tests | Description |
+|------|-------|-------------|
+| **Models** | 163 | Data models, enums, properties |
+| **Memory** | 23 | Memory CRUD, search, context building |
+| **Embeddings** | 20 | Generation, similarity, model selection |
+| **RAG** | 28 | Document ingestion, retrieval, hybrid search |
+| **Conversations** | 15 | CRUD, messages, pagination |
+| **Search** | 12 | Highlighting, Polish chars, async |
+| **Local Models** | 28 | State management, download, inference |
+| **AI Service** | 20 | Generation, streaming, summarization |
+| **Error Handling** | 15 | Network, database, retry logic |
+| **Performance** | 13 | Response time, memory, throughput |
+| **Security** | 17 | API keys, sanitization, validation |
+| **Localization** | 12 | Polish/English, date/number formats |
+| **Export** | 9 | JSON, Markdown, backup/restore |
+
+### Integration Tests with Real API
+
+Some tests require an OpenRouter API key stored at `~/.llmclient/openrouter_api_key.txt`:
+
+```bash
+# Create the file with your API key
+echo "sk-or-your-api-key" > ~/.llmclient/openrouter_api_key.txt
+```
+
+These tests verify real API behavior including streaming, system prompts, and error handling.
+
 ## License
 
 This project is licensed under the [MIT](LICENSE) license.
@@ -264,9 +352,96 @@ Projekt wykorzystuje wzorzec MVVM i jest podzielony na następujące warstwy:
 
 Planowane ulepszenia znajdziesz tutaj: [ROADMAP.md](./ROADMAP.md)
 
+## Testowanie
+
+LLMClient posiada kompleksowe pokrycie testami z **ponad 500 automatycznymi testami** obejmującymi wszystkie główne funkcjonalności.
+
+### Struktura Testów
+
+```
+LLMClient.Tests/
+├── Models/              (~163 testy jednostkowe)
+│   ├── ModelsTests.cs           - Conversation, Message, Memory, AiModel
+│   ├── EdgeCaseTests.cs         - Przypadki brzegowe
+│   ├── RagTraceTests.cs         - Śledzenie RAG i timing
+│   ├── ErrorReportTests.cs      - Modele raportowania błędów
+│   ├── EmbeddingModelTests.cs   - Wybór modelu embeddingowego
+│   ├── DocumentAnalysisTests.cs - Modele analizy dokumentów
+│   ├── EngineSettingsTests.cs   - Konfiguracja silnika
+│   └── ModelSettingsTests.cs    - Ustawienia modelu
+├── Services/            (~41 testów)
+│   ├── MockServiceTests.cs      - Mocki serwisów
+│   └── ServiceInterfaceContractTests.cs - Kontrakty interfejsów
+└── Integration/         (~300 testów)
+    ├── MemoryIntegrationTests.cs      - Pamięć CRUD, wyszukiwanie
+    ├── EmbeddingIntegrationTests.cs   - Generowanie embeddingów
+    ├── RagIntegrationTests.cs         - Ingestion dokumentów RAG
+    ├── AdvancedRagTests.cs            - Hybrid search, reranking
+    ├── ConversationIntegrationTests.cs - Obsługa konwersacji
+    ├── SearchIntegrationTests.cs      - Wyszukiwanie, highlighting
+    ├── LocalModelIntegrationTests.cs  - Silnik modeli lokalnych
+    ├── RobustLocalModelTests.cs       - Stan modelu, pobieranie
+    ├── IngestionPipelineTests.cs      - Kolejka dokumentów
+    ├── MemoryContextIntegrationTests.cs - Generowanie kontekstu
+    ├── AiServiceIntegrationTests.cs   - Generowanie AI
+    ├── EndToEndWorkflowTests.cs       - Kompletne workflow
+    ├── ErrorHandlingIntegrationTests.cs - Obsługa błędów
+    ├── CacheOptimizationTests.cs      - Cache, batching
+    ├── DocumentProcessingTests.cs     - Chunking, analiza
+    ├── LocalizationIntegrationTests.cs - PL/EN, formatowanie
+    ├── SecurityIntegrationTests.cs    - API keys, sanityzacja
+    ├── ExportImportIntegrationTests.cs - Eksport, backup
+    ├── OnboardingIntegrationTests.cs  - Pierwsze uruchomienie
+    ├── ModelDownloadIntegrationTests.cs - Pobieranie modeli
+    ├── ConcurrencyIntegrationTests.cs - Bezpieczeństwo wątków
+    ├── PerformanceIntegrationTests.cs - Wydajność
+    └── OpenRouterIntegrationTests.cs  - Testy z prawdziwym API
+```
+
+### Uruchamianie Testów
+
+```bash
+# Uruchom testy jednostkowe (bez testów API)
+dotnet test LLMClient.Tests --filter "Category!=Integration"
+
+# Uruchom wszystkie testy
+dotnet test LLMClient.Tests
+
+# Uruchom konkretną kategorię
+dotnet test LLMClient.Tests --filter "FullyQualifiedName~Memory"
+```
+
+### Pokrycie Testami
+
+| Obszar | Testy | Opis |
+|--------|-------|------|
+| **Modele** | 163 | Modele danych, enumy, właściwości |
+| **Pamięć** | 23 | CRUD, wyszukiwanie, budowanie kontekstu |
+| **Embeddingi** | 20 | Generowanie, podobieństwo, wybór modelu |
+| **RAG** | 28 | Ingestion, retrieval, hybrid search |
+| **Konwersacje** | 15 | CRUD, wiadomości, paginacja |
+| **Wyszukiwanie** | 12 | Highlighting, polskie znaki |
+| **Modele lokalne** | 28 | Zarządzanie stanem, pobieranie |
+| **AI Service** | 20 | Generowanie, streaming |
+| **Błędy** | 15 | Sieć, baza danych, retry |
+| **Wydajność** | 13 | Czas odpowiedzi, pamięć |
+| **Bezpieczeństwo** | 17 | API keys, sanityzacja |
+| **Lokalizacja** | 12 | PL/EN, formaty dat/liczb |
+| **Eksport** | 9 | JSON, Markdown, backup |
+
+### Testy z Prawdziwym API
+
+Niektóre testy wymagają klucza API OpenRouter w `~/.llmclient/openrouter_api_key.txt`:
+
+```bash
+# Utwórz plik z kluczem API
+echo "sk-or-your-api-key" > ~/.llmclient/openrouter_api_key.txt
+```
+
 ## Licencja
 
 Ten projekt jest udostępniany na licencji [MIT](LICENSE).
+
 ## Embedding Models for Semantic Search
 
 LLMClient offers two embedding models for semantic search and RAG (Retrieval-Augmented Generation):
