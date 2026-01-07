@@ -86,28 +86,24 @@
   		<!-- ONNX Runtime GenAI for local model inference (latest versions) -->
   		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.8.0" />
   		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Managed" Version="0.8.3" />
-		<!-- LLamaSharp for llama.cpp backend (Windows + Android) -->
+		<!-- LLamaSharp for llama.cpp backend -->
 		<!-- v0.25.0 has official Android ARM64 support with libllama.so -->
-		<PackageReference Include="LLamaSharp" Version="0.25.0" Condition="$(TargetFramework.Contains('windows')) OR $(TargetFramework.Contains('android'))" />
+		<!-- Windows: Core package only (no native backend) to avoid AVX variant conflicts -->
+		<PackageReference Include="LLamaSharp" Version="0.25.0" Condition="$(TargetFramework.Contains('windows')) OR $(TargetFramework.Contains('android'))">
+			<ExcludeAssets Condition="$(TargetFramework.Contains('windows'))">native</ExcludeAssets>
+		</PackageReference>
 		<PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
 		
 		<!-- MediaPipe GenAI for Google AI Edge LLM inference (Gemma-3n, multimodal) -->
 		<PackageReference Include="Xamarin.Google.MediaPipe.Tasks.GenAI" Version="0.10.29" Condition="$(TargetFramework.Contains('android'))" />
 		<PackageReference Include="MediaPipeTasksGenAI.iOS" Version="0.10.24" Condition="$(TargetFramework.Contains('ios'))" />
 		
-		<!-- Windows backends: CPU + CUDA -->
-		<!-- Wyłączamy LLamaSharp.Backend.Cpu bo powoduje konflikty AVX variants - używamy tylko CUDA lub runtime download -->
+		<!-- Windows backends: CPU + CUDA - temporarily disabled due to AVX conflicts -->
+		<!-- TODO: Re-enable when LLamaSharp fixes NETSDK1152 issue -->
 		<!--
-		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
-			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
-			<ExcludeAssets>none</ExcludeAssets>
-			<PrivateAssets>none</PrivateAssets>
-		</PackageReference>
+		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))"/>
+		<PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))"/>
 		-->
-		<PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
-			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
-			<ExcludeAssets>none</ExcludeAssets>
-		</PackageReference>
 		
 		<!-- Android: Use official LLamaSharp.Backend.Cpu.Android instead of custom libllama.so -->
 		<PackageReference Include="LLamaSharp.Backend.Cpu.Android" Version="0.25.0" Condition="$(TargetFramework.Contains('android'))" />

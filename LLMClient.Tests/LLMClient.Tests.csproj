@@ -7,6 +7,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <UseWinUI>true</UseWinUI>
+    <!-- Disable MAUI asset processing in test project to avoid conflicts -->
+    <UseMaui>false</UseMaui>
+    <EnableDefaultMauiItems>false</EnableDefaultMauiItems>
   </PropertyGroup>
 
   <ItemGroup>
