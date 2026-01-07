@@ -191,6 +191,10 @@
 		<None Remove="$(PkgLLamaSharp_Backend_Cpu)\runtimes\osx-**\**" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\LLMClient.Core\LLMClient.Core.csproj" />
+	</ItemGroup>
+
 	<!-- Additional filtering to be extra safe at build time -->
 	<Target Name="FilterRuntimeAssets" BeforeTargets="AssignTargetPaths;ResolveAssemblyReferences;PrepareForBuild;_ComputeFilesToPublishForRuntimeIdentifiers">
 		<!-- Windows build: Remove Linux/OSX/Android assets -->
