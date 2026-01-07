@@ -222,6 +222,42 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Links Section -->
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0"
+                    Padding="20"
+                    Margin="0,10,0,0">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="&#xe86f;"
+                               FontFamily="MaterialSymbols"
+                               FontSize="24"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center" />
+                        <Label Text="Links"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    
+                    <Button Text="Open Source Licenses"
+                            Clicked="OnLicensesClicked"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            HorizontalOptions="Start"
+                            Padding="0"/>
+                    
+                    <Button Text="Privacy Policy"
+                            Clicked="OnPrivacyPolicyClicked"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            HorizontalOptions="Start"
+                            Padding="0"/>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Version Info -->
             <Label Text="{helpers:Translate HelpVersion}"
                    FontSize="12"

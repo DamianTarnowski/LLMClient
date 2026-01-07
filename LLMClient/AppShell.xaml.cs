@@ -17,6 +17,9 @@ namespace LLMClient
             
             // Pomoc / Instrukcja
             Routing.RegisterRoute(nameof(Views.HelpPage), typeof(Views.HelpPage));
+            
+            // Licencje Open Source
+            Routing.RegisterRoute(nameof(Views.LicensesPage), typeof(Views.LicensesPage));
         }
     }
 }

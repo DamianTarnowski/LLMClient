@@ -36,7 +36,8 @@
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
-		<WindowsPackageType>None</WindowsPackageType>
+		<!-- For Windows Store publishing, use MSIX package type -->
+		<WindowsPackageType>MSIX</WindowsPackageType>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
@@ -48,10 +49,10 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<!-- <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" /> -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#6366f1" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#6366f1" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
@@ -95,11 +96,14 @@
 		<PackageReference Include="MediaPipeTasksGenAI.iOS" Version="0.10.24" Condition="$(TargetFramework.Contains('ios'))" />
 		
 		<!-- Windows backends: CPU + CUDA -->
+		<!-- Wyłączamy LLamaSharp.Backend.Cpu bo powoduje konflikty AVX variants - używamy tylko CUDA lub runtime download -->
+		<!--
 		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
 			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
 			<ExcludeAssets>none</ExcludeAssets>
 			<PrivateAssets>none</PrivateAssets>
 		</PackageReference>
+		-->
 		<PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.25.0" Condition="$(TargetFramework.Contains('windows'))">
 			<IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
 			<ExcludeAssets>none</ExcludeAssets>
@@ -251,6 +255,25 @@
 			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/runtimes/osx-'))" />
 		</ItemGroup>
 		<Message Text="Removed duplicate native libraries for Android build" Importance="high" />
+	</Target>
+
+	<!-- Windows: Remove duplicate LLamaSharp AVX variants - keep only avx2 -->
+	<Target Name="RemoveDuplicateWindowsNativeLibraries" BeforeTargets="_ComputeFilesToPublishForRuntimeIdentifiers;ComputeFilesToPublish;ResolveAssemblyReferences" Condition="$(TargetFramework.Contains('windows'))">
+		<ItemGroup>
+			<!-- Remove avx, avx512, noavx variants - keep only avx2 for best compatibility -->
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('\native\avx\'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('\native\avx512\'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('\native\noavx\'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/native/avx/'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/native/avx512/'))" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(Identity)').Contains('/native/noavx/'))" />
+			
+			<!-- Also filter ReferenceCopyLocalPaths -->
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('\native\avx\'))" />
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('\native\avx512\'))" />
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(Identity)').Contains('\native\noavx\'))" />
+		</ItemGroup>
+		<Message Text="Filtered LLamaSharp to use only AVX2 variant for Windows" Importance="high" />
 	</Target>
 
 </Project>

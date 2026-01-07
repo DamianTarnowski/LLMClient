@@ -43,4 +43,10 @@
         ContentTemplate="{DataTemplate views:GgufModelManagerPage}"
         Route="GgufModelManagerPage" />
 
+    <!-- Help Page -->
+    <ShellContent
+        Title="Help"
+        ContentTemplate="{DataTemplate views:HelpPage}"
+        Route="HelpPage" />
+
 </Shell>

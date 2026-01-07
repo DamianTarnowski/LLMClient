@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LLMClient.Views.LicensesPage"
+             Title="Open Source Licenses">
+    
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            
+            <Label Text="Open Source Licenses" 
+                   FontSize="24" 
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            
+            <Label Text="LLMClient is built with the following open source libraries:"
+                   FontSize="14"
+                   TextColor="Gray"/>
+            
+            <!-- Microsoft MAUI -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Microsoft.Maui.Controls" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) .NET Foundation and Contributors" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Semantic Kernel -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Microsoft.SemanticKernel" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Microsoft Corporation" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- ONNX Runtime -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Microsoft.ML.OnnxRuntime" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Microsoft Corporation" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- ONNX Runtime GenAI -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Microsoft.ML.OnnxRuntimeGenAI" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Microsoft Corporation" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- LLamaSharp -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="LLamaSharp" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) LLamaSharp Contributors" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- SQLite-net -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="sqlite-net-sqlcipher" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Krueger Systems, Inc." FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- CommunityToolkit.Mvvm -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="CommunityToolkit.Mvvm" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) .NET Foundation and Contributors" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Newtonsoft.Json -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Newtonsoft.Json" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) James Newton-King" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- DocumentFormat.OpenXml -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="DocumentFormat.OpenXml" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Microsoft Corporation" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- PdfPig -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="UglyToad.PdfPig" FontAttributes="Bold"/>
+                    <Label Text="Apache License 2.0" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) UglyToad" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Indiko Markdown -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Indiko.Maui.Controls.Markdown" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Indiko" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- MediaPipe -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="MediaPipe Tasks GenAI" FontAttributes="Bold"/>
+                    <Label Text="Apache License 2.0" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Google LLC" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- ML Tokenizers -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Microsoft.ML.Tokenizers" FontAttributes="Bold"/>
+                    <Label Text="MIT License" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Microsoft Corporation" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Rust Tokenizers -->
+            <Frame BorderColor="LightGray" Padding="12" CornerRadius="8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="HuggingFace Tokenizers (Rust)" FontAttributes="Bold"/>
+                    <Label Text="Apache License 2.0" FontSize="12" TextColor="Gray"/>
+                    <Label Text="Copyright (c) Hugging Face" FontSize="11"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <BoxView HeightRequest="1" Color="LightGray" Margin="0,8"/>
+            
+            <Label Text="Full license texts are available at the respective project repositories."
+                   FontSize="12"
+                   TextColor="Gray"
+                   HorizontalTextAlignment="Center"/>
+            
+            <Label Text="LLMClient itself is licensed under the MIT License."
+                   FontSize="12"
+                   FontAttributes="Italic"
+                   HorizontalTextAlignment="Center"/>
+            
+        </VerticalStackLayout>
+    </ScrollView>
+    
+</ContentPage>

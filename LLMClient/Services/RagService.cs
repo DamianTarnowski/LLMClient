@@ -123,8 +123,25 @@ public class RagService : IRagService
             mode = RetrievalMode.Keyword;
         }
 
-        var allChunks = await _databaseService.GetAllRagChunksAsync();
-        if (allChunks.Count == 0) return string.Empty;
+        // OPTYMALIZACJA: Pre-filtrowanie keyword zamiast ładowania wszystkich chunków
+        var queryTerms = query.ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(t => t.Length > 2) // Ignoruj krótkie słowa
+            .Take(5) // Maksymalnie 5 słów kluczowych
+            .ToArray();
+        
+        // Pobierz tylko chunki pasujące do słów kluczowych (limit 100)
+        var candidateChunks = await _databaseService.GetRagChunksWithKeywordFilterAsync(queryTerms, limit: 500);
+        
+        if (candidateChunks.Count == 0)
+        {
+            // Fallback: pobierz wszystkie chunki z embeddingami
+            candidateChunks = await _databaseService.GetAllRagChunksAsync();
+        }
+        
+        if (candidateChunks.Count == 0) return string.Empty;
+        
+        System.Diagnostics.Debug.WriteLine($"[RagService] Pre-filtered to {candidateChunks.Count} candidate chunks");
 
         // Użyj Dictionary dla bezpiecznej modyfikacji i lepszej wydajności O(1)
         var scoredDict = new Dictionary<int, (RagChunk Chunk, float Score)>();
@@ -134,7 +151,7 @@ public class RagService : IRagService
             var queryEmbedding = await _embeddingService!.GenerateEmbeddingAsync(query, isQuery: true);
             if (queryEmbedding != null)
             {
-                foreach (var chunk in allChunks.Where(c => c.Embedding != null))
+                foreach (var chunk in candidateChunks.Where(c => c.Embedding != null))
                 {
                     var chunkEmbedding = BytesToFloatArray(chunk.Embedding!);
                     var similarity = CosineSimilarity(queryEmbedding, chunkEmbedding);
@@ -148,14 +165,13 @@ public class RagService : IRagService
 
         if (mode == RetrievalMode.Keyword || mode == RetrievalMode.Hybrid)
         {
-            var queryTerms = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var chunk in allChunks)
+            foreach (var chunk in candidateChunks)
             {
                 var contentLower = chunk.Content.ToLowerInvariant();
                 var matchCount = queryTerms.Count(t => contentLower.Contains(t));
                 if (matchCount > 0)
                 {
-                    var keywordScore = (float)matchCount / queryTerms.Length;
+                    var keywordScore = (float)matchCount / Math.Max(queryTerms.Length, 1);
                     if (scoredDict.TryGetValue(chunk.Id, out var existing))
                     {
                         var hybridScore = (existing.Score * 0.7f) + (keywordScore * 0.3f);
@@ -192,11 +208,25 @@ public class RagService : IRagService
             trace.RetrievalMode = mode;
         }
 
-        var allChunks = await _databaseService.GetAllRagChunksAsync();
+        // OPTYMALIZACJA: Pre-filtrowanie keyword zamiast ładowania wszystkich chunków
+        var queryTerms = query.ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(t => t.Length > 2)
+            .Take(5)
+            .ToArray();
+        
+        var candidateChunks = await _databaseService.GetRagChunksWithKeywordFilterAsync(queryTerms, limit: 500);
+        if (candidateChunks.Count == 0)
+        {
+            candidateChunks = await _databaseService.GetAllRagChunksAsync();
+        }
+        
         var documents = await _databaseService.GetRagDocumentsAsync();
         var docLookup = documents.ToDictionary(d => d.Id, d => d.FileName);
+        
+        trace.Timings.Add(new RagTiming("PreFilter", 0)); // Placeholder for timing
 
-        if (allChunks.Count == 0)
+        if (candidateChunks.Count == 0)
         {
             return new RetrievalResult { Trace = trace };
         }
@@ -211,7 +241,7 @@ public class RagService : IRagService
             var queryEmbedding = await _embeddingService!.GenerateEmbeddingAsync(query, isQuery: true);
             if (queryEmbedding != null)
             {
-                foreach (var chunk in allChunks.Where(c => c.Embedding != null))
+                foreach (var chunk in candidateChunks.Where(c => c.Embedding != null))
                 {
                     var chunkEmbedding = BytesToFloatArray(chunk.Embedding!);
                     var similarity = CosineSimilarity(queryEmbedding, chunkEmbedding);
@@ -225,14 +255,13 @@ public class RagService : IRagService
         var keywordSw = System.Diagnostics.Stopwatch.StartNew();
         if (mode == RetrievalMode.Keyword || mode == RetrievalMode.Hybrid)
         {
-            var queryTerms = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var chunk in allChunks)
+            foreach (var chunk in candidateChunks)
             {
                 var contentLower = chunk.Content.ToLowerInvariant();
                 var matchCount = queryTerms.Count(t => contentLower.Contains(t));
                 if (matchCount > 0)
                 {
-                    var keywordScore = (float)matchCount / queryTerms.Length;
+                    var keywordScore = (float)matchCount / Math.Max(queryTerms.Length, 1);
                     if (scoredDict.TryGetValue(chunk.Id, out var existing))
                     {
                         var hybridScore = (existing.VectorScore * 0.7f) + (keywordScore * 0.3f);
@@ -290,7 +319,7 @@ public class RagService : IRagService
             Context = string.Join("\n\n---\n\n", topResults.Select(t => t.Chunk.Content)),
             Chunks = retrievedChunks,
             Trace = trace,
-            TotalChunksEvaluated = allChunks.Count,
+            TotalChunksEvaluated = candidateChunks.Count,
             RetrievalTimeMs = sw.ElapsedMilliseconds
         };
     }

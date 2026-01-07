@@ -388,21 +388,31 @@ namespace LLMClient.Services
 
             try
             {
-                // Generate salt
+                // 1. Zapewnij, że baza jest zainicjalizowana (potrzebujemy starego klucza)
+                await EnsureDatabaseInitializedAsync();
+                
+                // 2. Wygeneruj nowy klucz z nowego hasła
                 var salt = new byte[16];
                 RandomNumberGenerator.Fill(salt);
-
-                // Derive key z passphrase using static Pbkdf2 method (.NET 10+)
                 var keyBytes = Rfc2898DeriveBytes.Pbkdf2(passphrase, salt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256, PBKDF2_KEY_SIZE);
-                var customKey = Convert.ToBase64String(keyBytes) + ":" + Convert.ToBase64String(salt); // Store key:salt
+                var newKey = Convert.ToBase64String(keyBytes) + ":" + Convert.ToBase64String(salt);
 
-                await SecureStorage.SetAsync(DB_CUSTOM_KEY_NAME, customKey);
+                // 3. Wykonaj REKEY na otwartej bazie danych
+                // W SQLCipher PRAGMA rekey zmienia klucz szyfrujący aktualnie otwartej bazy
+                await _database!.ExecuteAsync($"PRAGMA rekey = '{newKey}'");
+
+                // 4. Jeśli rekey się udał, zaktualizuj SecureStorage
+                await SecureStorage.SetAsync(DB_CUSTOM_KEY_NAME, newKey);
+                
                 // Usuń stary auto-key jeśli istnieje
                 SecureStorage.Remove(DB_ENCRYPTION_KEY_NAME);
+                
+                System.Diagnostics.Debug.WriteLine("DatabaseService: Passphrase changed and database rekeyed successfully.");
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"DatabaseService: Failed to change passphrase: {ex.Message}");
                 return false;
             }
         }
@@ -490,17 +500,22 @@ namespace LLMClient.Services
             }
         }
 
-        // Metody dla Conversation - ZOPTYMALIZOWANE (batch load zamiast N+1)
+        // Metody dla Conversation - ZOPTYMALIZOWANE (batch load zamiast N+1, bez ciężkich kolumn)
         public async Task<List<Conversation>> GetConversationsAsync()
         {
             await EnsureDatabaseInitializedAsync();
             
-            // Pobierz wszystkie konwersacje i wiadomości w dwóch zapytaniach (zamiast N+1)
+            // Pobierz wszystkie konwersacje
             var conversations = await _database!.Table<Conversation>().ToListAsync();
-            var allMessages = await _database.Table<Message>()
-                .OrderBy(m => m.Timestamp)
-                .ThenBy(m => m.Id)
-                .ToListAsync();
+            
+            // Pobierz wiadomości BEZ ImageBase64 i Embedding (oszczędność pamięci i czasu startu)
+            // Te kolumny są ładowane lazy gdy potrzebne (np. przy semantic search)
+            var query = @"
+                SELECT Id, ConversationId, Content, IsUser, Timestamp, ImagePath, EmbeddingVersion 
+                FROM Message 
+                ORDER BY Timestamp, Id
+            ";
+            var allMessages = await _database.QueryAsync<Message>(query);
             
             // Grupuj wiadomości po ConversationId dla O(1) lookup
             var messagesByConversation = allMessages
@@ -515,6 +530,28 @@ namespace LLMClient.Services
             }
 
             return conversations;
+        }
+        
+        /// <summary>
+        /// Ładuje ImageBase64 dla wiadomości (lazy loading)
+        /// </summary>
+        public async Task<string?> GetMessageImageBase64Async(int messageId)
+        {
+            await EnsureDatabaseInitializedAsync();
+            var result = await _database!.QueryAsync<Message>(
+                "SELECT ImageBase64 FROM Message WHERE Id = ?", messageId);
+            return result.FirstOrDefault()?.ImageBase64;
+        }
+        
+        /// <summary>
+        /// Ładuje Embedding dla wiadomości (lazy loading)
+        /// </summary>
+        public async Task<byte[]?> GetMessageEmbeddingAsync(int messageId)
+        {
+            await EnsureDatabaseInitializedAsync();
+            var result = await _database!.QueryAsync<Message>(
+                "SELECT Embedding FROM Message WHERE Id = ?", messageId);
+            return result.FirstOrDefault()?.Embedding;
         }
 
         public async Task<int> SaveConversationAsync(Conversation conversation)
@@ -693,25 +730,38 @@ namespace LLMClient.Services
         }
 
         /// <summary>
-        /// Wyszukiwanie semantyczne we wszystkich konwersacjach
+        /// Wyszukiwanie semantyczne we wszystkich konwersacjach (z opcjonalnym pre-filtrowaniem keyword)
         /// </summary>
         public async Task<List<(Message message, float similarity, string conversationTitle)>> SemanticSearchAcrossConversationsAsync(
             float[] queryEmbedding, 
             float minSimilarity = 0.3f, 
-            int maxResults = 20)
+            int maxResults = 20,
+            string[]? keywordPrefilter = null)
         {
             await EnsureDatabaseInitializedAsync();
             
             if (_embeddingService == null) return new List<(Message, float, string)>();
             
-            var query = @"
-                SELECT m.Id, m.Content, m.IsUser, m.Timestamp, m.ConversationId, m.Embedding, m.EmbeddingVersion, m.ImagePath, m.ImageBase64, c.Title as ConversationTitle 
-                FROM Message m 
-                INNER JOIN Conversation c ON m.ConversationId = c.Id 
-                WHERE m.Embedding IS NOT NULL
-            ";
+            // OPTYMALIZACJA: Użyj pre-filtrowania keyword jeśli dostępne
+            List<MessageWithConversationTitle> messagesWithConversations;
             
-            var messagesWithConversations = await _database.QueryAsync<MessageWithConversationTitle>(query);
+            if (keywordPrefilter != null && keywordPrefilter.Length > 0)
+            {
+                messagesWithConversations = await GetMessagesWithEmbeddingsFilteredAsync(keywordPrefilter, limit: 500);
+                System.Diagnostics.Debug.WriteLine($"[DatabaseService] SemanticSearch pre-filtered to {messagesWithConversations.Count} candidates");
+            }
+            else
+            {
+                var query = @"
+                    SELECT m.Id, m.Content, m.IsUser, m.Timestamp, m.ConversationId, m.Embedding, m.EmbeddingVersion, m.ImagePath, c.Title as ConversationTitle 
+                    FROM Message m 
+                    INNER JOIN Conversation c ON m.ConversationId = c.Id 
+                    WHERE m.Embedding IS NOT NULL
+                    ORDER BY m.Timestamp DESC
+                    LIMIT 500
+                ";
+                messagesWithConversations = await _database!.QueryAsync<MessageWithConversationTitle>(query);
+            }
             var results = new List<(Message message, float similarity, string conversationTitle)>();
             int scanned = 0;
             int invalid = 0;
@@ -1097,6 +1147,79 @@ namespace LLMClient.Services
         {
             await EnsureDatabaseInitializedAsync();
             return await _database!.Table<RagChunk>().ToListAsync();
+        }
+        
+        /// <summary>
+        /// Pobiera chunki RAG z pre-filtrowaniem keyword (optymalizacja - mniejszy zbiór do vector search)
+        /// </summary>
+        public async Task<List<RagChunk>> GetRagChunksWithKeywordFilterAsync(string[] keywords, int limit = 100)
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            if (keywords == null || keywords.Length == 0)
+            {
+                // Fallback: pobierz tylko chunki z embeddingami, z limitem
+                return await _database!.QueryAsync<RagChunk>(
+                    "SELECT * FROM RagChunk WHERE Embedding IS NOT NULL LIMIT ?", limit);
+            }
+            
+            // Buduj query z LIKE dla każdego słowa kluczowego
+            var conditions = keywords.Select(k => $"Content LIKE '%{k.Replace("'", "''")}%'");
+            var whereClause = string.Join(" OR ", conditions);
+            
+            var query = $@"
+                SELECT * FROM RagChunk 
+                WHERE ({whereClause}) 
+                ORDER BY 
+                    CASE WHEN Embedding IS NOT NULL THEN 0 ELSE 1 END,
+                    Id DESC
+                LIMIT {limit}
+            ";
+            
+            return await _database!.QueryAsync<RagChunk>(query);
+        }
+        
+        /// <summary>
+        /// Pobiera wiadomości z embeddingami z pre-filtrowaniem keyword (optymalizacja semantic search)
+        /// </summary>
+        public async Task<List<MessageWithConversationTitle>> GetMessagesWithEmbeddingsFilteredAsync(
+            string[]? keywords = null, 
+            int limit = 200)
+        {
+            await EnsureDatabaseInitializedAsync();
+            
+            string query;
+            if (keywords == null || keywords.Length == 0)
+            {
+                // Bez filtrowania - pobierz ostatnie wiadomości z embeddingami
+                query = $@"
+                    SELECT m.Id, m.Content, m.IsUser, m.Timestamp, m.ConversationId, m.Embedding, 
+                           m.EmbeddingVersion, m.ImagePath, c.Title as ConversationTitle 
+                    FROM Message m 
+                    INNER JOIN Conversation c ON m.ConversationId = c.Id 
+                    WHERE m.Embedding IS NOT NULL
+                    ORDER BY m.Timestamp DESC
+                    LIMIT {limit}
+                ";
+            }
+            else
+            {
+                // Pre-filtrowanie keyword
+                var conditions = keywords.Select(k => $"m.Content LIKE '%{k.Replace("'", "''")}%'");
+                var whereClause = string.Join(" OR ", conditions);
+                
+                query = $@"
+                    SELECT m.Id, m.Content, m.IsUser, m.Timestamp, m.ConversationId, m.Embedding, 
+                           m.EmbeddingVersion, m.ImagePath, c.Title as ConversationTitle 
+                    FROM Message m 
+                    INNER JOIN Conversation c ON m.ConversationId = c.Id 
+                    WHERE m.Embedding IS NOT NULL AND ({whereClause})
+                    ORDER BY m.Timestamp DESC
+                    LIMIT {limit}
+                ";
+            }
+            
+            return await _database!.QueryAsync<MessageWithConversationTitle>(query);
         }
 
         public async Task<List<RagChunk>> GetRagChunksByDocumentAsync(int documentId)

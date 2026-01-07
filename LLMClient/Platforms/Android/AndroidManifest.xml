@@ -1,7 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="false" android:supportsRtl="true">
+	<application 
+		android:allowBackup="false" 
+		android:supportsRtl="true"
+		android:label="LLMClient"
+		android:icon="@mipmap/appicon"
+		android:roundIcon="@mipmap/appicon_round"
+		android:theme="@style/Maui.SplashTheme"
+		android:largeHeap="true"
+		android:hardwareAccelerated="true">
 	</application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- For local model file storage -->
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+	<!-- Keep CPU awake during long model inference -->
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<!-- For foreground service during model download -->
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 </manifest>

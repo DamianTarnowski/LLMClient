@@ -291,9 +291,6 @@ namespace LLMClient.ViewModels
             }
         }
 
-        /// <summary>
-        /// Ogólny stan zajętości – true, gdy trwa pobieranie modelu, generowanie embeddingów lub wyszukiwanie.
-        /// </summary>
         public bool IsBusy => IsDownloadingModel || IsGeneratingEmbeddings || IsSearching;
 
         public string EmbeddingStatsText => $"Embeddingi: {MessagesWithEmbeddings}/{TotalMessages} ({EmbeddingCoverage:F1}%)";
@@ -328,17 +325,12 @@ namespace LLMClient.ViewModels
             ClearResultsCommand = new Command(ClearResults);
             NavigateToMessageCommand = new Command<SemanticSearchResult>(async (result) => await NavigateToMessageAsync(result));
             GenerateEmbeddingsCommand = new Command(async () => await GenerateEmbeddingsAsync(), () => CanGenerateEmbeddings);
-            // Przycisk 🔄 na UI ma nie tylko odczytać statystyki, ale też ewentualnie wygenerować brakujące embeddingi.
             CheckEmbeddingStatsCommand = new Command(async () => await RefreshAsync());
             DownloadModelCommand = new Command(async () => await DownloadModelAsync(), () => !IsDownloadingModel);
             GoBackCommand = new Command(async () => await GoBackAsync());
 
-            // Check if embedding service is ready
             CheckEmbeddingServiceStatus();
-            // Load initial embedding stats
             _ = Task.Run(async () => await CheckEmbeddingStatsAsync());
-            // Uruchamiamy inicjalizację na wątku UI – DisplayAlert musi działać na głównym wątku
-            // MainThread.BeginInvokeOnMainThread(async () => await InitializeEmbeddingServiceAsync());
         }
 
         public async Task OnAppearingAsync()
@@ -347,10 +339,6 @@ namespace LLMClient.ViewModels
             await RefreshAsync();
         }
 
-        /// <summary>
-        /// Wywoływane przez stronę SemanticSearchPage.OnAppearing
-        /// Odświeża statystyki embeddingów i generuje brakujące, jeśli ViewModel już istnieje na stosie.
-        /// </summary>
         public async Task RefreshAsync()
         {
             _logger?.LogInformation("SemanticSearchViewModel.RefreshAsync invoked");
@@ -451,7 +439,6 @@ namespace LLMClient.ViewModels
             if (string.IsNullOrWhiteSpace(SearchQuery) || IsSearching)
                 return false;
             
-            // Tryb tekstowy nie wymaga embeddingów
             if (SelectedSearchMode == SearchMode.Text)
                 return true;
             
@@ -531,10 +518,8 @@ namespace LLMClient.ViewModels
         {
             var textWeight = 1f - VectorWeight;
             
-            // Pobierz wyniki tekstowe
             var textResults = await _databaseService.TextSearchAcrossConversationsAsync(SearchQuery, MaxResults * 2);
             
-            // Pobierz wyniki wektorowe (jeśli embedding service jest dostępny)
             List<(Message message, float similarity, string conversationTitle)> vectorResults = new();
             if (_embeddingService != null && _embeddingService.IsInitialized)
             {
@@ -546,7 +531,6 @@ namespace LLMClient.ViewModels
                 }
             }
 
-            // Połącz wyniki - grupuj po MessageId
             var combinedScores = new Dictionary<int, (Message message, string title, float textScore, float vectorScore)>();
 
             foreach (var r in textResults)
@@ -573,7 +557,6 @@ namespace LLMClient.ViewModels
                 }
             }
 
-            // Oblicz końcowy score hybrydowy
             return combinedScores.Values
                 .Select(x =>
                 {
@@ -596,7 +579,6 @@ namespace LLMClient.ViewModels
         {
             if (result?.Message == null) return;
 
-            // Nawigacja do MainPage z parametrami
             var conversationId = result.Message.ConversationId;
             var messageId = result.Message.Id;
             try
@@ -633,7 +615,6 @@ namespace LLMClient.ViewModels
                     EmbeddingProgress = result.ErrorMessage;
                 }
 
-                // Refresh stats after generation
                 await CheckEmbeddingStatsAsync();
             }
             catch (Exception ex)
@@ -683,12 +664,17 @@ namespace LLMClient.ViewModels
 
         private void OnEmbeddingProgress(EmbeddingPipelineProgress progress)
         {
-            EmbeddingProgress = $"{progress.ProcessedMessages}/{progress.TotalMessages} ({progress.ProgressPercentage:F1}%) - {progress.CurrentMessage}";
+            var text = $"{progress.ProcessedMessages}/{progress.TotalMessages} ({progress.ProgressPercentage:F1}%) - {progress.CurrentMessage}";
             
             if (progress.EstimatedTimeRemaining > TimeSpan.Zero)
             {
-                EmbeddingProgress += $" - ETA: {progress.EstimatedTimeRemaining:mm\\:ss}";
+                text += $" - ETA: {progress.EstimatedTimeRemaining:mm\\:ss}";
             }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                EmbeddingProgress = text;
+            });
         }
 
         private async Task CheckEmbeddingStatsAsync()
@@ -697,13 +683,15 @@ namespace LLMClient.ViewModels
             {
                 var stats = await _embeddingPipelineService.GetEmbeddingStatsAsync();
                 
-                TotalMessages = stats.TotalMessages;
-                MessagesWithEmbeddings = stats.MessagesWithEmbeddings;
-                EmbeddingCoverage = stats.EmbeddingCoverage;
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    TotalMessages = stats.TotalMessages;
+                    MessagesWithEmbeddings = stats.MessagesWithEmbeddings;
+                    EmbeddingCoverage = stats.EmbeddingCoverage;
+                });
             }
             catch (Exception ex)
             {
-                // Silent error - just log it
                 System.Diagnostics.Debug.WriteLine($"Error checking embedding stats: {ex.Message}");
             }
         }
@@ -712,7 +700,7 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                await Shell.Current.GoToAsync("//MainPage", true); // nawigacja na stronę główną
+                await Shell.Current.GoToAsync("//MainPage", true);
             }
             catch (Exception ex)
             {
@@ -727,4 +715,4 @@ namespace LLMClient.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-} 
+}

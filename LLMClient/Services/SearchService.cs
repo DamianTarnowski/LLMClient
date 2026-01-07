@@ -33,6 +33,7 @@ namespace LLMClient.Services
     public interface ISearchService
     {
         List<SearchResult> SearchInConversation(Conversation conversation, string searchTerm);
+        Task<List<SearchResult>> SearchInConversationAsync(Conversation conversation, string searchTerm);
         Task<List<SemanticSearchResult>> SemanticSearchAcrossConversationsAsync(List<Conversation> conversations, string query, float minSimilarity = 0.3f, int maxResults = 20);
         Task<List<SemanticSearchResult>> TextSearchAcrossConversationsAsync(string query, int maxResults = 20);
         Task<List<SemanticSearchResult>> HybridSearchAcrossConversationsAsync(string query, float minSimilarity = 0.3f, int maxResults = 20, float vectorWeight = 0.7f);
@@ -114,6 +115,55 @@ namespace LLMClient.Services
             if (_currentResults.Count > 0)
                 _currentResultIndex = 0;
 
+            return _currentResults;
+        }
+
+        public async Task<List<SearchResult>> SearchInConversationAsync(Conversation conversation, string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm) || conversation?.Messages == null)
+            {
+                _currentResults.Clear();
+                _currentResultIndex = -1;
+                return _currentResults;
+            }
+
+            var trimmedSearchTerm = searchTerm.Trim();
+            var messages = conversation.Messages.ToList(); // Snapshot for thread safety
+            
+            // Run regex matching on background thread to avoid blocking UI
+            var results = await Task.Run(() =>
+            {
+                var localResults = new List<SearchResult>();
+                var pattern = Regex.Escape(trimmedSearchTerm);
+                var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                
+                foreach (var message in messages)
+                {
+                    if (string.IsNullOrWhiteSpace(message.Content))
+                        continue;
+
+                    var matches = regex.Matches(message.Content);
+
+                    foreach (Match match in matches)
+                    {
+                        var result = new SearchResult
+                        {
+                            Message = message,
+                            StartIndex = match.Index,
+                            Length = match.Length,
+                            HighlightedContent = regex.Replace(message.Content, $"**{trimmedSearchTerm}**")
+                        };
+                        localResults.Add(result);
+                    }
+                }
+                
+                return localResults;
+            });
+            
+            // Update state on calling thread
+            _currentResults = results;
+            _currentResultIndex = results.Count > 0 ? 0 : -1;
+            
             return _currentResults;
         }
 

@@ -566,18 +566,16 @@
             </StackLayout>
 
             <!-- ===== MESSAGES ===== -->
-            <ScrollView Grid.Row="2"
-                        x:Name="MessagesScrollView"
-                        IsVisible="{Binding SelectedConversation.Messages.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
-                        Padding="16,8">
+            <CollectionView Grid.Row="2"
+                            x:Name="MessagesCollectionView"
+                            ItemsSource="{Binding FilteredMessages}"
+                            IsVisible="{Binding SelectedConversation.Messages.Count, Converter={StaticResource ZeroToInverseBoolConverter}}"
+                            BackgroundColor="Transparent"
+                            SelectionMode="None"
+                            ItemsLayout="VerticalList"
+                            Padding="16,8">
 
-                <CollectionView x:Name="MessagesCollectionView"
-                                ItemsSource="{Binding FilteredMessages}"
-                                BackgroundColor="Transparent"
-                                SelectionMode="None"
-                                ItemsLayout="VerticalList">
-
-                    <CollectionView.ItemTemplate>
+                <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Message">
                             <SwipeView Margin="0,4">
                                 <SwipeView.RightItems>
@@ -678,7 +676,6 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-            </ScrollView>
 
             <!-- ===== INPUT AREA ===== -->
             <Border Grid.Row="3"

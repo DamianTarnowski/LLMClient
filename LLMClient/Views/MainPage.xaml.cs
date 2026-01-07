@@ -134,13 +134,17 @@ public partial class MainPage : ContentPage
     private void ScrollToBottom()
     {
         if (BindingContext is MainPageViewModel viewModel &&
-            viewModel.SelectedConversation?.Messages?.Count > 0)
+            viewModel.FilteredMessages?.Count > 0)
         {
-            // Ensure the UI has updated before scrolling
+            // Use CollectionView.ScrollTo for better performance and virtualization support
             _ = Dispatcher.DispatchAsync(async () =>
             {
-                await Task.Delay(100); // Small delay to allow UI to render new messages
-                await MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, false);
+                await Task.Delay(100); // Small delay to allow UI to render
+                var lastItem = viewModel.FilteredMessages.LastOrDefault();
+                if (lastItem != null)
+                {
+                    MessagesCollectionView.ScrollTo(lastItem, position: ScrollToPosition.End, animate: false);
+                }
             });
         }
     }

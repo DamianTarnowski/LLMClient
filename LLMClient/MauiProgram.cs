@@ -36,6 +36,23 @@ namespace LLMClient
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
             builder.Services.AddSingleton<IStreamingBatchService, StreamingBatchService>();
             builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
+            
+            // Error Reporting Service - szczegółowe raportowanie błędów
+            builder.Services.AddSingleton<IErrorReportingService>(provider =>
+            {
+                var service = new ErrorReportingService();
+                service.Initialize(new Models.ErrorReportingConfig
+                {
+                    IsEnabled = true,
+                    SendAutomatically = false, // Domyślnie wyłączone, użytkownik może włączyć
+                    IncludeDeviceInfo = true,
+                    IncludeSystemState = true,
+                    IncludeBreadcrumbs = true,
+                    MaxBreadcrumbs = 100,
+                    MinimumSeverity = Models.ErrorSeverity.Warning
+                });
+                return service;
+            });
             builder.Services.AddSingleton<MultiModelEmbeddingService>();
             builder.Services.AddSingleton<IEmbeddingService>(p => p.GetRequiredService<MultiModelEmbeddingService>());
             builder.Services.AddSingleton<IEmbeddingPipelineService, EmbeddingPipelineService>();

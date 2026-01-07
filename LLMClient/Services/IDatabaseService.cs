@@ -25,7 +25,7 @@ public interface IDatabaseService
     Task<bool> GenerateAndSaveEmbeddingAsync(Message message);
     Task<List<Message>> GetMessagesNeedingEmbeddingsAsync();
     Task<List<(Message message, float similarity)>> SemanticSearchInConversationAsync(int conversationId, float[] queryEmbedding, float minSimilarity = 0.3f, int maxResults = 10);
-    Task<List<(Message message, float similarity, string conversationTitle)>> SemanticSearchAcrossConversationsAsync(float[] queryEmbedding, float minSimilarity = 0.3f, int maxResults = 20);
+    Task<List<(Message message, float similarity, string conversationTitle)>> SemanticSearchAcrossConversationsAsync(float[] queryEmbedding, float minSimilarity = 0.3f, int maxResults = 20, string[]? keywordPrefilter = null);
     Task<List<(Message message, float matchScore, string conversationTitle)>> TextSearchAcrossConversationsAsync(string searchQuery, int maxResults = 20);
     Task<(int withEmbeddings, int total)> GetEmbeddingStatsAsync();
     Task<int> ClearAllEmbeddingsAsync();
@@ -52,8 +52,12 @@ public interface IDatabaseService
     Task DeleteRagDocumentAsync(int documentId);
     Task SaveRagChunksAsync(int documentId, List<string> chunks);
     Task<List<RagChunk>> GetAllRagChunksAsync();
+    Task<List<RagChunk>> GetRagChunksWithKeywordFilterAsync(string[] keywords, int limit = 100);
     Task<List<RagChunk>> GetRagChunksByDocumentAsync(int documentId);
     Task UpdateRagChunkEmbeddingAsync(RagChunk chunk);
+    
+    // Optimized search operations
+    Task<List<DatabaseService.MessageWithConversationTitle>> GetMessagesWithEmbeddingsFilteredAsync(string[]? keywords = null, int limit = 200);
     
     // Encryption/Security info
     Task<bool> IsDatabaseEncryptedAsync();

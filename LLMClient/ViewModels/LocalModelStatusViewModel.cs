@@ -50,47 +50,53 @@ namespace LLMClient.ViewModels
             _localModelService.DownloadProgress += OnDownloadProgressChanged;
             _localModelService.ErrorOccurred += OnErrorOccurred;
             
-            // Load selected model info
-            LoadSelectedModelInfo();
+            // Load selected model info (async)
+            _ = LoadSelectedModelInfoAsync();
             
             // Subscribe to model selection changes (GGUF/LLamaSharp)
             WeakReferenceMessenger.Default.Register<GgufModelSelectedMessage>(this, (r, m) =>
             {
-                MainThread.BeginInvokeOnMainThread(() =>
+                MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Received GGUF model change: {m.Value}");
-                    RefreshModelInfo();
+                    await LoadSelectedModelInfoAsync(); // Update wywołania na LoadSelectedModelInfoAsync
                 });
             });
             
             // Initialize status on startup
-            Task.Run(async () => await UpdateStatusAsync());
+            _ = UpdateStatusAsync();
         }
         
-        private void LoadSelectedModelInfo()
+        private async Task LoadSelectedModelInfoAsync()
         {
             try
             {
                 // Get model info from ILocalModelService (works for both ONNX and LLamaSharp)
-                var modelInfo = _localModelService.GetModelInfoAsync().GetAwaiter().GetResult();
+                var modelInfo = await _localModelService.GetModelInfoAsync();
                 
-                ModelName = modelInfo.DisplayName ?? "Model lokalny";
-                _modelSizeBytes = modelInfo.SizeInMB * 1024L * 1024L;
-                ModelSize = modelInfo.SizeInMB > 0 
-                    ? (modelInfo.SizeInMB < 1024 ? $"{modelInfo.SizeInMB} MB" : $"{modelInfo.SizeInMB / 1024.0:F1} GB")
-                    : "";
-                ModelDescription = "";
-                ShowModelInfo = true;
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    ModelName = modelInfo.DisplayName ?? "Model lokalny";
+                    _modelSizeBytes = modelInfo.SizeInMB * 1024L * 1024L;
+                    ModelSize = modelInfo.SizeInMB > 0 
+                        ? (modelInfo.SizeInMB < 1024 ? $"{modelInfo.SizeInMB} MB" : $"{modelInfo.SizeInMB / 1024.0:F1} GB")
+                        : "";
+                    ModelDescription = "";
+                    ShowModelInfo = true;
+                });
                 
                 System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Selected model: {ModelName} ({modelInfo.SizeInMB} MB)");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[LocalModelStatus] Error loading model info: {ex.Message}");
-                ModelName = "Model lokalny";
-                ModelSize = "";
-                ModelDescription = "";
-                ShowModelInfo = false;
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    ModelName = "Model lokalny";
+                    ModelSize = "";
+                    ModelDescription = "";
+                    ShowModelInfo = false;
+                });
             }
         }
 
@@ -596,10 +602,10 @@ namespace LLMClient.ViewModels
         /// <summary>
         /// Refresh model info (call after model selection changes)
         /// </summary>
-        public void RefreshModelInfo()
+        public async Task RefreshModelInfoAsync()
         {
-            LoadSelectedModelInfo();
-            Task.Run(async () => await UpdateStatusAsync());
+            await LoadSelectedModelInfoAsync();
+            await UpdateStatusAsync();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

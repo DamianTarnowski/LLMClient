@@ -1,1 +1,22 @@
- 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e0e7ff"/>
+    </linearGradient>
+  </defs>
+  <!-- Chat bubble -->
+  <path d="M80 100 h352 a48 48 0 0 1 48 48 v200 a48 48 0 0 1 -48 48 h-220 l-90 75 v-75 h-42 a48 48 0 0 1 -48 -48 v-200 a48 48 0 0 1 48 -48z" fill="url(#bubbleGrad)"/>
+  <!-- AI brain/network dots -->
+  <circle cx="180" cy="270" r="24" fill="#6366f1"/>
+  <circle cx="256" cy="220" r="24" fill="#8b5cf6"/>
+  <circle cx="332" cy="270" r="24" fill="#6366f1"/>
+  <circle cx="218" cy="330" r="18" fill="#a78bfa"/>
+  <circle cx="294" cy="330" r="18" fill="#a78bfa"/>
+  <!-- Connection lines -->
+  <line x1="180" y1="270" x2="256" y2="220" stroke="#c4b5fd" stroke-width="5"/>
+  <line x1="256" y1="220" x2="332" y2="270" stroke="#c4b5fd" stroke-width="5"/>
+  <line x1="180" y1="270" x2="218" y2="330" stroke="#c4b5fd" stroke-width="5"/>
+  <line x1="332" y1="270" x2="294" y2="330" stroke="#c4b5fd" stroke-width="5"/>
+  <line x1="218" y1="330" x2="294" y2="330" stroke="#c4b5fd" stroke-width="5"/>
+</svg>

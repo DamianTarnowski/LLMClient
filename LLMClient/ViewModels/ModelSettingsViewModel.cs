@@ -49,7 +49,7 @@ namespace LLMClient.ViewModels
             // Initialize embedding models
             AvailableEmbeddingModels = new ObservableCollection<EmbeddingModelInfo>(Models.EmbeddingModels.All);
             _selectedEmbeddingModel = _embeddingService?.CurrentModel ?? Models.EmbeddingModels.GetDefault();
-            _initialEmbeddingModelId = _selectedEmbeddingModel.Id;
+            _initialEmbeddingModelId = _selectedEmbeddingModel?.Id ?? "";
             
             // Subscribe to local model state changes
             _localModelService.StateChanged += OnLocalModelStateChanged;
@@ -167,7 +167,6 @@ namespace LLMClient.ViewModels
                 OnPropertyChanged(nameof(FontScalePercent));
                 // Save immediately
                 Preferences.Set("FontScale", _fontScale);
-                // Font scale is applied via binding
             }
         }
         
@@ -183,7 +182,6 @@ namespace LLMClient.ViewModels
             }
         }
 
-        // Engine options: ONNX GenAI (CPU) + LLamaSharp (llama.cpp) + MediaPipe GenAI (Gemma)
 #if ANDROID || IOS
         public EngineType[] EngineOptions { get; } = new[] { EngineType.OnnxGenAI, EngineType.LLamaSharp, EngineType.MediaPipeGenAI };
 #else
@@ -207,7 +205,6 @@ namespace LLMClient.ViewModels
         public ICommand ResetCommand { get; }
         public ICommand RegenerateEmbeddingsCommand { get; }
         
-        // Embedding model selection
         public ObservableCollection<EmbeddingModelInfo> AvailableEmbeddingModels { get; }
         
         public EmbeddingModelInfo? SelectedEmbeddingModel
@@ -236,7 +233,6 @@ namespace LLMClient.ViewModels
             {
                 if (Shell.Current != null)
                 {
-                    // Navigate explicitly to MainPage to simulate Back when this page is a ShellContent root
                     await Shell.Current.GoToAsync("///MainPage");
                 }
                 else if (Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation != null)
@@ -260,7 +256,6 @@ namespace LLMClient.ViewModels
         {
             if (IsLocalModelActive)
             {
-                // Show friendly name based on selected local engine
                 var engineName = SelectedEngine switch
                 {
                     EngineType.LLamaSharp => "LLamaSharp (llama.cpp)",
@@ -273,7 +268,6 @@ namespace LLMClient.ViewModels
             }
             else
             {
-                // Get current cloud model info from preferences or AI service
                 CurrentModelName = Preferences.Get("LastCloudModel", "Cloud Model");
                 ModelType = "Cloud AI Model";
             }
@@ -283,7 +277,6 @@ namespace LLMClient.ViewModels
         {
             try
             {
-                // Load settings from database
                 var settings = await _databaseService.GetModelSettingsAsync();
                 
                 await MainThread.InvokeOnMainThreadAsync(() =>
@@ -306,12 +299,9 @@ namespace LLMClient.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] Error loading settings: {ex.Message}");
-                
-                // Load defaults on error
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     SystemPrompt = GetDefaultSystemPrompt();
-                    UpdateModelInfo();
                 });
             }
         }
@@ -326,15 +316,13 @@ namespace LLMClient.ViewModels
                     Temperature = Temperature,
                     MaxLength = MaxLength,
                     RepetitionPenalty = RepetitionPenalty,
-                    TopP = TopP,
-                    UpdatedAt = DateTime.UtcNow
+                    TopP = TopP
                 };
-                
+
                 await _databaseService.SaveModelSettingsAsync(settings);
                 Preferences.Set("IncludeMemoryInSystemPrompt", IncludeMemoryInSystemPrompt);
                 EngineSettings.SaveSelectedEngine(SelectedEngine);
                 
-                // Apply settings to current model
                 await ApplySettingsToCurrentModelAsync();
                 
                 var currentPage = Application.Current?.Windows.FirstOrDefault()?.Page;
@@ -342,26 +330,16 @@ namespace LLMClient.ViewModels
                 {
                     await currentPage.DisplayAlertAsync(
                         "Sukces",
-                        "Ustawienia zapisane.\n\nZmiana silnika lokalnego została zastosowana natychmiast. Jeśli chcesz używać nowego silnika, załaduj odpowiedni model w sekcji statusu lokalnego modelu.",
+                        "Ustawienia zapisane.\n\nZmiana silnika lokalnego została zastosowana natychmiast.",
                         "OK");
                 }
 
-                // Po zapisie – wróć automatycznie do poprzedniego ekranu
-                try
-                {
-                    if (Shell.Current != null)
-                        await Shell.Current.GoToAsync("..");
-                    else if (currentPage?.Navigation != null)
-                        await currentPage.Navigation.PopAsync();
-                }
-                catch { }
+                if (Shell.Current != null)
+                    await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] Error saving settings: {ex.Message}");
-                var errorPage = Application.Current?.Windows.FirstOrDefault()?.Page;
-                if (errorPage != null)
-                    await errorPage.DisplayAlertAsync("Error", "Failed to save settings.", "OK");
             }
         }
 
@@ -394,19 +372,9 @@ namespace LLMClient.ViewModels
         
         private async Task ApplySettingsToCurrentModelAsync()
         {
-            try
+            if (IsLocalModelActive)
             {
-                if (IsLocalModelActive)
-                {
-                    // Apply settings to local model service
-                    await ApplySettingsToLocalModelAsync();
-                }
-                // For cloud models, system prompt will be applied in AiService automatically
-                // when it reads from database
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ModelSettingsViewModel] Error applying settings: {ex.Message}");
+                await ApplySettingsToLocalModelAsync();
             }
         }
         
@@ -464,7 +432,6 @@ namespace LLMClient.ViewModels
     {
         [SQLite.PrimaryKey, SQLite.AutoIncrement]
         public int Id { get; set; }
-        
         public string SystemPrompt { get; set; } = "";
         public double Temperature { get; set; } = 0.3;
         public int MaxLength { get; set; } = 128;

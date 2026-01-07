@@ -142,7 +142,7 @@ namespace LLMClient.Services
         private string GetModelDirectory(EmbeddingModelInfo model)
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return Path.Combine(appData, "User Name", "com.companyname.llmclient", "Data", "models", model.Id);
+            return Path.Combine(appData, "LLMClient", "Data", "models", model.Id);
         }
 
         private string GetModelPath(EmbeddingModelInfo model)

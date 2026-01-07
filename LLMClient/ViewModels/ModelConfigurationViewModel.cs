@@ -127,7 +127,10 @@ namespace LLMClient.ViewModels
         private async Task LoadModelsAsync()
         {
             var models = await _databaseService.GetModelsAsync();
-            Models = new ObservableCollection<AiModel>(models);
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Models = new ObservableCollection<AiModel>(models);
+            });
         }
 
         private void AddNewModel()

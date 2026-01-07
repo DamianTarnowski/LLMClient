@@ -1260,7 +1260,7 @@ namespace LLMClient.ViewModels
                     await Task.Delay(250, token);
                     if (token.IsCancellationRequested) return;
                     
-                    await MainThread.InvokeOnMainThreadAsync(() => ExecuteSearch());
+                    await ExecuteSearchAsync(token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -1269,35 +1269,48 @@ namespace LLMClient.ViewModels
             }, token);
         }
         
-        private void ExecuteSearch()
+        private async Task ExecuteSearchAsync(CancellationToken cancellationToken = default)
         {
             if (SelectedConversation == null)
             {
                 _searchService.ClearResults();
-                OnPropertyChanged(nameof(HasSearchResults));
-                OnPropertyChanged(nameof(SearchResultText));
-                UpdateFilteredMessages();
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    OnPropertyChanged(nameof(HasSearchResults));
+                    OnPropertyChanged(nameof(SearchResultText));
+                    UpdateFilteredMessages();
+                });
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(SearchTerm))
             {
                 _searchService.ClearResults();
-                UpdateFilteredMessages(); // Pokaż wszystkie wiadomości
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    UpdateFilteredMessages();
+                    OnPropertyChanged(nameof(HasSearchResults));
+                    OnPropertyChanged(nameof(SearchResultText));
+                });
             }
             else
             {
-                _searchService.SearchInConversation(SelectedConversation, SearchTerm);
-                FilterMessagesBySearchResults();
-            }
+                // Regex search runs on background thread
+                await _searchService.SearchInConversationAsync(SelectedConversation, SearchTerm);
+                
+                if (cancellationToken.IsCancellationRequested) return;
+                
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    FilterMessagesBySearchResults();
+                    OnPropertyChanged(nameof(HasSearchResults));
+                    OnPropertyChanged(nameof(SearchResultText));
 
-            OnPropertyChanged(nameof(HasSearchResults));
-            OnPropertyChanged(nameof(SearchResultText));
-
-            // Scroll to first result if found
-            if (_searchService.HasResults)
-            {
-                ScrollToSearchResult();
+                    if (_searchService.HasResults)
+                    {
+                        ScrollToSearchResult();
+                    }
+                });
             }
         }
 
@@ -1311,11 +1324,51 @@ namespace LLMClient.ViewModels
             {
                 var messages = SelectedConversation?.Messages?.ToList() ?? new List<Message>();
                 
-                FilteredMessages.Clear();
-                foreach (var message in messages)
+                // Optymalizacja: Zamiast Clear+Add w pętli (N notyfikacji), 
+                // zastąp całą kolekcję (1 notyfikacja) gdy jest duża różnica
+                if (FilteredMessages.Count == 0 && messages.Count == 0)
+                    return;
+                
+                // Jeśli różnica jest mała, użyj inkrementalnej aktualizacji
+                if (Math.Abs(FilteredMessages.Count - messages.Count) <= 2 && messages.Count > 0)
                 {
-                    FilteredMessages.Add(message);
+                    // Sprawdź czy kolekcje są identyczne (częsty case przy streamingu)
+                    bool areEqual = FilteredMessages.Count == messages.Count;
+                    if (areEqual)
+                    {
+                        for (int i = 0; i < FilteredMessages.Count; i++)
+                        {
+                            if (FilteredMessages[i].Id != messages[i].Id)
+                            {
+                                areEqual = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (areEqual)
+                        return; // Nic się nie zmieniło
+                    
+                    // Dodaj tylko nowe wiadomości na końcu (streaming case)
+                    if (messages.Count > FilteredMessages.Count)
+                    {
+                        var lastFilteredId = FilteredMessages.LastOrDefault()?.Id ?? 0;
+                        var newMessages = messages.SkipWhile(m => m.Id <= lastFilteredId || FilteredMessages.Any(f => f.Id == m.Id)).ToList();
+                        
+                        if (newMessages.Count == messages.Count - FilteredMessages.Count && newMessages.Count > 0)
+                        {
+                            foreach (var msg in newMessages)
+                            {
+                                FilteredMessages.Add(msg);
+                            }
+                            return;
+                        }
+                    }
                 }
+                
+                // Fallback: pełna zamiana kolekcji (jedna notyfikacja Reset)
+                FilteredMessages = new ObservableCollection<Message>(messages);
+                OnPropertyChanged(nameof(FilteredMessages));
             }
             finally
             {
