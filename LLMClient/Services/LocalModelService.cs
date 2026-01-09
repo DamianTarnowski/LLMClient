@@ -22,6 +22,7 @@ namespace LLMClient.Services
         public string DisplayName { get; set; } = "Phi-4 Mini Instruct (Local)";
         public string Version { get; set; } = "instruct-v1.0";
         public long SizeInMB { get; set; } = 5025; // ~4.86GB data + 52MB model = ~4.91GB total
+        public long RequiredRamMB { get; set; } = 8000; // ~8 GB RAM dla Phi-4 Mini ONNX
         public string HuggingFaceRepo { get; set; } = "microsoft/Phi-4-mini-instruct-onnx";
         public string[] SupportedLanguages { get; set; } = { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru", "tr", "nl", "pt" };
         public bool IsOnboardingCapable { get; set; } = true;

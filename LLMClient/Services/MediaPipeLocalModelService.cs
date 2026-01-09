@@ -28,10 +28,13 @@ namespace LLMClient.Services
         public required string HuggingFaceRepo { get; init; }
         public required string FileName { get; init; }
         public required long SizeInMB { get; init; }
+        public long RequiredRamMB { get; init; } = 0; // 0 = auto (SizeInMB * 1.5)
         public required string[] SupportedLanguages { get; init; }
         public string Description { get; init; } = "";
         public bool IsRecommended { get; init; } = false;
         public bool SupportsMultimodal { get; init; } = false;
+        
+        public long EstimatedRamMB => RequiredRamMB > 0 ? RequiredRamMB : (long)(SizeInMB * 1.5);
     }
 
     /// <summary>
@@ -64,8 +67,9 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "google/gemma-3n-E2B-it-litert-lm",
                 FileName = "gemma-3n-e2b.task",
                 SizeInMB = 1500,
+                RequiredRamMB = 2500,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh" },
-                Description = "Gemma 3n 2B z obsługą tekstu, obrazów i audio. Idealny dla mobile.",
+                Description = "Gemma 3n 2B z obsługą tekstu, obrazów i audio. Wymaga ~2.5 GB RAM.",
                 IsRecommended = true,
                 SupportsMultimodal = true
             },
@@ -76,8 +80,9 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "google/gemma-3n-E4B-it-litert-lm",
                 FileName = "gemma-3n-e4b.task",
                 SizeInMB = 2800,
+                RequiredRamMB = 4500,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh" },
-                Description = "Gemma 3n 4B - większy model multimodalny, lepsza jakość.",
+                Description = "Gemma 3n 4B - większy model multimodalny. Wymaga ~4.5 GB RAM.",
                 SupportsMultimodal = true
             },
             new MediaPipeModelInfo
@@ -87,8 +92,9 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "litert-community/Gemma2-2B-it",
                 FileName = "gemma2-2b.task",
                 SizeInMB = 1400,
+                RequiredRamMB = 2500,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh" },
-                Description = "Gemma 2 2B - szybki model tekstowy od Google."
+                Description = "Gemma 2 2B - szybki model tekstowy. Wymaga ~2.5 GB RAM."
             },
             new MediaPipeModelInfo
             {
@@ -97,8 +103,9 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "litert-community/Gemma3-1B-it",
                 FileName = "gemma3-1b.task",
                 SizeInMB = 800,
+                RequiredRamMB = 1500,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh" },
-                Description = "Gemma 3 1B - najlżejszy model, ultra szybki na mobile."
+                Description = "Gemma 3 1B - najlżejszy model, ultra szybki. Wymaga ~1.5 GB RAM."
             }
         };
 
@@ -175,6 +182,7 @@ namespace LLMClient.Services
                 ModelId = _selectedModel.Id,
                 DisplayName = _selectedModel.DisplayName,
                 SizeInMB = _selectedModel.SizeInMB,
+                RequiredRamMB = _selectedModel.RequiredRamMB > 0 ? _selectedModel.RequiredRamMB : (long)(_selectedModel.SizeInMB * 1.5),
                 HuggingFaceRepo = _selectedModel.HuggingFaceRepo,
                 SupportedLanguages = _selectedModel.SupportedLanguages
             });

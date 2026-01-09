@@ -33,6 +33,7 @@ namespace LLMClient.ViewModels
         
         // Model info (from ILocalModelService - works for both ONNX and LLamaSharp)
         private long _modelSizeBytes = 0;
+        private long _requiredRamMB = 0;
         private string _modelName = "";
         private string _modelSize = "";
         private string _modelDescription = "";
@@ -80,6 +81,7 @@ namespace LLMClient.ViewModels
                 {
                     ModelName = modelInfo.DisplayName ?? "Model lokalny";
                     _modelSizeBytes = modelInfo.SizeInMB * 1024L * 1024L;
+                    _requiredRamMB = modelInfo.RequiredRamMB > 0 ? modelInfo.RequiredRamMB : (long)(modelInfo.SizeInMB * 1.5);
                     ModelSize = modelInfo.SizeInMB > 0 
                         ? (modelInfo.SizeInMB < 1024 ? $"{modelInfo.SizeInMB} MB" : $"{modelInfo.SizeInMB / 1024.0:F1} GB")
                         : "";
@@ -560,7 +562,8 @@ namespace LLMClient.ViewModels
                 var modelName = !string.IsNullOrEmpty(_modelName) ? _modelName : "Model";
                 var modelSize = !string.IsNullOrEmpty(_modelSize) ? _modelSize : "?";
                 var modelDesc = _modelDescription;
-                var ramRequiredMB = _modelSizeBytes > 0 ? (long)(_modelSizeBytes / (1024.0 * 1024.0) * 1.5) : 2000;
+                // Use RequiredRamMB from model info (already calculated with fallback)
+                var ramRequiredMB = _requiredRamMB > 0 ? _requiredRamMB : 2000;
                 var ramRequiredGB = ramRequiredMB / 1024.0;
                 
                 var page = Application.Current?.Windows.FirstOrDefault()?.Page;

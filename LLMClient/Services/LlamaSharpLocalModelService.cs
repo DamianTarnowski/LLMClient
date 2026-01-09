@@ -310,6 +310,7 @@ namespace LLMClient.Services
                 DisplayName = _selectedModel.DisplayName,
                 Version = "1.0",
                 SizeInMB = _selectedModel.SizeInMB,
+                RequiredRamMB = _selectedModel.RequiredRamMB > 0 ? _selectedModel.RequiredRamMB : (long)(_selectedModel.SizeInMB * 1.5),
                 HuggingFaceRepo = _selectedModel.HuggingFaceRepo,
                 SupportedLanguages = _selectedModel.SupportedLanguages,
                 IsOnboardingCapable = true,
