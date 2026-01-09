@@ -222,57 +222,12 @@
                 <!-- Sidebar Footer -->
                 <StackLayout Grid.Row="2" Padding="16" Spacing="12">
                     <!-- Model Toggle -->
-                    <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
-                            StrokeShape="RoundRectangle 12"
-                            StrokeThickness="0"
-                            Padding="4">
-                        <Grid ColumnSpacing="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Button Grid.Column="0"
-                                    Text="{helpers:Translate Local}"
-                                    Command="{Binding EnableLocalModelCommand}"
-                                    CornerRadius="10"
-                                    HeightRequest="40"
-                                    FontSize="13"
-                                    BackgroundColor="Transparent"
-                                    TextColor="{StaticResource Gray500}">
-                                <Button.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding UseLocalModel}" Value="True">
-                                        <Setter Property="BackgroundColor" Value="{StaticResource Secondary}" />
-                                        <Setter Property="TextColor" Value="White" />
-                                    </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
-
-                            <Button Grid.Column="1"
-                                    Text="{helpers:Translate API}"
-                                    Command="{Binding EnableApiModelCommand}"
-                                    CornerRadius="10"
-                                    HeightRequest="40"
-                                    FontSize="13"
-                                    BackgroundColor="Transparent"
-                                    TextColor="{StaticResource Gray500}">
-                                <Button.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding UseLocalModel}" Value="False">
-                                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                        <Setter Property="TextColor" Value="White" />
-                                    </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <!-- API Model Picker (visible when API mode) -->
+                    <!-- Model Picker (unified - local and API models) -->
                     <Border BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
                             Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"
                             StrokeShape="RoundRectangle 12"
                             StrokeThickness="1"
-                            Padding="12,8"
-                            IsVisible="{Binding UseLocalModel, Converter={StaticResource InverseBoolConverter}}">
+                            Padding="12,8">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />

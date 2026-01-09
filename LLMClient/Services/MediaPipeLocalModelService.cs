@@ -256,6 +256,16 @@ namespace LLMClient.Services
             }
         }
 
+        public void CancelDownload()
+        {
+            if (_state == LocalModelState.Downloading)
+            {
+                _logger.LogInformation("[MediaPipe] Cancelling download...");
+                _state = LocalModelState.NotDownloaded;
+                StateChanged?.Invoke(_state);
+            }
+        }
+
         public async Task<bool> LoadModelAsync()
         {
             if (_state == LocalModelState.Loaded)

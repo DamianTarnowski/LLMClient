@@ -34,6 +34,7 @@ namespace LLMClient.Services
         Task<bool> IsModelDownloadedAsync();
         Task<LocalModelInfo> GetModelInfoAsync();
         Task<bool> DownloadModelAsync(IProgress<double>? progress = null);
+        void CancelDownload();
         Task<bool> LoadModelAsync();
         Task UnloadModelAsync();
         Task<bool> DeleteModelAsync();
@@ -226,6 +227,16 @@ namespace LLMClient.Services
                 ErrorOccurred?.Invoke($"Error downloading model: {ex.Message}");
                 State = LocalModelState.Error;
                 return false;
+            }
+        }
+
+        public void CancelDownload()
+        {
+            if (_downloadCancellation != null && !_downloadCancellation.IsCancellationRequested)
+            {
+                _logger.LogInformation("Cancelling model download...");
+                _downloadCancellation.Cancel();
+                State = LocalModelState.NotDownloaded;
             }
         }
 

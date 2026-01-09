@@ -212,6 +212,18 @@ namespace LLMClient.Services
                 "DownloadModel");
         }
 
+        public void CancelDownload()
+        {
+            try
+            {
+                _innerService.CancelDownload();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "CancelDownload failed");
+            }
+        }
+
         public async Task<bool> LoadModelAsync()
         {
             return await ExecuteSafelyAsync(

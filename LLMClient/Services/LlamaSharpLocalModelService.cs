@@ -346,6 +346,15 @@ namespace LLMClient.Services
             }
         }
 
+        public void CancelDownload()
+        {
+            if (IsDownloading)
+            {
+                _logger.LogInformation("[LLamaSharp] Cancelling download...");
+                SetState(LocalModelState.NotDownloaded);
+            }
+        }
+
         public Task<bool> LoadModelAsync()
         {
             try

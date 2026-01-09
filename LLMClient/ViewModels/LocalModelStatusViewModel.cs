@@ -457,7 +457,8 @@ namespace LLMClient.ViewModels
                         break;
                         
                     case LocalModelState.Downloading:
-                        // Cancel download - this would need to be implemented in the service
+                        // Cancel download
+                        _localModelService.CancelDownload();
                         break;
                         
                     case LocalModelState.Downloaded:

@@ -60,6 +60,9 @@ namespace LLMClient.Services
         private const int CONNECTION_TIMEOUT_MINUTES = 60; // Increased for large files (4.86GB)
         private const int MAX_TOTAL_RETRIES = 5;
         private const int RETRY_DELAY_BASE_MS = 1000;
+#if ANDROID
+        private Android.OS.PowerManager.WakeLock? _wakeLock;
+#endif
 
         // Memory requirements
         private const long MINIMUM_RAM_BYTES = 4L * 1024 * 1024 * 1024; // 4GB minimum
@@ -264,6 +267,45 @@ namespace LLMClient.Services
             }
         }
 
+        private void AcquireWakeLock()
+        {
+#if ANDROID
+            try
+            {
+                var powerManager = Android.App.Application.Context.GetSystemService(Android.Content.Context.PowerService) as Android.OS.PowerManager;
+                if (powerManager != null && _wakeLock == null)
+                {
+                    _wakeLock = powerManager.NewWakeLock(Android.OS.WakeLockFlags.Partial, "LLMClient::ModelDownload");
+                    _wakeLock.Acquire();
+                    _logger.LogInformation("WakeLock acquired for download");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to acquire WakeLock");
+            }
+#endif
+        }
+
+        private void ReleaseWakeLock()
+        {
+#if ANDROID
+            try
+            {
+                if (_wakeLock != null && _wakeLock.IsHeld)
+                {
+                    _wakeLock.Release();
+                    _wakeLock = null;
+                    _logger.LogInformation("WakeLock released");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to release WakeLock");
+            }
+#endif
+        }
+
         /// <summary>
         /// Get estimated download time based on a rough speed estimate
         /// </summary>
@@ -448,6 +490,9 @@ namespace LLMClient.Services
                 State = LocalModelState.Downloading;
                 _downloadCancellation = new CancellationTokenSource();
 
+                // Acquire WakeLock to prevent device sleep during download
+                AcquireWakeLock();
+
                 // Create model directory
                 Directory.CreateDirectory(_modelPath);
 
@@ -537,7 +582,19 @@ namespace LLMClient.Services
             }
             finally
             {
+                ReleaseWakeLock();
                 _downloadSemaphore.Release();
+            }
+        }
+
+        public void CancelDownload()
+        {
+            if (_downloadCancellation != null && !_downloadCancellation.IsCancellationRequested)
+            {
+                _logger.LogInformation("Cancelling model download...");
+                _downloadCancellation.Cancel();
+                ReleaseWakeLock();
+                State = LocalModelState.NotDownloaded;
             }
         }
 

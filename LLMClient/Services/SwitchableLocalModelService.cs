@@ -175,6 +175,7 @@ namespace LLMClient.Services
         public Task<LocalModelInfo> GetModelInfoAsync() => _current.GetModelInfoAsync();
         public Task<bool> IsModelDownloadedAsync() => _current.IsModelDownloadedAsync();
         public Task<bool> DownloadModelAsync(IProgress<double>? progress = null) => _current.DownloadModelAsync(progress);
+        public void CancelDownload() => _current.CancelDownload();
         public Task<bool> LoadModelAsync() => _current.LoadModelAsync();
         public Task UnloadModelAsync() => _current.UnloadModelAsync();
         public Task<bool> DeleteModelAsync() => _current.DeleteModelAsync();
