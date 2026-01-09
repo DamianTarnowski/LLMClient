@@ -29,10 +29,13 @@ namespace LLMClient.Services
         public required string HuggingFaceRepo { get; init; }
         public required string FileName { get; init; }
         public required long SizeInMB { get; init; }
+        public long RequiredRamMB { get; init; } = 0; // 0 = auto (SizeInMB * 1.5)
         public required string[] SupportedLanguages { get; init; }
         public string? ChatTemplate { get; init; }
         public string Description { get; init; } = "";
         public bool IsRecommended { get; init; } = false;
+        
+        public long EstimatedRamMB => RequiredRamMB > 0 ? RequiredRamMB : (long)(SizeInMB * 1.5);
     }
 
     public class LlamaSharpLocalModelService : ILocalModelService, IDisposable
@@ -49,6 +52,7 @@ namespace LLMClient.Services
         
         public static readonly List<GgufModelInfo> AvailableModels = new()
         {
+            // ===== GEMMA 3 FAMILY =====
             new GgufModelInfo
             {
                 Id = "gemma-3-1b-it",
@@ -56,10 +60,23 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "ggml-org/gemma-3-1b-it-GGUF",
                 FileName = "gemma-3-1b-it-Q4_K_M.gguf",
                 SizeInMB = 700,
+                RequiredRamMB = 1500,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
                 ChatTemplate = "gemma",
-                Description = "Maly, szybki model Gemma 3 od Google. Idealny dla mobile.",
+                Description = "Maly, szybki model Gemma 3 od Google. Wymaga ~1.5 GB RAM. Idealny dla mobile.",
                 IsRecommended = true
+            },
+            new GgufModelInfo
+            {
+                Id = "gemma-3-1b-it-q8",
+                DisplayName = "Gemma 3 1B Instruct (Q8)",
+                HuggingFaceRepo = "ggml-org/gemma-3-1b-it-GGUF",
+                FileName = "gemma-3-1b-it-Q8_0.gguf",
+                SizeInMB = 1100,
+                RequiredRamMB = 2000,
+                SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
+                ChatTemplate = "gemma",
+                Description = "Gemma 3 1B wyzsza jakosc (Q8). Wymaga ~2 GB RAM."
             },
             new GgufModelInfo
             {
@@ -90,9 +107,58 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "ggml-org/gemma-3-4b-it-GGUF",
                 FileName = "gemma-3-4b-it-Q4_K_M.gguf",
                 SizeInMB = 2800,
+                RequiredRamMB = 5000,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
                 ChatTemplate = "gemma",
-                Description = "Sredni model Gemma 3."
+                Description = "Sredni model Gemma 3. Wymaga ~5 GB RAM. Multimodal (vision)."
+            },
+            new GgufModelInfo
+            {
+                Id = "gemma-3-4b-it-q8",
+                DisplayName = "Gemma 3 4B Instruct (Q8)",
+                HuggingFaceRepo = "ggml-org/gemma-3-4b-it-GGUF",
+                FileName = "gemma-3-4b-it-Q8_0.gguf",
+                SizeInMB = 4400,
+                RequiredRamMB = 7000,
+                SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
+                ChatTemplate = "gemma",
+                Description = "Gemma 3 4B wyzsza jakosc (Q8). Wymaga ~7 GB RAM."
+            },
+            new GgufModelInfo
+            {
+                Id = "gemma-3-12b-it",
+                DisplayName = "Gemma 3 12B Instruct",
+                HuggingFaceRepo = "bartowski/google_gemma-3-12b-it-GGUF",
+                FileName = "google_gemma-3-12b-it-Q4_K_M.gguf",
+                SizeInMB = 7500,
+                RequiredRamMB = 12000,
+                SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
+                ChatTemplate = "gemma",
+                Description = "Duzy model Gemma 3. Wymaga ~12 GB RAM. Tylko desktop/tablet z duza RAM."
+            },
+            new GgufModelInfo
+            {
+                Id = "gemma-3n-4b-it",
+                DisplayName = "Gemma 3n 4B (Nano)",
+                HuggingFaceRepo = "ggml-org/gemma-3n-E4B-it-GGUF",
+                FileName = "gemma-3n-E4B-it-Q4_K_M.gguf",
+                SizeInMB = 2500,
+                RequiredRamMB = 4500,
+                SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
+                ChatTemplate = "gemma",
+                Description = "Nowa zoptymalizowana Gemma 3n. Wymaga ~4.5 GB RAM. Audio/video input."
+            },
+            new GgufModelInfo
+            {
+                Id = "gemma-3n-2b-it",
+                DisplayName = "Gemma 3n 2B (Nano)",
+                HuggingFaceRepo = "ggml-org/gemma-3n-E2B-it-GGUF",
+                FileName = "gemma-3n-E2B-it-Q4_K_M.gguf",
+                SizeInMB = 1400,
+                RequiredRamMB = 2500,
+                SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
+                ChatTemplate = "gemma",
+                Description = "Kompaktowa Gemma 3n 2B. Wymaga ~2.5 GB RAM. Dobra dla mobile."
             },
             new GgufModelInfo
             {
