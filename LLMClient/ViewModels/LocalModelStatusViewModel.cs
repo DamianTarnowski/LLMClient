@@ -11,6 +11,7 @@ namespace LLMClient.ViewModels
     {
         private readonly ILocalModelService _localModelService;
         private readonly ILocalizationService _localizationService;
+        private readonly IDeviceMemoryService? _deviceMemoryService;
         
         private bool _isVisible = false;
         private string _statusIcon = "🤖";
@@ -37,10 +38,11 @@ namespace LLMClient.ViewModels
         private string _modelDescription = "";
         private bool _showModelInfo = false;
 
-        public LocalModelStatusViewModel(ILocalModelService localModelService, ILocalizationService localizationService)
+        public LocalModelStatusViewModel(ILocalModelService localModelService, ILocalizationService localizationService, IDeviceMemoryService? deviceMemoryService = null)
         {
             _localModelService = localModelService;
             _localizationService = localizationService;
+            _deviceMemoryService = deviceMemoryService;
             
             ActionCommand = new Command(async () => await ExecuteActionAsync(), () => ShowActionButton);
             SelectModelCommand = new Command(async () => await OpenModelSelectorAsync());
@@ -558,18 +560,41 @@ namespace LLMClient.ViewModels
                 var modelName = !string.IsNullOrEmpty(_modelName) ? _modelName : "Model";
                 var modelSize = !string.IsNullOrEmpty(_modelSize) ? _modelSize : "?";
                 var modelDesc = _modelDescription;
-                var languages = "";
-                var ramRequired = _modelSizeBytes > 0 ? (int)Math.Ceiling(_modelSizeBytes / (1024.0 * 1024.0 * 1024.0)) + 2 : 4;
-                
-                var message = $"📦 Model: {modelName}\n" +
-                              $"📁 Rozmiar: {modelSize}\n" +
-                              $"💾 Wymagana pamięć RAM: {ramRequired} GB\n" +
-                              $"🌍 Języki: {languages}\n\n" +
-                              $"{modelDesc}\n\n" +
-                              $"Czy chcesz pobrać ten model?";
+                var ramRequiredMB = _modelSizeBytes > 0 ? (long)(_modelSizeBytes / (1024.0 * 1024.0) * 1.5) : 2000;
+                var ramRequiredGB = ramRequiredMB / 1024.0;
                 
                 var page = Application.Current?.Windows.FirstOrDefault()?.Page;
                 if (page == null) return true;
+                
+                // Check device RAM and show warning if insufficient
+                if (_deviceMemoryService != null)
+                {
+                    var warningMessage = _deviceMemoryService.GetRamWarningMessage(ramRequiredMB, modelName);
+                    if (!string.IsNullOrEmpty(warningMessage))
+                    {
+                        // Show RAM warning dialog
+                        var proceedAnyway = await page.DisplayAlertAsync(
+                            "⚠️ Ostrzeżenie o pamięci RAM",
+                            warningMessage,
+                            "Pobierz mimo to",
+                            "Anuluj");
+                        
+                        if (!proceedAnyway) return false;
+                    }
+                }
+                
+                // Show standard confirmation with device RAM info
+                var totalRamMB = _deviceMemoryService?.GetTotalRamMB() ?? 0;
+                var totalRamGB = totalRamMB / 1024.0;
+                var ramInfo = totalRamMB > 0 
+                    ? $"💾 Wymaga: ~{ramRequiredGB:F1} GB RAM (Twoje urządzenie: {totalRamGB:F1} GB)"
+                    : $"💾 Wymaga: ~{ramRequiredGB:F1} GB RAM";
+                
+                var message = $"📦 Model: {modelName}\n" +
+                              $"📁 Rozmiar do pobrania: {modelSize}\n" +
+                              $"{ramInfo}\n\n" +
+                              $"{modelDesc}\n\n" +
+                              $"Czy chcesz pobrać ten model?";
                 
                 return await page.DisplayAlertAsync(
                     GetLocalizedString("ConfirmDownload"),

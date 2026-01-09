@@ -36,6 +36,7 @@ namespace LLMClient
             builder.Services.AddSingleton<ISecureApiKeyService, SecureApiKeyService>();
             builder.Services.AddSingleton<IStreamingBatchService, StreamingBatchService>();
             builder.Services.AddSingleton<IErrorHandlingService, ErrorHandlingService>();
+            builder.Services.AddSingleton<IDeviceMemoryService, DeviceMemoryService>();
             
             // Error Reporting Service - szczegółowe raportowanie błędów
             builder.Services.AddSingleton<IErrorReportingService>(provider =>
