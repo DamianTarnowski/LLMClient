@@ -85,9 +85,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
                 FileName = "qwen2.5-0.5b-instruct-q4_k_m.gguf",
                 SizeInMB = 491,
+                RequiredRamMB = 800,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
                 ChatTemplate = "chatml",
-                Description = "Bardzo maly i szybki model do testow na telefonie."
+                Description = "Bardzo maly i szybki model do testow na telefonie. Wymaga ~0.8 GB RAM."
             },
             new GgufModelInfo
             {
@@ -96,9 +97,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "Qwen/Qwen2-0.5B-Instruct-GGUF",
                 FileName = "qwen2-0_5b-instruct-q4_k_m.gguf",
                 SizeInMB = 398,
+                RequiredRamMB = 700,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
                 ChatTemplate = "chatml",
-                Description = "Bardzo maly model Qwen2 w formacie GGUF."
+                Description = "Bardzo maly model Qwen2 w formacie GGUF. Wymaga ~0.7 GB RAM."
             },
             new GgufModelInfo
             {
@@ -167,9 +169,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF",
                 FileName = "smollm2-1.7b-instruct-q4_k_m.gguf",
                 SizeInMB = 1060,
+                RequiredRamMB = 2000,
                 SupportedLanguages = new[] { "en" },
                 ChatTemplate = "chatml",
-                Description = "Lekki model 1.7B."
+                Description = "Lekki model 1.7B zoptymalizowany pod wydajnosc. Wymaga ~2 GB RAM."
             },
             new GgufModelInfo
             {
@@ -178,9 +181,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
                 FileName = "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
                 SizeInMB = 669,
+                RequiredRamMB = 1000,
                 SupportedLanguages = new[] { "en" },
                 ChatTemplate = "chatml",
-                Description = "Bardzo szybki, maly model do testow."
+                Description = "Bardzo szybki, maly model do testow. Wymaga ~1 GB RAM."
             },
             new GgufModelInfo
             {
@@ -189,9 +193,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "unsloth/Qwen3-1.7B-Instruct-GGUF",
                 FileName = "Qwen3-1.7B-Instruct-Q4_K_M.gguf",
                 SizeInMB = 1100,
+                RequiredRamMB = 2000,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
                 ChatTemplate = "chatml",
-                Description = "Kompaktowy Qwen3 z dobra jakoscia."
+                Description = "Kompaktowy Qwen3 z dobra jakoscia. Wymaga ~2 GB RAM."
             },
             new GgufModelInfo
             {
@@ -200,9 +205,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "unsloth/Qwen3-4B-Instruct-2507-GGUF",
                 FileName = "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
                 SizeInMB = 2700,
+                RequiredRamMB = 4500,
                 SupportedLanguages = new[] { "en", "pl", "de", "es", "fr", "it", "ja", "ko", "zh", "ru" },
                 ChatTemplate = "chatml",
-                Description = "Sredni Qwen3."
+                Description = "Sredni Qwen3. Wymaga ~4.5 GB RAM."
             },
             new GgufModelInfo
             {
@@ -211,9 +217,10 @@ namespace LLMClient.Services
                 HuggingFaceRepo = "microsoft/Phi-3-mini-4k-instruct-gguf",
                 FileName = "Phi-3-mini-4k-instruct-q4.gguf",
                 SizeInMB = 2300,
+                RequiredRamMB = 4000,
                 SupportedLanguages = new[] { "en" },
                 ChatTemplate = "chatml",
-                Description = "Kompaktowy model od Microsoft."
+                Description = "Kompaktowy model od Microsoft. Wymaga ~4 GB RAM."
             }
         };
         
