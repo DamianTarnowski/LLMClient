@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using LLMClient.Models;
@@ -762,14 +762,29 @@ namespace LLMClient.ViewModels
                 {
                     var model = AiConfiguration.SelectedModel;
                     
-                    // Walidacja - nie konfiguruj modelu bez wymaganych danych
-                    if (model.Provider != AiProvider.LocalModel)
+                    // Handle local model selection from unified picker
+                    if (model.Provider == AiProvider.LocalModel)
                     {
-                        if (string.IsNullOrEmpty(model.ApiKey) || string.IsNullOrEmpty(model.ModelId))
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Model {model.Name} nie ma wymaganych danych - pomijam");
-                            return;
-                        }
+                        System.Diagnostics.Debug.WriteLine("[MainPageViewModel] Local model selected from picker");
+                        await SetUseLocalModelAsync(true);
+                        Preferences.Set("LastSelectedModelId", model.Id);
+                        OnPropertyChanged(nameof(SupportsImages));
+                        OnPropertyChanged(nameof(UseLocalModel));
+                        return;
+                    }
+                    
+                    // Switching from local to cloud - unload local model first
+                    if (_localModelService.State == LocalModelState.Loaded)
+                    {
+                        System.Diagnostics.Debug.WriteLine("[MainPageViewModel] Switching from local to cloud model");
+                        await SetUseLocalModelAsync(false);
+                    }
+                    
+                    // Walidacja - nie konfiguruj modelu bez wymaganych danych
+                    if (string.IsNullOrEmpty(model.ApiKey) || string.IsNullOrEmpty(model.ModelId))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainPageViewModel] Model {model.Name} nie ma wymaganych danych - pomijam");
+                        return;
                     }
                     
                     await Task.Run(() => _aiService.UpdateConfiguration(model));
@@ -777,6 +792,7 @@ namespace LLMClient.ViewModels
                     Preferences.Set("LastSelectedModelId", model.Id);
                     // Powiadom o zmianie obsługi obrazków
                     OnPropertyChanged(nameof(SupportsImages));
+                    OnPropertyChanged(nameof(UseLocalModel));
                 }
                 catch (Exception ex)
                 {
@@ -808,7 +824,20 @@ namespace LLMClient.ViewModels
             });
 
             // Continue with models on main thread
-            AiConfiguration.Models = new ObservableCollection<AiModel>(models);
+            // Add local model as first option in picker
+            var localModelOption = new AiModel
+            {
+                Id = -1,
+                Name = "🤖 Phi-4 Mini (Lokalny)",
+                ModelId = "phi-4-mini-instruct",
+                Provider = AiProvider.LocalModel,
+                IsActive = true,
+                SupportsStreaming = true,
+                SupportsImages = false
+            };
+            var allModels = new List<AiModel> { localModelOption };
+            allModels.AddRange(models);
+            AiConfiguration.Models = new ObservableCollection<AiModel>(allModels);
 
             try
             {
